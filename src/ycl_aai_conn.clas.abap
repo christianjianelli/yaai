@@ -14,6 +14,7 @@ CLASS ycl_aai_conn DEFINITION
     ALIASES set_body FOR yif_aai_conn~set_body.
     ALIASES do_receive FOR yif_aai_conn~do_receive.
     ALIASES get_response FOR yif_aai_conn~get_response.
+    ALIASES set_api_key FOR yif_aai_conn~set_api_key.
 
     METHODS
       constructor
@@ -46,6 +47,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
   METHOD constructor.
 
     me->m_api = i_api.
+
+    me->set_api_key( new ycl_aai_api_keys( )->read( i_api ) ).
 
     CASE me->m_api.
 
@@ -116,7 +119,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
       _o_http_client->request->set_header_field(
         EXPORTING
           name  = 'Authorization'                " Name of the header field
-          value = |'Bearer '{ me->_api_key }|      " HTTP header field value
+          value = |Bearer { me->_api_key }|      " HTTP header field value
       ).
 
     ENDIF.
@@ -218,6 +221,12 @@ CLASS ycl_aai_conn IMPLEMENTATION.
                                 message_v3 = sy-msgv3
                                 message_v4 = sy-msgv4 ) ).
     ENDIF.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~set_api_key.
+
+    me->_api_key = i_api_key.
 
   ENDMETHOD.
 

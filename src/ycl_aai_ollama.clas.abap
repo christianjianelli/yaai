@@ -5,23 +5,23 @@ CLASS ycl_aai_ollama DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES: BEGIN OF chat_message,
+    TYPES: BEGIN OF chat_message_s,
              role    TYPE string,
              content TYPE string,
-           END OF chat_message.
+           END OF chat_message_s.
 
-    TYPES: chat_messages_t TYPE STANDARD TABLE OF chat_message WITH NON-UNIQUE KEY role.
+    TYPES: chat_messages_t TYPE STANDARD TABLE OF chat_message_s WITH NON-UNIQUE KEY role.
 
-    TYPES: BEGIN OF ollama_chat_request,
+    TYPES: BEGIN OF ollama_chat_request_s,
              model    TYPE string,
              stream   TYPE abap_bool,
              messages TYPE chat_messages_t,
-           END OF ollama_chat_request,
+           END OF ollama_chat_request_s,
 
-           BEGIN OF ollama_chat_response,
+           BEGIN OF ollama_chat_response_s,
              model   TYPE string,
-             message TYPE chat_message,
-           END OF ollama_chat_response.
+             message TYPE chat_message_s,
+           END OF ollama_chat_response_s.
 
     CLASS-DATA m_ref TYPE REF TO ycl_aai_ollama.
 
@@ -66,8 +66,9 @@ CLASS ycl_aai_ollama DEFINITION
   PRIVATE SECTION.
 
     DATA: _model               TYPE string,
-          _ollama_api_request  TYPE ollama_chat_request,
-          _ollama_api_response TYPE ollama_chat_response,
+          _system_instructions TYPE string,
+          _ollama_api_request  TYPE ollama_chat_request_s,
+          _ollama_api_response TYPE ollama_chat_response_s,
           _chat_messages       TYPE chat_messages_t.
 
 ENDCLASS.
@@ -114,9 +115,9 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
-      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE ollama_chat_request( model = me->_model
-                                                                                 stream = abap_false
-                                                                                 messages = me->_chat_messages ) ).
+      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE ollama_chat_request_s( model = me->_model
+                                                                                   stream = abap_false
+                                                                                   messages = me->_chat_messages ) ).
 
       lo_aai_conn->set_body( l_json ).
 
@@ -134,9 +135,11 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           e_data = me->_ollama_api_response
       ).
 
+      me->_ollama_api_response-message-content = lo_aai_util->replace_unicode_escape_seq( me->_ollama_api_response-message-content ).
+
       APPEND me->_ollama_api_response-message TO me->_chat_messages.
 
-      e_response = lo_aai_util->replace_unicode_escape_seq( me->_ollama_api_response-message-content ).
+      e_response = me->_ollama_api_response-message-content.
 
     ENDIF.
 

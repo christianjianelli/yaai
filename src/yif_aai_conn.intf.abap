@@ -19,6 +19,11 @@ INTERFACE yif_aai_conn
       RETURNING VALUE(r_created) TYPE abap_bool.
 
   METHODS
+    set_api_key
+      IMPORTING
+        i_api_key TYPE string.
+
+  METHODS
     set_body
       IMPORTING
         i_json TYPE string.
