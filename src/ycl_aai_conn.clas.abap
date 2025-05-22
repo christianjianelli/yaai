@@ -11,6 +11,7 @@ CLASS ycl_aai_conn DEFINITION
     ALIASES m_api FOR yif_aai_conn~m_api.
     ALIASES m_base_url FOR yif_aai_conn~m_base_url.
     ALIASES create_connection FOR yif_aai_conn~create_connection.
+    ALIASES set_body FOR yif_aai_conn~set_body.
     ALIASES do_receive FOR yif_aai_conn~do_receive.
     ALIASES get_response FOR yif_aai_conn~get_response.
 
@@ -48,13 +49,21 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     CASE me->m_api.
 
-      WHEN yif_aai_const=>ollama.
+      WHEN yif_aai_const=>c_ollama.
 
-        me->m_base_url = 'http://192.168.1.110/ollama'.
+        SELECT SINGLE low FROM tvarvc
+          WHERE name = @yif_aai_const=>c_ollama_base_url_param
+            AND type = 'P'
+            AND numb = '0000'
+           INTO @me->m_base_url.
 
-      WHEN yif_aai_const=>openai.
+      WHEN yif_aai_const=>c_openai.
 
-        me->m_base_url = 'http://192.168.1.110/openai'.
+        SELECT SINGLE low FROM tvarvc
+          WHERE name = @yif_aai_const=>c_openai_base_url_param
+            AND type = 'P'
+            AND numb = '0000'
+           INTO @me->m_base_url.
 
     ENDCASE.
 
@@ -112,7 +121,23 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     ENDIF.
 
+    IF i_body_json IS NOT INITIAL.
+
+      CALL METHOD me->_o_http_client->request->set_cdata
+        EXPORTING
+          data = i_body_json.
+
+    ENDIF.
+
     r_created = abap_true.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~set_body.
+
+    CALL METHOD me->_o_http_client->request->set_cdata
+      EXPORTING
+        data = i_json.
 
   ENDMETHOD.
 

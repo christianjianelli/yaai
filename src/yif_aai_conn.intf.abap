@@ -15,7 +15,13 @@ INTERFACE yif_aai_conn
                 i_endpoint       TYPE string
                 i_api_key        TYPE string OPTIONAL
                 i_http_method    TYPE string DEFAULT if_http_request=>co_request_method_post
+                i_body_json      TYPE string OPTIONAL
       RETURNING VALUE(r_created) TYPE abap_bool.
+
+  METHODS
+    set_body
+      IMPORTING
+        i_json TYPE string.
 
   METHODS
     do_receive

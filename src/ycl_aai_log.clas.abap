@@ -23,7 +23,7 @@ CLASS ycl_aai_log IMPLEMENTATION.
     DATA(ls_msg) = i_s_msg.
 
     IF ls_msg-id IS INITIAL.
-      ls_msg-id = yif_aai_const=>message_id.
+      ls_msg-id = yif_aai_const=>c_message_id.
     ENDIF.
 
     IF ls_msg-type IS INITIAL.

@@ -13,7 +13,7 @@ CLASS ltcl_conn IMPLEMENTATION.
 
   METHOD connection_test.
 
-    DATA(lo_cut) = NEW ycl_aai_conn( i_api = yif_aai_const=>ollama ).
+    DATA(lo_cut) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
 
     IF lo_cut->create_connection( i_endpoint = '' ) = abap_true.
 
