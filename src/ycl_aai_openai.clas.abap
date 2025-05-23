@@ -1,6 +1,5 @@
 CLASS ycl_aai_openai DEFINITION
   PUBLIC
-  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
@@ -67,7 +66,8 @@ CLASS ycl_aai_openai DEFINITION
         i_message  TYPE clike
         i_new      TYPE abap_bool DEFAULT abap_false
       EXPORTING
-        e_response TYPE string.
+        e_response   TYPE string
+        e_t_response TYPE rswsourcet.
 
     METHODS embed
       IMPORTING
@@ -118,13 +118,21 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD set_system_instructions.
 
+    APPEND VALUE #( role = 'developer' content = i_system_instructions ) TO me->_messages.
+
   ENDMETHOD.
 
   METHOD embed.
 
+    " TODO
+
   ENDMETHOD.
 
   METHOD generate.
+
+    CLEAR e_response.
+
+    FREE e_t_response.
 
     IF me->_model IS INITIAL.
       RETURN.
@@ -182,6 +190,12 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         ENDLOOP.
 
       ENDLOOP.
+
+    ENDIF.
+
+    IF e_t_response IS REQUESTED.
+
+      SPLIT e_response AT cl_abap_char_utilities=>newline INTO TABLE e_t_response.
 
     ENDIF.
 

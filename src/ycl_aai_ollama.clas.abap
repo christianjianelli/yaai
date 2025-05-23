@@ -1,6 +1,5 @@
 CLASS ycl_aai_ollama DEFINITION
   PUBLIC
-  FINAL
   CREATE PUBLIC.
 
   PUBLIC SECTION.
@@ -44,16 +43,18 @@ CLASS ycl_aai_ollama DEFINITION
 
     METHODS chat
       IMPORTING
-        i_message  TYPE clike
-        i_new      TYPE abap_bool DEFAULT abap_false
+        i_message    TYPE clike
+        i_new        TYPE abap_bool DEFAULT abap_false
       EXPORTING
-        e_response TYPE string.
+        e_response   TYPE string
+        e_t_response TYPE rswsourcet.
 
     METHODS generate
       IMPORTING
-        i_message  TYPE string
+        i_message    TYPE string
       EXPORTING
-        e_response TYPE string.
+        e_response   TYPE string
+        e_t_response TYPE rswsourcet.
 
     METHODS embed
       IMPORTING
@@ -99,6 +100,10 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   METHOD chat.
 
+    CLEAR e_response.
+
+    FREE e_t_response.
+
     IF me->_model IS INITIAL.
       RETURN.
     ENDIF.
@@ -140,6 +145,12 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
       APPEND me->_ollama_api_response-message TO me->_chat_messages.
 
       e_response = me->_ollama_api_response-message-content.
+
+    ENDIF.
+
+    IF e_t_response IS REQUESTED.
+
+      SPLIT e_response AT cl_abap_char_utilities=>newline INTO TABLE e_t_response.
 
     ENDIF.
 

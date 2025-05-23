@@ -1,6 +1,5 @@
 CLASS ycl_aai_api_keys DEFINITION
   PUBLIC
-  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
