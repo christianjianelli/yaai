@@ -75,7 +75,15 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     r_created = abap_false.
 
-    me->_url = |{ me->m_base_url }/{ i_endpoint }|.
+    me->_url = me->m_base_url.
+
+    IF i_endpoint IS NOT INITIAL AND i_endpoint(1) <> '/'.
+      me->_url = |{ me->_url }/{ i_endpoint }|.
+    ENDIF.
+
+    IF i_endpoint IS NOT INITIAL AND i_endpoint(1) = '/'.
+      me->_url = |{ me->_url }{ i_endpoint }|.
+    ENDIF.
 
     cl_http_client=>create_by_url(
       EXPORTING

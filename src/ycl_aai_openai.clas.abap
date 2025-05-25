@@ -4,85 +4,32 @@ CLASS ycl_aai_openai DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES: BEGIN OF generate_message_s,
-             role    TYPE string,
-             content TYPE string,
-           END OF generate_message_s.
+    INTERFACES yif_aai_openai.
 
-    TYPES: generate_messages_t TYPE STANDARD TABLE OF generate_message_s WITH NON-UNIQUE KEY role.
-
-    TYPES: BEGIN OF openai_generate_request_s,
-             model  TYPE string,
-             stream TYPE abap_bool,
-             input  TYPE generate_messages_t,
-           END OF openai_generate_request_s.
-
-    TYPES: BEGIN OF content_s,
-             type TYPE string,
-             text TYPE string,
-           END OF content_s.
-
-    TYPES content_t TYPE STANDARD TABLE OF content_s WITH NON-UNIQUE KEY text.
-
-    TYPES: BEGIN OF output_s,
-             id      TYPE string,
-             type    TYPE string,
-             role    TYPE string,
-             status  TYPE string,
-             content TYPE content_t,
-           END OF output_s.
-
-    TYPES: output_t TYPE STANDARD TABLE OF output_s WITH NON-UNIQUE KEY id.
-
-    TYPES: BEGIN OF openai_generate_response_s,
-             id          TYPE string,
-             status      TYPE string,
-             model       TYPE string,
-             temperature TYPE string,
-             output      TYPE output_t,
-           END OF openai_generate_response_s.
+    ALIASES set_model FOR yif_aai_openai~set_model.
+    ALIASES set_system_instructions FOR yif_aai_openai~set_system_instructions.
+    ALIASES generate FOR yif_aai_openai~generate.
+    ALIASES embed FOR yif_aai_openai~embed.
 
     CLASS-DATA m_ref TYPE REF TO ycl_aai_openai.
 
     CLASS-METHODS get_instance
       IMPORTING
-                i_model      TYPE clike OPTIONAL
+                i_model      TYPE csequence OPTIONAL
       RETURNING VALUE(r_ref) TYPE REF TO ycl_aai_openai.
 
     METHODS constructor
       IMPORTING
-        i_model TYPE clike OPTIONAL.
-
-    METHODS set_model
-      IMPORTING
-        i_model TYPE clike.
-
-    METHODS set_system_instructions
-      IMPORTING
-        i_system_instructions TYPE string.
-
-    METHODS generate
-      IMPORTING
-        i_message  TYPE clike
-        i_new      TYPE abap_bool DEFAULT abap_false
-      EXPORTING
-        e_response   TYPE string
-        e_t_response TYPE rswsourcet.
-
-    METHODS embed
-      IMPORTING
-        i_message  TYPE clike
-      EXPORTING
-        e_response TYPE string.
+        i_model TYPE csequence OPTIONAL.
 
   PROTECTED SECTION.
 
   PRIVATE SECTION.
 
     DATA: _model                    TYPE string,
-          _openai_generate_request  TYPE openai_generate_request_s,
-          _openai_generate_response TYPE openai_generate_response_s,
-          _messages                 TYPE generate_messages_t.
+          _openai_generate_request  TYPE yif_aai_openai~openai_generate_request_s,
+          _openai_generate_response TYPE yif_aai_openai~openai_generate_response_s,
+          _messages                 TYPE yif_aai_openai~generate_messages_t.
 
 ENDCLASS.
 
@@ -110,25 +57,19 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD set_model.
+  METHOD yif_aai_openai~set_model.
 
     me->_model = i_model.
 
   ENDMETHOD.
 
-  METHOD set_system_instructions.
+  METHOD yif_aai_openai~set_system_instructions.
 
     APPEND VALUE #( role = 'developer' content = i_system_instructions ) TO me->_messages.
 
   ENDMETHOD.
 
-  METHOD embed.
-
-    " TODO
-
-  ENDMETHOD.
-
-  METHOD generate.
+  METHOD yif_aai_openai~generate.
 
     CLEAR e_response.
 
@@ -148,9 +89,9 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
-      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE openai_generate_request_s( model = me->_model
-                                                                                       stream = abap_false
-                                                                                       input = me->_messages ) ).
+      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~openai_generate_request_s( model = me->_model
+                                                                                                      stream = abap_false
+                                                                                                      input = me->_messages ) ).
 
       lo_aai_conn->set_body( l_json ).
 
@@ -198,6 +139,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
       SPLIT e_response AT cl_abap_char_utilities=>newline INTO TABLE e_t_response.
 
     ENDIF.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_openai~embed.
 
   ENDMETHOD.
 

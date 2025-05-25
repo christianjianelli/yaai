@@ -4,21 +4,11 @@ CLASS ycl_aai_api_keys DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS create
-      IMPORTING
-                i_id             TYPE clike
-                i_api_key        TYPE clike
-      RETURNING VALUE(r_created) TYPE abap_bool.
+    INTERFACES yif_aai_api_keys.
 
-    METHODS read
-      IMPORTING
-                i_id             TYPE clike
-      RETURNING VALUE(r_api_key) TYPE string.
-
-    METHODS delete
-      IMPORTING
-                i_id             TYPE clike
-      RETURNING VALUE(r_deleted) TYPE abap_bool.
+    ALIASES create FOR yif_aai_api_keys~create.
+    ALIASES read FOR yif_aai_api_keys~read.
+    ALIASES delete FOR yif_aai_api_keys~delete.
 
   PROTECTED SECTION.
 
@@ -53,7 +43,20 @@ CLASS ycl_aai_api_keys IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD create.
+  METHOD yif_aai_api_keys~read.
+
+    CLEAR r_api_key.
+
+    SELECT SINGLE api_key
+      FROM yaai_api_key
+      WHERE id = @i_id
+      INTO @DATA(l_api_key).
+
+    r_api_key = me->decode( l_api_key ).
+
+  ENDMETHOD.
+
+  METHOD yif_aai_api_keys~create.
 
     r_created = abap_false.
 
@@ -76,7 +79,7 @@ CLASS ycl_aai_api_keys IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD delete.
+  METHOD yif_aai_api_keys~delete.
 
     r_deleted = abap_false.
 
@@ -85,19 +88,6 @@ CLASS ycl_aai_api_keys IMPLEMENTATION.
     IF sy-subrc = 0.
       r_deleted = abap_true.
     ENDIF.
-
-  ENDMETHOD.
-
-  METHOD read.
-
-    CLEAR r_api_key.
-
-    SELECT SINGLE api_key
-      FROM yaai_api_key
-      WHERE id = @i_id
-      INTO @DATA(l_api_key).
-
-    r_api_key = me->decode( l_api_key ).
 
   ENDMETHOD.
 
