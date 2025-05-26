@@ -138,11 +138,67 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
   METHOD yif_aai_function_calling~get_arguments.
 
+    DATA: lv_json_string  TYPE string,
+          lt_name_value   TYPE yif_aai_function_calling~arguments_t,
+          lo_deserializer TYPE REF TO /ui2/cl_json,
+          lr_data         TYPE REF TO data.
+
+    FIELD-SYMBOLS: <ls_data>  TYPE any,
+                   <lv_name>  TYPE string,
+                   <lv_value> TYPE any.
+
+    lv_json_string = i_json.
+
+    lo_deserializer = NEW #( ).
+
+    " Deserialize the JSON into a generic data structure
+    lo_deserializer->deserialize(
+      EXPORTING
+        json        = lv_json_string
+        pretty_name = /ui2/cl_json=>pretty_mode-camel_case
+      CHANGING
+        data        = lr_data ).
+
+    ASSIGN lr_data->* TO <ls_data>.
+
+    " Assuming the JSON is a flat structure (object with key-value pairs)
+    DATA: lo_strucdescr TYPE REF TO cl_abap_structdescr,
+          lt_components TYPE abap_component_tab,
+          ls_component  LIKE LINE OF lt_components.
+
+    lo_strucdescr ?= cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+
+    lt_components = lo_strucdescr->get_components( ).
+
+    LOOP AT lt_components INTO ls_component.
+
+      ASSIGN COMPONENT ls_component-name OF STRUCTURE <ls_data> TO <lv_value>.
+
+      IF sy-subrc = 0.
+
+        APPEND INITIAL LINE TO e_t_arguments ASSIGNING FIELD-SYMBOL(<ls_argument>).
+
+        <ls_argument>-name = ls_component-name.
+
+        ASSIGN <lv_value>->* TO FIELD-SYMBOL(<val>).
+
+        <ls_argument>-value = <val>.
+
+      ENDIF.
+
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD yif_aai_function_calling~call_tool.
 
+    FIELD-SYMBOLS <l_data> TYPE any.
+
+    DATA lr_data TYPE REF TO data.
+
     DATA lo_class TYPE REF TO object.
+
+    DATA lo_class_descr TYPE REF TO cl_abap_classdescr.
 
     DATA lt_parameters TYPE abap_parmbind_tab.
 
@@ -152,24 +208,67 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
     LOOP AT me->mt_methods INTO DATA(ls_method).
 
+      ls_method-class_name = to_upper( ls_method-class_name ).
+      ls_method-method = to_upper( ls_method-method ).
+
       DATA(l_name) = |{ ls_method-class_name }_{ ls_method-method }|.
 
       IF i_tool_name <> l_name.
         CLEAR ls_method.
+        CONTINUE.
       ENDIF.
+
+      EXIT.
 
     ENDLOOP.
 
     IF ls_method IS INITIAL.
-      r_response = 'Sorry, but the requested tool is not available.'.
+      r_response = 'The function/tool called is not available.'.
       RETURN.
     ENDIF.
 
-    LOOP AT i_t_arguments INTO DATA(ls_argument).
+    CALL METHOD cl_abap_classdescr=>describe_by_name
+      EXPORTING
+        p_name         = ls_method-class_name  " Type name
+      RECEIVING
+        p_descr_ref    = DATA(lo_descr)        " Reference to description object
+      EXCEPTIONS
+        type_not_found = 1                     " Type with name p_name could not be found
+        OTHERS         = 2.
 
-      ls_parameter-name = ls_argument-name.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    lo_class_descr ?= lo_descr.
+
+    LOOP AT i_t_arguments ASSIGNING FIELD-SYMBOL(<ls_argument>).
+
+      lo_class_descr->get_method_parameter_type(
+        EXPORTING
+          p_method_name       = ls_method-method      " Method name
+          p_parameter_name    = <ls_argument>-name    " Parameter Name
+        RECEIVING
+          p_descr_ref         = DATA(lo_descr_ref)    " Description object
+        EXCEPTIONS
+          parameter_not_found = 1                     " Parameter could not be found
+          method_not_found    = 2                     " Method was not found
+          OTHERS              = 3
+      ).
+
+      IF sy-subrc <> 0.
+        EXIT.
+      ENDIF.
+
+      CREATE DATA lr_data TYPE HANDLE lo_descr_ref.
+
+      ASSIGN lr_data->* TO <l_data>.
+
+      <l_data> = CONV #( <ls_argument>-value ).
+
+      ls_parameter-name = to_upper( <ls_argument>-name ).
       ls_parameter-kind = cl_abap_objectdescr=>exporting.
-      ls_parameter-value = REF #( ls_argument-value ).
+      ls_parameter-value = REF #( <l_data> ).
 
       INSERT ls_parameter INTO TABLE lt_parameters.
 
@@ -183,18 +282,22 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
     TRY.
 
-        CREATE OBJECT lo_class TYPE ('ZCL_TEST').
+        CREATE OBJECT lo_class TYPE (ls_method-class_name).
 
         CALL METHOD lo_class->(ls_method-method)
           PARAMETER-TABLE lt_parameters.
 
       CATCH cx_sy_create_object_error INTO DATA(lo_ex_create_object_error).
 
-        r_response = |'Sorry, but the an error occurred while calling the tool. Error: { lo_ex_create_object_error->get_text( ) }|.
+        r_response = |An error occurred while calling the function/tool. Error: { lo_ex_create_object_error->get_text( ) }|.
 
       CATCH cx_sy_dyn_call_illegal_method INTO DATA(lo_ex_dyn_call_illegal_method).
 
-        r_response = |'Sorry, but the an error occurred while calling the tool. Error: { lo_ex_dyn_call_illegal_method->get_text( ) }|.
+        r_response = |'An error occurred while calling the function/tool. Error: { lo_ex_dyn_call_illegal_method->get_text( ) }|.
+
+      CATCH cx_sy_dyn_call_illegal_type INTO DATA(lo_ex_dyn_call_illegal_type).
+
+        r_response = |'An error occurred while calling the function/tool. Error: { lo_ex_dyn_call_illegal_type->get_text( ) }|.
 
     ENDTRY.
 

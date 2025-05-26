@@ -10,6 +10,7 @@ CLASS ycl_aai_util DEFINITION
              format      TYPE string,
              required    TYPE abap_bool,
              description TYPE string,
+             "o_elemdescr TYPE REF TO cl_abap_elemdescr,
            END OF importing_params_s,
 
            importing_params_tt TYPE STANDARD TABLE OF importing_params_s WITH EMPTY KEY.
@@ -133,7 +134,7 @@ CLASS ycl_aai_util IMPLEMENTATION.
     " Get the class descriptor
     CALL METHOD cl_abap_classdescr=>describe_by_name
       EXPORTING
-        p_name         = i_class_name     " Type name
+        p_name         = to_upper( i_class_name )     " Type name
       RECEIVING
         p_descr_ref    = DATA(lo_descr)   " Reference to description object
       EXCEPTIONS
@@ -149,7 +150,7 @@ CLASS ycl_aai_util IMPLEMENTATION.
     " Get all methods of the class
     lt_methods = lo_class_descr->methods.
 
-    READ TABLE lt_methods ASSIGNING FIELD-SYMBOL(<ls_method>) WITH KEY name = i_method_name.
+    READ TABLE lt_methods ASSIGNING FIELD-SYMBOL(<ls_method>) WITH KEY name = to_upper( i_method_name ).
 
     IF sy-subrc <> 0.
       RETURN.

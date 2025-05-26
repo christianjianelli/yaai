@@ -47,7 +47,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     me->m_api = i_api.
 
-    me->set_api_key( new ycl_aai_api_keys( )->read( i_api ) ).
+    me->set_api_key( NEW ycl_aai_api_keys( )->read( i_api ) ).
 
     CASE me->m_api.
 
@@ -190,6 +190,38 @@ CLASS ycl_aai_conn IMPLEMENTATION.
       me->_response = me->_o_http_client->response->get_cdata( ).
 
       e_response = me->_response.
+
+*       me->_o_http_client->refresh_request(
+*         EXCEPTIONS
+*           http_action_failed = 1                " Method Execution Failed
+*           others             = 2
+*       ).
+*
+*       IF sy-subrc <> 0.
+**        MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+**          WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+*       ENDIF.
+*
+*       me->_o_http_client->refresh_response(
+*         EXCEPTIONS
+*           http_action_failed = 1                " Method Execution Failed
+*           others             = 2
+*       ).
+*
+*       IF sy-subrc <> 0.
+**        MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+**          WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+*       ENDIF.
+
+      me->_o_http_client->close(
+        EXCEPTIONS
+          http_invalid_state = 1                " Invalid state
+          OTHERS             = 2
+      ).
+
+      IF sy-subrc <> 0.
+
+      ENDIF.
 
     ELSE.
 

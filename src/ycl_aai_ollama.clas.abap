@@ -7,6 +7,7 @@ CLASS ycl_aai_ollama DEFINITION
     INTERFACES yif_aai_ollama.
 
     ALIASES set_model FOR yif_aai_ollama~set_model.
+    ALIASES set_temperature FOR yif_aai_ollama~set_temperature.
     ALIASES set_system_instructions FOR yif_aai_ollama~set_system_instructions.
     ALIASES bind_tools FOR yif_aai_ollama~bind_tools.
     ALIASES chat FOR yif_aai_ollama~chat.
@@ -31,6 +32,7 @@ CLASS ycl_aai_ollama DEFINITION
   PRIVATE SECTION.
 
     DATA: _model                    TYPE string,
+          _temperature              TYPE p LENGTH 2 DECIMALS 1,
           _system_instructions      TYPE string,
           _ollama_chat_response     TYPE yif_aai_ollama~ollama_chat_response_s,
           _ollama_generate_response TYPE yif_aai_ollama~ollama_generate_response_s,
@@ -60,11 +62,19 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     me->_model = i_model.
 
+    me->_temperature = 1.
+
   ENDMETHOD.
 
   METHOD yif_aai_ollama~set_model.
 
     me->_model = i_model.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_ollama~set_temperature.
+
+    me->_temperature = i_temperature.
 
   ENDMETHOD.
 
@@ -82,6 +92,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   METHOD yif_aai_ollama~chat.
 
+    DATA l_tools TYPE string VALUE '[]'.
+
     CLEAR e_response.
 
     FREE e_t_response.
@@ -96,49 +108,88 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     APPEND VALUE #( role = 'user' content = i_message ) TO me->_chat_messages.
 
-    DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+    DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
-    IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_ollama_chat_endpoint ).
+    IF me->mo_function_calling IS BOUND.
 
-      DATA(lo_aai_util) = NEW ycl_aai_util( ).
+      me->mo_function_calling->get_tools(
+        IMPORTING
+          e_tools = l_tools
+      ).
 
-      IF me->mo_function_calling IS BOUND.
+    ENDIF.
 
-        me->mo_function_calling->get_tools(
+    DO 5 TIMES.
+
+      DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+
+      IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_ollama_chat_endpoint ).
+
+        FREE me->_ollama_chat_response.
+
+        DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ollama_chat_request_s( model = me->_model
+                                                                                                    options = VALUE #( temperature = me->_temperature )
+                                                                                                    messages = me->_chat_messages
+                                                                                                    tools = l_tools ) ).
+
+        lo_aai_conn->set_body( l_json ).
+
+        FREE l_json.
+
+        lo_aai_conn->do_receive(
           IMPORTING
-            e_tools = DATA(l_tools)
+            e_response = l_json
         ).
+
+        lo_aai_util->deserialize(
+          EXPORTING
+            i_json = l_json
+          IMPORTING
+            e_data = me->_ollama_chat_response
+        ).
+
+        IF me->_ollama_chat_response-message-tool_calls[] IS NOT INITIAL.
+
+          APPEND me->_ollama_chat_response-message TO me->_chat_messages.
+
+          LOOP AT me->_ollama_chat_response-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool>).
+
+            me->mo_function_calling->get_arguments(
+              EXPORTING
+                i_json        = <ls_tool>-function-arguments
+              IMPORTING
+                e_t_arguments = DATA(lt_arguments)
+            ).
+
+            me->mo_function_calling->call_tool(
+              EXPORTING
+                i_tool_name   = to_upper( <ls_tool>-function-name )
+                i_t_arguments = lt_arguments
+              RECEIVING
+                r_response    = DATA(l_tool_response)
+            ).
+
+            APPEND VALUE #( role = 'tool' content = l_tool_response ) TO me->_chat_messages.
+
+            FREE lt_arguments.
+
+          ENDLOOP.
+
+          CONTINUE.
+
+        ENDIF.
+
+        me->_ollama_chat_response-message-content = lo_aai_util->replace_unicode_escape_seq( me->_ollama_chat_response-message-content ).
+
+        APPEND me->_ollama_chat_response-message TO me->_chat_messages.
+
+        e_response = me->_ollama_chat_response-message-content.
+
+        EXIT.
 
       ENDIF.
 
-      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ollama_chat_request_s( model = me->_model
-                                                                                                  stream = abap_false
-                                                                                                  messages = me->_chat_messages
-                                                                                                  tools = l_tools ) ).
-
-      lo_aai_conn->set_body( l_json ).
-
-      FREE l_json.
-
-      lo_aai_conn->do_receive(
-        IMPORTING
-          e_response = l_json
-      ).
-
-      lo_aai_util->deserialize(
-        EXPORTING
-          i_json = l_json
-        IMPORTING
-          e_data = me->_ollama_chat_response
-      ).
-
-      me->_ollama_chat_response-message-content = lo_aai_util->replace_unicode_escape_seq( me->_ollama_chat_response-message-content ).
-
-      APPEND me->_ollama_chat_response-message TO me->_chat_messages.
-
-      e_response = me->_ollama_chat_response-message-content.
-
-    ENDIF.
+    ENDDO.
 
     IF e_t_response IS REQUESTED.
 
