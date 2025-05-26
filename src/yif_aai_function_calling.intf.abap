@@ -18,6 +18,13 @@ INTERFACE yif_aai_function_calling
            function TYPE function_s,
          END OF tool_s,
 
+         BEGIN OF arguments_s,
+           name  TYPE string,
+           value TYPE string,
+         END OF arguments_s,
+
+         arguments_t TYPE STANDARD TABLE OF arguments_s WITH EMPTY KEY,
+
          BEGIN OF method_s,
            class_name  TYPE string,
            method      TYPE string,
@@ -35,5 +42,13 @@ INTERFACE yif_aai_function_calling
   METHODS reset_methods.
 
   METHODS remove_method IMPORTING i_s_method TYPE method_s.
+
+  METHODS get_arguments IMPORTING i_out       TYPE REF TO if_oo_adt_intrnl_classrun
+                                  i_json      TYPE csequence
+                        EXPORTING t_arguments TYPE arguments_t.
+
+  METHODS call_tool IMPORTING i_tool_name       TYPE string
+                              i_t_arguments     TYPE arguments_t
+                    RETURNING VALUE(r_response) TYPE string.
 
 ENDINTERFACE.

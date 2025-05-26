@@ -6,11 +6,14 @@ CLASS ycl_aai_function_calling DEFINITION
 
     INTERFACES yif_aai_function_calling.
 
-    ALIASES add_methods FOR yif_aai_function_calling~add_methods.
-    ALIASES get_tools FOR yif_aai_function_calling~get_tools.
+    ALIASES add_methods   FOR yif_aai_function_calling~add_methods.
+    ALIASES get_tools     FOR yif_aai_function_calling~get_tools.
     ALIASES reset_methods FOR yif_aai_function_calling~reset_methods.
     ALIASES remove_method FOR yif_aai_function_calling~remove_method.
-    ALIASES mt_methods FOR yif_aai_function_calling~mt_methods.
+    ALIASES get_arguments FOR yif_aai_function_calling~get_arguments.
+    ALIASES call_tool     FOR yif_aai_function_calling~call_tool.
+
+    ALIASES mt_methods    FOR yif_aai_function_calling~mt_methods.
 
     INTERFACES if_oo_adt_classrun.
 
@@ -130,6 +133,70 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
   METHOD yif_aai_function_calling~reset_methods.
 
     FREE me->mt_methods.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_function_calling~get_arguments.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_function_calling~call_tool.
+
+    DATA lo_class TYPE REF TO object.
+
+    DATA lt_parameters TYPE abap_parmbind_tab.
+
+    DATA ls_parameter  TYPE LINE OF abap_parmbind_tab.
+
+    CLEAR r_response.
+
+    LOOP AT me->mt_methods INTO DATA(ls_method).
+
+      DATA(l_name) = |{ ls_method-class_name }_{ ls_method-method }|.
+
+      IF i_tool_name <> l_name.
+        CLEAR ls_method.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF ls_method IS INITIAL.
+      r_response = 'Sorry, but the requested tool is not available.'.
+      RETURN.
+    ENDIF.
+
+    LOOP AT i_t_arguments INTO DATA(ls_argument).
+
+      ls_parameter-name = ls_argument-name.
+      ls_parameter-kind = cl_abap_objectdescr=>exporting.
+      ls_parameter-value = REF #( ls_argument-value ).
+
+      INSERT ls_parameter INTO TABLE lt_parameters.
+
+    ENDLOOP.
+
+    ls_parameter-name = 'R_RESPONSE'.
+    ls_parameter-kind = cl_abap_objectdescr=>receiving.
+    ls_parameter-value = REF #( r_response ).
+
+    INSERT ls_parameter INTO TABLE lt_parameters.
+
+    TRY.
+
+        CREATE OBJECT lo_class TYPE ('ZCL_TEST').
+
+        CALL METHOD lo_class->(ls_method-method)
+          PARAMETER-TABLE lt_parameters.
+
+      CATCH cx_sy_create_object_error INTO DATA(lo_ex_create_object_error).
+
+        r_response = |'Sorry, but the an error occurred while calling the tool. Error: { lo_ex_create_object_error->get_text( ) }|.
+
+      CATCH cx_sy_dyn_call_illegal_method INTO DATA(lo_ex_dyn_call_illegal_method).
+
+        r_response = |'Sorry, but the an error occurred while calling the tool. Error: { lo_ex_dyn_call_illegal_method->get_text( ) }|.
+
+    ENDTRY.
 
   ENDMETHOD.
 
