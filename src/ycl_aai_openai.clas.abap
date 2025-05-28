@@ -95,6 +95,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD yif_aai_openai~generate.
 
+    FIELD-SYMBOLS <l_data> TYPE string.
+
+    DATA lr_data TYPE REF TO data.
+
     DATA l_tools TYPE string VALUE '[]'.
 
     CLEAR e_response.
@@ -166,12 +170,28 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                           call_id = <ls_output>-call_id
                           name = <ls_output>-name ) TO me->_messages.
 
-          me->mo_function_calling->get_arguments(
+         " This deserialization is necessary because we need to parse the string passed in the arguments to a JSON.
+         " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
+         " So the MO_FUNCTION_CALLING->GET_ARGUMENTS method can extract the arguments from the JSON.
+          lo_aai_util->deserialize(
             EXPORTING
-              i_json        = <ls_output>-arguments
+              i_json = <ls_output>-arguments
             IMPORTING
-              e_t_arguments = DATA(lt_arguments)
+              e_data = lr_data
           ).
+
+          ASSIGN lr_data->* TO <l_data>.
+
+          IF <l_data> IS ASSIGNED.
+
+            me->mo_function_calling->get_arguments(
+              EXPORTING
+                i_json        = <l_data>
+              IMPORTING
+                e_t_arguments = DATA(lt_arguments)
+            ).
+
+          ENDIF.
 
           me->mo_function_calling->call_tool(
             EXPORTING
