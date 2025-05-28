@@ -191,37 +191,11 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
       e_response = me->_response.
 
-*       me->_o_http_client->refresh_request(
-*         EXCEPTIONS
-*           http_action_failed = 1                " Method Execution Failed
-*           others             = 2
-*       ).
-*
-*       IF sy-subrc <> 0.
-**        MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-**          WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-*       ENDIF.
-*
-*       me->_o_http_client->refresh_response(
-*         EXCEPTIONS
-*           http_action_failed = 1                " Method Execution Failed
-*           others             = 2
-*       ).
-*
-*       IF sy-subrc <> 0.
-**        MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-**          WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-*       ENDIF.
-
       me->_o_http_client->close(
         EXCEPTIONS
-          http_invalid_state = 1                " Invalid state
-          OTHERS             = 2
+          http_invalid_state = 0
+          OTHERS             = 0
       ).
-
-      IF sy-subrc <> 0.
-
-      ENDIF.
 
     ELSE.
 

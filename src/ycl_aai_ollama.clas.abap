@@ -148,7 +148,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
             e_data = me->_ollama_chat_response
         ).
 
-        IF me->_ollama_chat_response-message-tool_calls[] IS NOT INITIAL.
+        IF me->_ollama_chat_response-message-tool_calls[] IS NOT INITIAL AND me->mo_function_calling IS BOUND.
 
           APPEND me->_ollama_chat_response-message TO me->_chat_messages.
 

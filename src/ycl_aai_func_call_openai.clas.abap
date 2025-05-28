@@ -1,19 +1,19 @@
-CLASS ycl_aai_function_calling DEFINITION
+CLASS ycl_aai_func_call_openai DEFINITION
   PUBLIC
   CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    INTERFACES yif_aai_function_calling.
+    INTERFACES yif_aai_func_call_openai.
 
-    ALIASES add_methods   FOR yif_aai_function_calling~add_methods.
-    ALIASES get_tools     FOR yif_aai_function_calling~get_tools.
-    ALIASES reset_methods FOR yif_aai_function_calling~reset_methods.
-    ALIASES remove_method FOR yif_aai_function_calling~remove_method.
-    ALIASES get_arguments FOR yif_aai_function_calling~get_arguments.
-    ALIASES call_tool     FOR yif_aai_function_calling~call_tool.
+    ALIASES add_methods   FOR yif_aai_func_call_openai~add_methods.
+    ALIASES get_tools     FOR yif_aai_func_call_openai~get_tools.
+    ALIASES reset_methods FOR yif_aai_func_call_openai~reset_methods.
+    ALIASES remove_method FOR yif_aai_func_call_openai~remove_method.
+    ALIASES get_arguments FOR yif_aai_func_call_openai~get_arguments.
+    ALIASES call_tool     FOR yif_aai_func_call_openai~call_tool.
 
-    ALIASES mt_methods    FOR yif_aai_function_calling~mt_methods.
+    ALIASES mt_methods    FOR yif_aai_func_call_openai~mt_methods.
 
   PROTECTED SECTION.
 
@@ -23,11 +23,33 @@ ENDCLASS.
 
 
 
-CLASS ycl_aai_function_calling IMPLEMENTATION.
+CLASS ycl_aai_func_call_openai IMPLEMENTATION.
 
-  METHOD yif_aai_function_calling~get_tools.
+  METHOD yif_aai_func_call_openai~add_methods.
 
-    DATA lt_tools TYPE STANDARD TABLE OF yif_aai_function_calling~tool_s.
+    APPEND LINES OF i_t_methods TO me->mt_methods.
+
+    SORT me->mt_methods BY class_name method.
+
+    DELETE ADJACENT DUPLICATES FROM me->mt_methods COMPARING class_name method.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_func_call_openai~remove_method.
+
+    DELETE me->mt_methods WHERE class_name = i_s_method-class_name AND method = i_s_method-method.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_func_call_openai~reset_methods.
+
+    FREE me->mt_methods.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_func_call_openai~get_tools.
+
+    DATA lt_tools TYPE STANDARD TABLE OF yif_aai_func_call_openai~tool_s.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
@@ -42,15 +64,15 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
       APPEND INITIAL LINE TO lt_tools ASSIGNING FIELD-SYMBOL(<ls_tool>).
 
       <ls_tool>-type = 'function'.
-      <ls_tool>-function-name = |{ <ls_method>-class_name }_{ <ls_method>-method }|.
-      <ls_tool>-function-description = <ls_method>-description.
-      <ls_tool>-function-parameters-type = 'object'.
+      <ls_tool>-name = |{ <ls_method>-class_name }_{ <ls_method>-method }|.
+      <ls_tool>-description = <ls_method>-description.
+      <ls_tool>-parameters-type = 'object'.
 
       LOOP AT lt_importing_params ASSIGNING FIELD-SYMBOL(<ls_importing_param>).
 
         IF <ls_importing_param>-required = abap_true.
 
-          APPEND <ls_importing_param>-name TO <ls_tool>-function-parameters-required.
+          APPEND <ls_importing_param>-name TO <ls_tool>-parameters-required.
 
         ENDIF.
 
@@ -63,29 +85,29 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
         DATA(l_tabix) = sy-tabix.
 
         IF l_tabix = 1.
-          <ls_tool>-function-parameters-properties = '{'.
+          <ls_tool>-parameters-properties = '{'.
         ENDIF.
 
         IF l_tabix <> l_last.
 
-          <ls_tool>-function-parameters-properties = <ls_tool>-function-parameters-properties && '"' &&
-                                                     <ls_importing_param>-name &&
-                                                     '":{"type":"' &&
-                                                     <ls_importing_param>-type && '","description":"' && <ls_importing_param>-description && '"},'.
+          <ls_tool>-parameters-properties = <ls_tool>-parameters-properties && '"' &&
+                                            <ls_importing_param>-name &&
+                                            '":{"type":"' &&
+                                            <ls_importing_param>-type && '","description":"' && <ls_importing_param>-description && '"},'.
 
         ELSE.
 
-          <ls_tool>-function-parameters-properties = <ls_tool>-function-parameters-properties && '"' &&
-                                                     <ls_importing_param>-name &&
-                                                     '":{"type":"' &&
-                                                     <ls_importing_param>-type && '","description":"' && <ls_importing_param>-description && '"}}'.
+          <ls_tool>-parameters-properties = <ls_tool>-parameters-properties && '"' &&
+                                            <ls_importing_param>-name &&
+                                            '":{"type":"' &&
+                                            <ls_importing_param>-type && '","description":"' && <ls_importing_param>-description && '"}}'.
 
         ENDIF.
 
       ENDLOOP.
 
       " Example
-      "<ls_tool>-function-parameters-properties = '{"location":{"type":"string","description":"City and country e.g. Bogotá, Colombia"},"unit":{"type":"string", "description":"Temperature unit like Celsius and Fahrenheit"}}'.
+      "<ls_tool>-parameters-properties = '{"location":{"type":"string","description":"City and country e.g. Bogotá, Colombia"},"unit":{"type":"string", "description":"Temperature unit like Celsius and Fahrenheit"}}'.
 
     ENDLOOP.
 
@@ -98,32 +120,10 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_function_calling~add_methods.
-
-    APPEND LINES OF i_t_methods TO me->mt_methods.
-
-    SORT me->mt_methods BY class_name method.
-
-    DELETE ADJACENT DUPLICATES FROM me->mt_methods COMPARING class_name method.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_function_calling~remove_method.
-
-    DELETE me->mt_methods WHERE class_name = i_s_method-class_name AND method = i_s_method-method.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_function_calling~reset_methods.
-
-    FREE me->mt_methods.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_function_calling~get_arguments.
+  METHOD yif_aai_func_call_openai~get_arguments.
 
     DATA: lv_json_string  TYPE string,
-          lt_name_value   TYPE yif_aai_function_calling~arguments_t,
+          lt_name_value   TYPE yif_aai_func_call_openai~arguments_t,
           lo_deserializer TYPE REF TO /ui2/cl_json,
           lr_data         TYPE REF TO data.
 
@@ -150,9 +150,15 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
           lt_components TYPE abap_component_tab,
           ls_component  LIKE LINE OF lt_components.
 
-    lo_strucdescr ?= cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+    TRY.
 
-    lt_components = lo_strucdescr->get_components( ).
+        lo_strucdescr ?= cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+
+        lt_components = lo_strucdescr->get_components( ).
+
+      CATCH cx_sy_move_cast_error.
+
+    ENDTRY.
 
     LOOP AT lt_components INTO ls_component.
 
@@ -174,7 +180,7 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_function_calling~call_tool.
+  METHOD yif_aai_func_call_openai~call_tool.
 
     FIELD-SYMBOLS <l_data> TYPE any.
 
