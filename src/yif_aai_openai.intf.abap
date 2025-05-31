@@ -1,7 +1,7 @@
 INTERFACE yif_aai_openai
   PUBLIC.
 
-  TYPES: BEGIN OF generate_message_s,
+  TYPES: BEGIN OF ty_generate_message_s,
            role      TYPE string,
            content   TYPE string,
            type      TYPE string,
@@ -9,45 +9,45 @@ INTERFACE yif_aai_openai
            arguments TYPE string,
            name      TYPE string,
            output    TYPE string,
-         END OF generate_message_s.
+         END OF ty_generate_message_s.
 
-  TYPES: generate_messages_t TYPE STANDARD TABLE OF generate_message_s WITH EMPTY KEY.
+  TYPES: ty_generate_messages_t TYPE STANDARD TABLE OF ty_generate_message_s WITH EMPTY KEY.
 
-  TYPES: BEGIN OF type_message_s,
+  TYPES: BEGIN OF ty_type_message_s,
            role      TYPE string,
            content   TYPE string,
            type      TYPE string,
-         END OF type_message_s,
+         END OF ty_type_message_s,
 
-         BEGIN OF type_function_call_s,
+         BEGIN OF ty_function_call_s,
            type      TYPE string,
            arguments TYPE string,
            call_id   TYPE string,
            name      TYPE string,
-         END OF type_function_call_s,
+         END OF ty_function_call_s,
 
-         BEGIN OF type_function_call_output_s,
+         BEGIN OF ty_function_call_output_s,
            type      TYPE string,
            call_id   TYPE string,
            output    TYPE string,
-         END OF type_function_call_output_s.
+         END OF ty_function_call_output_s.
 
-  TYPES: BEGIN OF openai_generate_request_s,
+  TYPES: BEGIN OF ty_openai_generate_request_s,
            model       TYPE string,
            stream      TYPE abap_bool,
            temperature TYPE p LENGTH 2 DECIMALS 1,
            input       TYPE /ui2/cl_json=>json,
            tools       TYPE /ui2/cl_json=>json,
-         END OF openai_generate_request_s.
+         END OF ty_openai_generate_request_s.
 
-  TYPES: BEGIN OF content_s,
+  TYPES: BEGIN OF ty_content_s,
            type TYPE string,
            text TYPE string,
-         END OF content_s.
+         END OF ty_content_s.
 
-  TYPES content_t TYPE STANDARD TABLE OF content_s WITH NON-UNIQUE KEY text.
+  TYPES content_t TYPE STANDARD TABLE OF ty_content_s WITH NON-UNIQUE KEY text.
 
-  TYPES: BEGIN OF output_s,
+  TYPES: BEGIN OF ty_output_s,
            id        TYPE string,
            type      TYPE string,
            role      TYPE string,
@@ -57,17 +57,17 @@ INTERFACE yif_aai_openai
            name      TYPE string,
            arguments TYPE /ui2/cl_json=>json,
            output    TYPE string,
-         END OF output_s.
+         END OF ty_output_s.
 
-  TYPES: output_t TYPE STANDARD TABLE OF output_s WITH NON-UNIQUE KEY id.
+  TYPES: ty_output_t TYPE STANDARD TABLE OF ty_output_s WITH NON-UNIQUE KEY id.
 
-  TYPES: BEGIN OF openai_generate_response_s,
+  TYPES: BEGIN OF ty_openai_generate_response_s,
            id          TYPE string,
            status      TYPE string,
            model       TYPE string,
            temperature TYPE string,
-           output      TYPE output_t,
-         END OF openai_generate_response_s.
+           output      TYPE ty_output_t,
+         END OF ty_openai_generate_response_s.
 
   DATA mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY.
 
@@ -89,7 +89,7 @@ INTERFACE yif_aai_openai
 
   METHODS set_history
     IMPORTING
-      i_t_history TYPE generate_messages_t.
+      i_t_history TYPE ty_generate_messages_t.
 
   METHODS get_conversation
     RETURNING

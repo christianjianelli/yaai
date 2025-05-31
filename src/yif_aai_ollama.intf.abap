@@ -1,52 +1,52 @@
 INTERFACE yif_aai_ollama
   PUBLIC.
 
-  TYPES: BEGIN OF function_s,
+  TYPES: BEGIN OF ty_function_s,
            name      TYPE string,
            arguments TYPE /ui2/cl_json=>json,
-         END OF function_s,
+         END OF ty_function_s,
 
-         BEGIN OF tool_calls_s,
-             function TYPE function_s,
-         END OF tool_calls_s,
+         BEGIN OF ty_tool_calls_s,
+             function TYPE ty_function_s,
+         END OF ty_tool_calls_s,
 
-         BEGIN OF chat_message_s,
+         BEGIN OF ty_chat_message_s,
            role    TYPE string,
            content TYPE string,
-           tool_calls TYPE STANDARD TABLE OF tool_calls_s WITH DEFAULT KEY,
-         END OF chat_message_s.
+           tool_calls TYPE STANDARD TABLE OF ty_tool_calls_s WITH DEFAULT KEY,
+         END OF ty_chat_message_s.
 
-  TYPES: chat_messages_t TYPE STANDARD TABLE OF chat_message_s WITH NON-UNIQUE KEY role.
+  TYPES: ty_chat_messages_t TYPE STANDARD TABLE OF ty_chat_message_s WITH NON-UNIQUE KEY role.
 
-  TYPES: BEGIN OF options_s,
+  TYPES: BEGIN OF ty_options_s,
            temperature TYPE p LENGTH 2 DECIMALS 1,
-         END OF options_s,
+         END OF ty_options_s,
 
-         BEGIN OF ollama_generate_request_s,
+         BEGIN OF ty_ollama_generate_request_s,
            model    TYPE string,
            prompt   TYPE string,
            system   TYPE string,
            stream   TYPE abap_bool,
-           options  TYPE options_s,
-         END OF ollama_generate_request_s,
+           options  TYPE ty_options_s,
+         END OF ty_ollama_generate_request_s,
 
-         BEGIN OF ollama_chat_request_s,
+         BEGIN OF ty_ollama_chat_request_s,
            model    TYPE string,
            stream   TYPE abap_bool,
-           messages TYPE chat_messages_t,
+           messages TYPE ty_chat_messages_t,
            tools    TYPE /ui2/cl_json=>json,
-           options  TYPE options_s,
-         END OF ollama_chat_request_s,
+           options  TYPE ty_options_s,
+         END OF ty_ollama_chat_request_s,
 
-         BEGIN OF ollama_generate_response_s,
+         BEGIN OF ty_ollama_generate_response_s,
            model    TYPE string,
            response TYPE string,
-         END OF ollama_generate_response_s,
+         END OF ty_ollama_generate_response_s,
 
-         BEGIN OF ollama_chat_response_s,
+         BEGIN OF ty_ollama_chat_response_s,
            model   TYPE string,
-           message TYPE chat_message_s,
-         END OF ollama_chat_response_s.
+           message TYPE ty_chat_message_s,
+         END OF ty_ollama_chat_response_s.
 
   DATA mo_function_calling TYPE REF TO yif_aai_function_calling READ-ONLY.
 

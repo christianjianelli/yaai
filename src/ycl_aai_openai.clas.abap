@@ -29,7 +29,7 @@ CLASS ycl_aai_openai DEFINITION
     METHODS constructor
       IMPORTING
         i_model     TYPE csequence OPTIONAL
-        i_t_history TYPE yif_aai_openai~generate_messages_t OPTIONAL.
+        i_t_history TYPE yif_aai_openai~ty_generate_messages_t OPTIONAL.
 
   PROTECTED SECTION.
 
@@ -37,9 +37,9 @@ CLASS ycl_aai_openai DEFINITION
 
     DATA: _model                    TYPE string,
           _temperature              TYPE p LENGTH 2 DECIMALS 1,
-          _openai_generate_request  TYPE yif_aai_openai~openai_generate_request_s,
-          _openai_generate_response TYPE yif_aai_openai~openai_generate_response_s,
-          _messages                 TYPE yif_aai_openai~generate_messages_t.
+          _openai_generate_request  TYPE yif_aai_openai~ty_openai_generate_request_s,
+          _openai_generate_response TYPE yif_aai_openai~ty_openai_generate_response_s,
+          _messages                 TYPE yif_aai_openai~ty_generate_messages_t.
 
 ENDCLASS.
 
@@ -134,10 +134,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         FREE me->_openai_generate_response.
 
-        DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~openai_generate_request_s( model = me->_model
-                                                                                                        stream = abap_false
-                                                                                                        input = me->get_conversation( )
-                                                                                                        tools = l_tools ) ).
+        DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_generate_request_s( model = me->_model
+                                                                                                           stream = abap_false
+                                                                                                           input = me->get_conversation( )
+                                                                                                           tools = l_tools ) ).
 
         lo_aai_conn->set_body( l_json ).
 
@@ -172,7 +172,6 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
          " This deserialization is necessary because we need to parse the string passed in the arguments to a JSON.
          " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
-         " So the MO_FUNCTION_CALLING->GET_ARGUMENTS method can extract the arguments from the JSON.
           lo_aai_util->deserialize(
             EXPORTING
               i_json = <ls_output>-arguments
@@ -182,21 +181,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
           ASSIGN lr_data->* TO <l_data>.
 
-          IF <l_data> IS ASSIGNED.
-
-            me->mo_function_calling->get_arguments(
-              EXPORTING
-                i_json        = <l_data>
-              IMPORTING
-                e_t_arguments = DATA(lt_arguments)
-            ).
-
-          ENDIF.
-
           me->mo_function_calling->call_tool(
             EXPORTING
               i_tool_name   = to_upper( <ls_output>-name )
-              i_t_arguments = lt_arguments
+              i_json        = <l_data>
             RECEIVING
               r_response    = DATA(l_tool_response)
           ).
@@ -270,19 +258,19 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         WHEN 'message'.
 
-          DATA(ls_message) = CORRESPONDING yif_aai_openai~type_message_s( <ls_message> ).
+          DATA(ls_message) = CORRESPONDING yif_aai_openai~ty_type_message_s( <ls_message> ).
 
           l_json = lo_aai_util->serialize( ls_message ).
 
         WHEN 'function_call'.
 
-          DATA(ls_function_call) = CORRESPONDING yif_aai_openai~type_function_call_s( <ls_message> ).
+          DATA(ls_function_call) = CORRESPONDING yif_aai_openai~ty_function_call_s( <ls_message> ).
 
           l_json = lo_aai_util->serialize( ls_function_call ).
 
         WHEN 'function_call_output'.
 
-          DATA(ls_function_call_output) = CORRESPONDING yif_aai_openai~type_function_call_output_s( <ls_message> ).
+          DATA(ls_function_call_output) = CORRESPONDING yif_aai_openai~ty_function_call_output_s( <ls_message> ).
 
           l_json = lo_aai_util->serialize( ls_function_call_output ).
 
@@ -307,9 +295,9 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD if_oo_adt_classrun~main.
 
-    DATA(lt_history) = VALUE yif_aai_openai~generate_messages_t( ( role = 'user' content = 'What is the weather like in Paris today?' type = 'message' )
-                                                                 ( type = 'function_call' arguments = '{\"location\":\"Paris, France\"}' call_id = 'call_dakeZtJNEjLML0ZkSeQCP2od' name = 'get_weather' )
-                                                                 ( type = 'function_call_output' call_id = 'call_dakeZtJNEjLML0ZkSeQCP2od' output = 'Sunny, 24ºC' ) ).
+    DATA(lt_history) = VALUE yif_aai_openai~ty_generate_messages_t( ( role = 'user' content = 'What is the weather like in Paris today?' type = 'message' )
+                                                                    ( type = 'function_call' arguments = '{\"location\":\"Paris, France\"}' call_id = 'call_dakeZtJNEjLML0ZkSeQCP2od' name = 'get_weather' )
+                                                                    ( type = 'function_call_output' call_id = 'call_dakeZtJNEjLML0ZkSeQCP2od' output = 'Sunny, 24ºC' ) ).
 
     me->set_history( lt_history ).
 

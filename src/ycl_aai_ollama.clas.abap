@@ -34,9 +34,9 @@ CLASS ycl_aai_ollama DEFINITION
     DATA: _model                    TYPE string,
           _temperature              TYPE p LENGTH 2 DECIMALS 1,
           _system_instructions      TYPE string,
-          _ollama_chat_response     TYPE yif_aai_ollama~ollama_chat_response_s,
-          _ollama_generate_response TYPE yif_aai_ollama~ollama_generate_response_s,
-          _chat_messages            TYPE yif_aai_ollama~chat_messages_t.
+          _ollama_chat_response     TYPE yif_aai_ollama~ty_ollama_chat_response_s,
+          _ollama_generate_response TYPE yif_aai_ollama~ty_ollama_generate_response_s,
+          _chat_messages            TYPE yif_aai_ollama~ty_chat_messages_t.
 
 ENDCLASS.
 
@@ -127,10 +127,10 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         FREE me->_ollama_chat_response.
 
-        DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ollama_chat_request_s( model = me->_model
-                                                                                                    options = VALUE #( temperature = me->_temperature )
-                                                                                                    messages = me->_chat_messages
-                                                                                                    tools = l_tools ) ).
+        DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_chat_request_s( model = me->_model
+                                                                                                       options = VALUE #( temperature = me->_temperature )
+                                                                                                       messages = me->_chat_messages
+                                                                                                       tools = l_tools ) ).
 
         lo_aai_conn->set_body( l_json ).
 
@@ -154,24 +154,15 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
           LOOP AT me->_ollama_chat_response-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool>).
 
-            me->mo_function_calling->get_arguments(
-              EXPORTING
-                i_json        = <ls_tool>-function-arguments
-              IMPORTING
-                e_t_arguments = DATA(lt_arguments)
-            ).
-
             me->mo_function_calling->call_tool(
               EXPORTING
                 i_tool_name   = to_upper( <ls_tool>-function-name )
-                i_t_arguments = lt_arguments
+                i_json        = <ls_tool>-function-arguments
               RECEIVING
                 r_response    = DATA(l_tool_response)
             ).
 
             APPEND VALUE #( role = 'tool' content = l_tool_response ) TO me->_chat_messages.
-
-            FREE lt_arguments.
 
           ENDLOOP.
 
@@ -215,7 +206,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
-      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ollama_generate_request_s( model = me->_model
+      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_generate_request_s( model = me->_model
                                                                                                       prompt = i_message
                                                                                                       stream = abap_false ) ).
 
