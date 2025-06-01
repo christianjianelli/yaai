@@ -10,7 +10,6 @@ CLASS ycl_aai_util DEFINITION
              format      TYPE string,
              required    TYPE abap_bool,
              description TYPE string,
-             "o_elemdescr TYPE REF TO cl_abap_elemdescr,
            END OF ty_importing_params_s,
 
            ty_importing_params_tt TYPE STANDARD TABLE OF ty_importing_params_s WITH EMPTY KEY.
@@ -87,7 +86,7 @@ CLASS ycl_aai_util IMPLEMENTATION.
     r_json = /ui2/cl_json=>serialize(
      EXPORTING
        data = i_data
-*       compress         =
+       compress         = abap_false
 *       name             =
        pretty_name      = /ui2/cl_json=>pretty_mode-low_case
 *       type_descr       =
@@ -108,7 +107,7 @@ CLASS ycl_aai_util IMPLEMENTATION.
       EXPORTING
         json             = i_json          " JSON string
 *      jsonx            =                  " JSON XString
-*      pretty_name      =                  " Pretty Print property names
+       pretty_name      = abap_true        " Pretty Print property names
 *      assoc_arrays     =                  " Deserialize associative array as tables with unique keys
 *      assoc_arrays_opt =                  " Optimize rendering of name value maps
 *      name_mappings    =                  " ABAP<->JSON Name Mapping Table
@@ -430,6 +429,12 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
             ENDIF.
 
+            APPEND VALUE #( name = <ls_parameter>-name
+                            type = me->get_parameter_type( i_o_type_descr = lo_elem_descr )
+                            format = me->get_parameter_format( i_o_type_descr = lo_elem_descr )
+                            required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
+                            description = ls_flddescr-fieldtext ) TO e_t_importing_params.
+
           WHEN 'S'. " Structure
 
             lo_structdescr ?= lo_descr_ref.
@@ -445,6 +450,12 @@ CLASS ycl_aai_util IMPLEMENTATION.
                 INTO @ls_flddescr-fieldtext.
 
             ENDIF.
+
+            APPEND VALUE #( name = <ls_parameter>-name
+                            type = 'object'
+                            format = space
+                            required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
+                            description = ls_flddescr-fieldtext ) TO e_t_importing_params.
 
           WHEN 'T'. " Table Type
 
@@ -462,13 +473,13 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
             ENDIF.
 
-        ENDCASE.
+            APPEND VALUE #( name = <ls_parameter>-name
+                            type = 'array'
+                            format = space
+                            required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
+                            description = ls_flddescr-fieldtext ) TO e_t_importing_params.
 
-        APPEND VALUE #( name = <ls_parameter>-name
-                        type = me->get_parameter_type( i_o_type_descr = lo_elem_descr )
-                        format = me->get_parameter_format( i_o_type_descr = lo_elem_descr )
-                        required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
-                        description = ls_flddescr-fieldtext ) TO e_t_importing_params.
+        ENDCASE.
 
       ENDIF.
 
@@ -678,15 +689,6 @@ CLASS ycl_aai_util IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD if_oo_adt_classrun~main.
-
-*    me->get_method_importing_params(
-*      EXPORTING
-*        i_class_name         = 'ZCL_MATH'
-*        i_method_name        = 'ADD'
-*      IMPORTING
-*        e_t_importing_params = DATA(lt_importing_params)
-*        e_t_components       = DATA(lt_components)
-*    ).
 
   ENDMETHOD.
 

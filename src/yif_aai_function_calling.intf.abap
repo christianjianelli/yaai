@@ -18,13 +18,6 @@ INTERFACE yif_aai_function_calling
            function TYPE ty_function_s,
          END OF ty_tool_s,
 
-*         BEGIN OF ty_arguments_s,
-*           name  TYPE string,
-*           value TYPE string,
-*         END OF ty_arguments_s,
-*
-*         ty_arguments_t TYPE STANDARD TABLE OF ty_arguments_s WITH EMPTY KEY,
-
          BEGIN OF ty_method_s,
            class_name  TYPE string,
            method_name TYPE string,
@@ -43,17 +36,10 @@ INTERFACE yif_aai_function_calling
 
   METHODS remove_method IMPORTING i_s_method TYPE ty_method_s.
 
-*  METHODS get_arguments IMPORTING i_json        TYPE csequence
-*                        EXPORTING e_t_arguments TYPE ty_arguments_t.
-
   METHODS call_tool
     IMPORTING
               i_tool_name       TYPE string
               i_json            TYPE /ui2/cl_json=>json
     RETURNING VALUE(r_response) TYPE string.
-
-*  METHODS call_tool IMPORTING i_tool_name       TYPE string
-*                              i_t_arguments     TYPE ty_arguments_t
-*                    RETURNING VALUE(r_response) TYPE string.
 
 ENDINTERFACE.

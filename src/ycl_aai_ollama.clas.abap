@@ -92,6 +92,10 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   METHOD yif_aai_ollama~chat.
 
+    FIELD-SYMBOLS <l_data> TYPE string.
+
+    DATA lr_data TYPE REF TO data.
+
     DATA l_tools TYPE string VALUE '[]'.
 
     CLEAR e_response.
@@ -153,6 +157,14 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           APPEND me->_ollama_chat_response-message TO me->_chat_messages.
 
           LOOP AT me->_ollama_chat_response-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool>).
+
+            " For some reason, probably a bug in Ollama API, part of the arguments in the JSON are passed as escaped strings.
+            " Because just part of the JSON has to be unescaped it is not possible to use the proper deserialize method.
+            " So the workaround is to unescape the JSON using the replaces below.
+            " Hopefully the Ollama API bug will be fixed and this workaround can be removed.
+            REPLACE ALL OCCURRENCES OF '\"' IN <ls_tool>-function-arguments WITH '"'.
+            REPLACE ALL OCCURRENCES OF '"[' IN <ls_tool>-function-arguments WITH '['.
+            REPLACE ALL OCCURRENCES OF ']"' IN <ls_tool>-function-arguments WITH ']'.
 
             me->mo_function_calling->call_tool(
               EXPORTING

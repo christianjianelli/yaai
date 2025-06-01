@@ -10,9 +10,7 @@ CLASS ycl_aai_function_calling DEFINITION
     ALIASES get_tools     FOR yif_aai_function_calling~get_tools.
     ALIASES reset_methods FOR yif_aai_function_calling~reset_methods.
     ALIASES remove_method FOR yif_aai_function_calling~remove_method.
-*    ALIASES get_arguments FOR yif_aai_function_calling~get_arguments.
     ALIASES call_tool     FOR yif_aai_function_calling~call_tool.
-
     ALIASES mt_methods    FOR yif_aai_function_calling~mt_methods.
 
   PROTECTED SECTION.
@@ -23,88 +21,7 @@ ENDCLASS.
 
 
 
-CLASS ycl_aai_function_calling IMPLEMENTATION.
-
-  METHOD yif_aai_function_calling~get_tools.
-
-    DATA lt_tools TYPE STANDARD TABLE OF yif_aai_function_calling~ty_tool_s.
-
-    DATA(lo_aai_util) = NEW ycl_aai_util( ).
-
-    LOOP AT me->mt_methods ASSIGNING FIELD-SYMBOL(<ls_method>).
-
-      lo_aai_util->get_method_importing_params(
-        EXPORTING
-          i_class_name         = <ls_method>-class_name
-          i_method_name        = <ls_method>-method_name
-        IMPORTING
-          e_t_importing_params = DATA(lt_importing_params)
-      ).
-
-      APPEND INITIAL LINE TO lt_tools ASSIGNING FIELD-SYMBOL(<ls_tool>).
-
-      <ls_tool>-type = 'function'.
-      <ls_tool>-function-name = |{ <ls_method>-class_name }_{ <ls_method>-method_name }|.
-      <ls_tool>-function-description = <ls_method>-description.
-      <ls_tool>-function-parameters-type = 'object'.
-
-      LOOP AT lt_importing_params ASSIGNING FIELD-SYMBOL(<ls_importing_param>).
-
-        IF <ls_importing_param>-required = abap_true.
-
-          APPEND <ls_importing_param>-name TO <ls_tool>-function-parameters-required.
-
-        ENDIF.
-
-      ENDLOOP.
-
-      <ls_tool>-function-parameters-properties = lo_aai_util->get_json_schema(
-        EXPORTING
-          i_class_name  = <ls_method>-class_name
-          i_method_name = <ls_method>-method_name
-      ).
-
-*      DATA(l_last) = lines( lt_importing_params ).
-*
-*      LOOP AT lt_importing_params ASSIGNING <ls_importing_param>.
-*
-*        DATA(l_tabix) = sy-tabix.
-*
-*        IF l_tabix = 1.
-*          <ls_tool>-function-parameters-properties = '{'.
-*        ENDIF.
-*
-*        IF l_tabix <> l_last.
-*
-*          <ls_tool>-function-parameters-properties = <ls_tool>-function-parameters-properties && '"' &&
-*                                                     <ls_importing_param>-name &&
-*                                                     '":{"type":"' &&
-*                                                     <ls_importing_param>-type && '","description":"' && <ls_importing_param>-description && '"},'.
-*
-*        ELSE.
-*
-*          <ls_tool>-function-parameters-properties = <ls_tool>-function-parameters-properties && '"' &&
-*                                                     <ls_importing_param>-name &&
-*                                                     '":{"type":"' &&
-*                                                     <ls_importing_param>-type && '","description":"' && <ls_importing_param>-description && '"}}'.
-*
-*        ENDIF.
-*
-*      ENDLOOP.
-
-      " Example
-      "<ls_tool>-function-parameters-properties = '{"location":{"type":"string","description":"City and country e.g. Bogotá, Colombia"},"unit":{"type":"string", "description":"Temperature unit like Celsius and Fahrenheit"}}'.
-
-    ENDLOOP.
-
-    IF lt_tools[] IS INITIAL.
-      e_tools = '[]'.
-      RETURN.
-    ENDIF.
-
-    e_tools = NEW ycl_aai_util( )->serialize( i_data = lt_tools ).
-
-  ENDMETHOD.
+CLASS YCL_AAI_FUNCTION_CALLING IMPLEMENTATION.
 
   METHOD yif_aai_function_calling~add_methods.
 
@@ -116,17 +33,6 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_function_calling~remove_method.
-
-    DELETE me->mt_methods WHERE class_name = i_s_method-class_name AND method_name = i_s_method-method_name.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_function_calling~reset_methods.
-
-    FREE me->mt_methods.
-
-  ENDMETHOD.
 
   METHOD yif_aai_function_calling~call_tool.
 
@@ -210,11 +116,11 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
     ENDIF.
 
     " Deserialize the JSON passing its data to the corresponding importing parameters of the method that is going to be called
-    /ui2/cl_json=>deserialize(
+    lo_aai_util->deserialize(
       EXPORTING
-        json = i_json
-      CHANGING
-        data = <ls_data>
+        i_json = i_json
+      IMPORTING
+        e_data = <ls_data>
     ).
 
     " Fill the parameters table to dynamically pass the importing parameters in the method call
@@ -268,4 +174,68 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD yif_aai_function_calling~get_tools.
+
+    DATA lt_tools TYPE STANDARD TABLE OF yif_aai_function_calling~ty_tool_s.
+
+    DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+    LOOP AT me->mt_methods ASSIGNING FIELD-SYMBOL(<ls_method>).
+
+      lo_aai_util->get_method_importing_params(
+        EXPORTING
+          i_class_name         = <ls_method>-class_name
+          i_method_name        = <ls_method>-method_name
+        IMPORTING
+          e_t_importing_params = DATA(lt_importing_params)
+      ).
+
+      APPEND INITIAL LINE TO lt_tools ASSIGNING FIELD-SYMBOL(<ls_tool>).
+
+      <ls_tool>-type = 'function'.
+      <ls_tool>-function-name = |{ <ls_method>-class_name }_{ <ls_method>-method_name }|.
+      <ls_tool>-function-description = <ls_method>-description.
+      <ls_tool>-function-parameters-type = 'object'.
+
+      LOOP AT lt_importing_params ASSIGNING FIELD-SYMBOL(<ls_importing_param>).
+
+        IF <ls_importing_param>-required = abap_true.
+
+          APPEND <ls_importing_param>-name TO <ls_tool>-function-parameters-required.
+
+        ENDIF.
+
+      ENDLOOP.
+
+      <ls_tool>-function-parameters-properties = lo_aai_util->get_json_schema(
+        EXPORTING
+          i_class_name  = <ls_method>-class_name
+          i_method_name = <ls_method>-method_name
+      ).
+
+    ENDLOOP.
+
+    IF lt_tools[] IS INITIAL.
+      e_tools = '[]'.
+      RETURN.
+    ENDIF.
+
+    e_tools = NEW ycl_aai_util( )->serialize( i_data = lt_tools ).
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_function_calling~remove_method.
+
+    DELETE me->mt_methods WHERE class_name = i_s_method-class_name AND method_name = i_s_method-method_name.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_function_calling~reset_methods.
+
+    FREE me->mt_methods.
+
+  ENDMETHOD.
 ENDCLASS.

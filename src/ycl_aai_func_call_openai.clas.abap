@@ -12,7 +12,6 @@ CLASS ycl_aai_func_call_openai DEFINITION
     ALIASES get_tools     FOR yif_aai_func_call_openai~get_tools.
     ALIASES reset_methods FOR yif_aai_func_call_openai~reset_methods.
     ALIASES remove_method FOR yif_aai_func_call_openai~remove_method.
-*    ALIASES get_arguments FOR yif_aai_func_call_openai~get_arguments.
     ALIASES call_tool     FOR yif_aai_func_call_openai~call_tool.
 
     ALIASES mt_methods    FOR yif_aai_func_call_openai~mt_methods.
@@ -223,81 +222,6 @@ CLASS ycl_aai_func_call_openai IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD if_oo_adt_classrun~main.
-
-*    me->add_methods( i_t_methods = VALUE #( ( class_name = 'ZCL_JSON2ABAP_TOOL_TEST' method_name = 'TOOL1' ) ) ).
-*
-*    me->get_tools(
-*      IMPORTING
-*        e_tools = DATA(l_tools_json)
-*    ).
-*
-*    out->write( l_tools_json ).
-
-*    DATA l_json TYPE string.
-*
-*    DATA(lo_aai_util) = NEW ycl_aai_util( ).
-*
-*    lo_aai_util->get_method_importing_params(
-*      EXPORTING
-*        i_class_name         = 'ZCL_MATH'
-*        i_method_name        = 'ADD'
-*      IMPORTING
-*        e_t_components       = DATA(lt_components)
-*    ).
-*
-*    l_json = '{"I_VAL1": 1, "I_VAL2": 2}'.
-*
-*    me->call_tool(
-*      EXPORTING
-*        i_class_name   = 'ZCL_MATH'
-*        i_method_name  = 'ADD'
-*        i_json         = l_json
-*        i_t_components = lt_components
-*      RECEIVING
-*        r_response     = DATA(l_response)
-*    ).
-*
-*    out->write( l_response ).
-*
-*    FREE lt_components.
-*
-*    lo_aai_util->get_method_importing_params(
-*      EXPORTING
-*        i_class_name         = 'ZCL_JSON2ABAP_TOOL_TEST'
-*        i_method_name        = 'TOOL1'
-*      IMPORTING
-*        e_t_components       = lt_components
-*    ).
-*
-*    l_json = '{'.
-*    l_json = l_json && '"I_T000":{'.
-*    l_json = l_json && '"MTEXT":"blabla",'.
-*    l_json = l_json && '"ORT01":"xtpo"'.
-*    l_json = l_json && '},'.
-*    l_json = l_json && '"I_MSG":{'.
-*    l_json = l_json && '"MESSAGE":"my message 1",'.
-*    l_json = l_json && '"NUMBER":"01"'.
-*    l_json = l_json && '},'.
-*    l_json = l_json && '"I_T_ADDR":[{'.
-*    l_json = l_json && '"EMAIL":"christianjianelli@sapo.pt",'.
-*    l_json = l_json && '"ADDRESS":"R. XPTO, 123, Ericeira"'.
-*    l_json = l_json && '},{'.
-*    l_json = l_json && '"EMAIL":"christian.jianelli@sapo.pt",'.
-*    l_json = l_json && '"ADDRESS":"R. Fulano da Silva, 9, Peniche"'.
-*    l_json = l_json && '}]'.
-*    l_json = l_json && '}'.
-*
-*    me->call_tool(
-*      EXPORTING
-*        i_class_name   = 'ZCL_JSON2ABAP_TOOL_TEST'
-*        i_method_name  = 'TOOL1'
-*        i_json         = l_json
-*        i_t_components = lt_components
-*      RECEIVING
-*        r_response     = l_response
-*    ).
-*
-*    out->write( l_response ).
 
   ENDMETHOD.
 
