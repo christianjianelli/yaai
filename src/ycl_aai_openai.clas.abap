@@ -239,7 +239,8 @@ CLASS ycl_aai_openai IMPLEMENTATION.
             <ls_content>-text = lo_aai_util->replace_unicode_escape_seq( <ls_content>-text ).
 
             APPEND VALUE #( role = <ls_output>-role
-                            content = <ls_content>-text ) TO me->_messages.
+                            content = <ls_content>-text
+                            type = <ls_output>-type ) TO me->_messages.
 
             e_response = e_response && <ls_content>-text.
 
