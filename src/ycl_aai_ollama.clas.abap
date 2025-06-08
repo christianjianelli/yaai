@@ -5,6 +5,7 @@ CLASS ycl_aai_ollama DEFINITION
   PUBLIC SECTION.
 
     INTERFACES yif_aai_ollama.
+    INTERFACES yif_aai_chat.
 
     ALIASES set_model FOR yif_aai_ollama~set_model.
     ALIASES set_temperature FOR yif_aai_ollama~set_temperature.
@@ -13,6 +14,8 @@ CLASS ycl_aai_ollama DEFINITION
     ALIASES chat FOR yif_aai_ollama~chat.
     ALIASES generate FOR yif_aai_ollama~generate.
     ALIASES embed FOR yif_aai_ollama~embed.
+    ALIASES get_chat_messages FOR yif_aai_ollama~get_chat_messages.
+
     ALIASES mo_function_calling FOR yif_aai_ollama~mo_function_calling.
 
 
@@ -90,6 +93,20 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD yif_aai_chat~chat.
+
+    me->chat(
+      EXPORTING
+        i_message    = i_message
+        i_new        = i_new
+        i_greeting   = i_greeting
+      IMPORTING
+        e_response   = e_response
+        e_t_response = e_t_response
+    ).
+
+  ENDMETHOD.
+
   METHOD yif_aai_ollama~chat.
 
     FIELD-SYMBOLS <l_data> TYPE string.
@@ -107,7 +124,15 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
     ENDIF.
 
     IF i_new = abap_true.
+
       FREE me->_chat_messages.
+
+      IF i_greeting IS NOT INITIAL.
+
+        APPEND VALUE #( role = 'assistant' content = i_greeting ) TO me->_chat_messages.
+
+      ENDIF.
+
     ENDIF.
 
     APPEND VALUE #( role = 'user' content = i_message ) TO me->_chat_messages.
@@ -219,8 +244,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
       DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
       DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_generate_request_s( model = me->_model
-                                                                                                      prompt = i_message
-                                                                                                      stream = abap_false ) ).
+                                                                                                         prompt = i_message
+                                                                                                         stream = abap_false ) ).
 
       lo_aai_conn->set_body( l_json ).
 
@@ -253,6 +278,12 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD yif_aai_ollama~embed.
+
+  ENDMETHOD.
+
+  METHOD get_chat_messages.
+
+    rt_messages = me->_chat_messages.
 
   ENDMETHOD.
 

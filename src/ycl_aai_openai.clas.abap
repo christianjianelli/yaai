@@ -4,9 +4,8 @@ CLASS ycl_aai_openai DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACES if_oo_adt_classrun.
-
     INTERFACES yif_aai_openai.
+    INTERFACES yif_aai_chat.
 
     ALIASES set_model FOR yif_aai_openai~set_model.
     ALIASES set_temperature FOR yif_aai_openai~set_temperature.
@@ -93,6 +92,20 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD yif_aai_chat~chat.
+
+    me->generate(
+      EXPORTING
+        i_message    = i_message
+        i_new        = i_new
+        i_greeting   = i_greeting
+      IMPORTING
+        e_response   = e_response
+        e_t_response = e_t_response
+    ).
+
+  ENDMETHOD.
+
   METHOD yif_aai_openai~generate.
 
     FIELD-SYMBOLS <l_data> TYPE string.
@@ -109,7 +122,19 @@ CLASS ycl_aai_openai IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    FREE me->_messages.
+    IF i_new = abap_true.
+
+      FREE me->_messages.
+
+      IF i_greeting IS NOT INITIAL.
+
+        APPEND VALUE #( role = 'assistant'
+                        content = i_greeting
+                        type = 'message' ) TO me->_messages.
+
+      ENDIF.
+
+    ENDIF.
 
     APPEND VALUE #( role = 'user'
                     content = i_message
@@ -170,8 +195,8 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                           call_id = <ls_output>-call_id
                           name = <ls_output>-name ) TO me->_messages.
 
-         " This deserialization is necessary because we need to parse the string passed in the arguments to a JSON.
-         " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
+          " This deserialization is necessary because we need to parse the string passed in the arguments to a JSON.
+          " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
           lo_aai_util->deserialize(
             EXPORTING
               i_json = <ls_output>-arguments
@@ -290,20 +315,6 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD yif_aai_openai~embed.
-
-  ENDMETHOD.
-
-  METHOD if_oo_adt_classrun~main.
-
-    DATA(lt_history) = VALUE yif_aai_openai~ty_generate_messages_t( ( role = 'user' content = 'What is the weather like in Paris today?' type = 'message' )
-                                                                    ( type = 'function_call' arguments = '{\"location\":\"Paris, France\"}' call_id = 'call_dakeZtJNEjLML0ZkSeQCP2od' name = 'get_weather' )
-                                                                    ( type = 'function_call_output' call_id = 'call_dakeZtJNEjLML0ZkSeQCP2od' output = 'Sunny, 24ºC' ) ).
-
-    me->set_history( lt_history ).
-
-    DATA(r_conversation) = me->get_conversation( ).
-
-    out->write( r_conversation ).
 
   ENDMETHOD.
 

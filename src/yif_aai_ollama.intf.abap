@@ -70,6 +70,7 @@ INTERFACE yif_aai_ollama
     IMPORTING
       i_message    TYPE csequence
       i_new        TYPE abap_bool DEFAULT abap_false
+      i_greeting   TYPE csequence OPTIONAL
     EXPORTING
       e_response   TYPE string
       e_t_response TYPE rswsourcet.
@@ -86,5 +87,8 @@ INTERFACE yif_aai_ollama
       i_message  TYPE string
     EXPORTING
       e_response TYPE string.
+
+  METHODS get_chat_messages
+    RETURNING VALUE(rt_messages) TYPE ty_chat_messages_t.
 
 ENDINTERFACE.
