@@ -69,6 +69,27 @@ INTERFACE yif_aai_openai
            output      TYPE ty_output_t,
          END OF ty_openai_generate_response_s.
 
+  TYPES: BEGIN OF ty_openai_embed_request_s,
+           input       TYPE string,
+           model       TYPE string,
+         END OF ty_openai_embed_request_s.
+
+  TYPES: ty_embedding_t TYPE STANDARD TABLE OF f WITH DEFAULT KEY.
+
+  TYPES: BEGIN OF ty_openai_embed_data_s,
+           object      TYPE string,
+           embedding   TYPE ty_embedding_t,
+           index       TYPE i,
+         END OF ty_openai_embed_data_s.
+
+  TYPES: ty_openai_embed_data_t TYPE STANDARD TABLE OF ty_openai_embed_data_s WITH DEFAULT KEY.
+
+  TYPES: BEGIN OF ty_openai_embed_response_s,
+           object      TYPE string,
+           data        TYPE ty_openai_embed_data_t,
+           model       TYPE string,
+         END OF ty_openai_embed_response_s.
+
   DATA mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY.
 
   METHODS set_model
@@ -106,8 +127,8 @@ INTERFACE yif_aai_openai
 
   METHODS embed
     IMPORTING
-      i_message  TYPE csequence
+      i_input      TYPE csequence
     EXPORTING
-      e_response TYPE string.
+      e_s_response TYPE ty_openai_embed_response_s.
 
 ENDINTERFACE.

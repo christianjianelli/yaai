@@ -13,6 +13,7 @@ INTERFACE yif_aai_const
   " OpenAI
   CONSTANTS: c_openai                   TYPE string VALUE 'OPENAI',
              c_openai_base_url_param    TYPE string VALUE 'YAAI_OPENAI_BASE_URL',
-             c_openai_generate_endpoint TYPE string VALUE '/v1/responses'.
+             c_openai_generate_endpoint TYPE string VALUE '/v1/responses',
+             c_openai_embed_endpoint    TYPE string VALUE '/v1/embeddings'.
 
 ENDINTERFACE.

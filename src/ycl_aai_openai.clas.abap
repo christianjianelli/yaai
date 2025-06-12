@@ -36,6 +36,7 @@ CLASS ycl_aai_openai DEFINITION
 
     DATA: _model                    TYPE string,
           _temperature              TYPE p LENGTH 2 DECIMALS 1,
+          _system_instructions      TYPE string,
           _openai_generate_request  TYPE yif_aai_openai~ty_openai_generate_request_s,
           _openai_generate_response TYPE yif_aai_openai~ty_openai_generate_response_s,
           _messages                 TYPE yif_aai_openai~ty_generate_messages_t.
@@ -82,7 +83,9 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD yif_aai_openai~set_system_instructions.
 
-    APPEND VALUE #( role = 'developer' content = i_system_instructions ) TO me->_messages.
+    "APPEND VALUE #( role = 'developer' content = i_system_instructions ) TO me->_messages.
+
+    me->_system_instructions = i_system_instructions.
 
   ENDMETHOD.
 
@@ -125,6 +128,14 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     IF i_new = abap_true.
 
       FREE me->_messages.
+
+      IF me->_system_instructions IS NOT INITIAL.
+
+        APPEND VALUE #( role = 'developer'
+                        content = me->_system_instructions
+                        type = 'message' ) TO me->_messages.
+
+      ENDIF.
 
       IF i_greeting IS NOT INITIAL.
 
@@ -308,7 +319,6 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         r_conversation = |{ r_conversation }, { l_json }|.
       ENDIF.
 
-
     ENDLOOP.
 
     r_conversation = |[{ r_conversation }]|.
@@ -316,6 +326,33 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD yif_aai_openai~embed.
+
+    DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
+
+    IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_openai_embed_endpoint ).
+
+      DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_embed_request_s( model = me->_model
+                                                                                                      input = i_input ) ).
+
+      lo_aai_conn->set_body( l_json ).
+
+      FREE l_json.
+
+      lo_aai_conn->do_receive(
+        IMPORTING
+          e_response = l_json
+      ).
+
+      lo_aai_util->deserialize(
+        EXPORTING
+          i_json = l_json
+        IMPORTING
+          e_data = e_s_response
+      ).
+
+    ENDIF.
 
   ENDMETHOD.
 

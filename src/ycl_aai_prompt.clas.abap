@@ -52,7 +52,7 @@ CLASS ycl_aai_prompt IMPLEMENTATION.
       ENDIF.
 
       "A 'Mustache' like pattern is used here
-      DATA(l_placeholder) = '{{' && <ls_component>-name && '}}'.
+      DATA(l_placeholder) = condense( '{{' && <ls_component>-name && '}}' ).
 
       REPLACE ALL OCCURRENCES OF l_placeholder IN l_template_text WITH <l_component>.
 
