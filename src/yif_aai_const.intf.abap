@@ -8,7 +8,8 @@ INTERFACE yif_aai_const
   CONSTANTS: c_ollama                   TYPE string VALUE 'OLLAMA',
              c_ollama_base_url_param    TYPE string VALUE 'YAAI_OLLAMA_BASE_URL',
              c_ollama_generate_endpoint TYPE string VALUE '/api/generate',
-             c_ollama_chat_endpoint     TYPE string VALUE '/api/chat'.
+             c_ollama_chat_endpoint     TYPE string VALUE '/api/chat',
+             c_ollama_embed_endpoint    TYPE string VALUE '/api/embed'.
 
   " OpenAI
   CONSTANTS: c_openai                   TYPE string VALUE 'OPENAI',

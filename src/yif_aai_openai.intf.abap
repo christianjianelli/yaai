@@ -14,9 +14,9 @@ INTERFACE yif_aai_openai
   TYPES: ty_generate_messages_t TYPE STANDARD TABLE OF ty_generate_message_s WITH EMPTY KEY.
 
   TYPES: BEGIN OF ty_type_message_s,
-           role      TYPE string,
-           content   TYPE string,
-           type      TYPE string,
+           role    TYPE string,
+           content TYPE string,
+           type    TYPE string,
          END OF ty_type_message_s,
 
          BEGIN OF ty_function_call_s,
@@ -27,9 +27,9 @@ INTERFACE yif_aai_openai
          END OF ty_function_call_s,
 
          BEGIN OF ty_function_call_output_s,
-           type      TYPE string,
-           call_id   TYPE string,
-           output    TYPE string,
+           type    TYPE string,
+           call_id TYPE string,
+           output  TYPE string,
          END OF ty_function_call_output_s.
 
   TYPES: BEGIN OF ty_openai_generate_request_s,
@@ -70,27 +70,27 @@ INTERFACE yif_aai_openai
          END OF ty_openai_generate_response_s.
 
   TYPES: BEGIN OF ty_openai_embed_request_s,
-           input       TYPE string,
-           model       TYPE string,
+           model TYPE string,
+           input TYPE string,
          END OF ty_openai_embed_request_s.
 
   TYPES: ty_embedding_t TYPE STANDARD TABLE OF f WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_openai_embed_data_s,
-           object      TYPE string,
-           embedding   TYPE ty_embedding_t,
-           index       TYPE i,
+           object    TYPE string,
+           embedding TYPE ty_embedding_t,
+           index     TYPE i,
          END OF ty_openai_embed_data_s.
 
   TYPES: ty_openai_embed_data_t TYPE STANDARD TABLE OF ty_openai_embed_data_s WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_openai_embed_response_s,
-           object      TYPE string,
-           data        TYPE ty_openai_embed_data_t,
-           model       TYPE string,
+           object TYPE string,
+           data   TYPE ty_openai_embed_data_t,
+           model  TYPE string,
          END OF ty_openai_embed_response_s.
 
-  DATA mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY.
+  DATA: mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY.
 
   METHODS set_model
     IMPORTING

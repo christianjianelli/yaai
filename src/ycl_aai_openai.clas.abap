@@ -83,8 +83,6 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD yif_aai_openai~set_system_instructions.
 
-    "APPEND VALUE #( role = 'developer' content = i_system_instructions ) TO me->_messages.
-
     me->_system_instructions = i_system_instructions.
 
   ENDMETHOD.
@@ -126,8 +124,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     ENDIF.
 
     IF i_new = abap_true.
-
       FREE me->_messages.
+    ENDIF.
+
+    IF me->_messages IS INITIAL.
 
       IF me->_system_instructions IS NOT INITIAL.
 

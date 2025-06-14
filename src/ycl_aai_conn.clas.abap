@@ -45,6 +45,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
   METHOD constructor.
 
+    DATA l_name TYPE tvarvc-name.
+
     me->m_api = i_api.
 
     me->set_api_key( NEW ycl_aai_api_keys( )->read( i_api ) ).
@@ -63,6 +65,16 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
         SELECT SINGLE low FROM tvarvc
           WHERE name = @yif_aai_const=>c_openai_base_url_param
+            AND type = 'P'
+            AND numb = '0000'
+           INTO @me->m_base_url.
+
+      WHEN OTHERS.
+
+        l_name = |YAAI_{ i_api }|.
+
+        SELECT SINGLE low FROM tvarvc
+          WHERE name = @l_name
             AND type = 'P'
             AND numb = '0000'
            INTO @me->m_base_url.

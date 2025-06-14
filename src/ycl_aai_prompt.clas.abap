@@ -6,9 +6,12 @@ CLASS ycl_aai_prompt DEFINITION
 
     INTERFACES yif_aai_prompt.
 
-    INTERFACES if_oo_adt_classrun.
-
     ALIASES generate_prompt_from_template FOR yif_aai_prompt~generate_prompt_from_template.
+
+    ALIASES m_placeholder_begin FOR yif_aai_prompt~m_placeholder_begin.
+    ALIASES m_placeholder_end FOR yif_aai_prompt~m_placeholder_end.
+
+    METHODS constructor.
 
   PROTECTED SECTION.
 
@@ -19,6 +22,13 @@ ENDCLASS.
 
 
 CLASS ycl_aai_prompt IMPLEMENTATION.
+
+  METHOD constructor.
+
+    me->m_placeholder_begin = '%'.
+    me->m_placeholder_end = me->m_placeholder_begin.
+
+  ENDMETHOD.
 
   METHOD yif_aai_prompt~generate_prompt_from_template.
 
@@ -51,8 +61,7 @@ CLASS ycl_aai_prompt IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      "A 'Mustache' like pattern is used here
-      DATA(l_placeholder) = condense( '{{' && <ls_component>-name && '}}' ).
+      DATA(l_placeholder) = condense( me->m_placeholder_begin && <ls_component>-name && me->m_placeholder_end ).
 
       REPLACE ALL OCCURRENCES OF l_placeholder IN l_template_text WITH <l_component>.
 
@@ -62,7 +71,10 @@ CLASS ycl_aai_prompt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD if_oo_adt_classrun~main.
+  METHOD yif_aai_prompt~set_placeholder_pattern.
+
+    me->m_placeholder_begin = i_placeholder_begin.
+    me->m_placeholder_end = i_placeholder_end.
 
   ENDMETHOD.
 

@@ -18,7 +18,6 @@ CLASS ycl_aai_ollama DEFINITION
 
     ALIASES mo_function_calling FOR yif_aai_ollama~mo_function_calling.
 
-
     CLASS-DATA m_ref TYPE REF TO ycl_aai_ollama.
 
     CLASS-METHODS get_instance
@@ -83,7 +82,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   METHOD yif_aai_ollama~set_system_instructions.
 
-    APPEND VALUE #( role = 'system' content = i_system_instructions ) TO me->_chat_messages.
+    me->_system_instructions = i_system_instructions.
 
   ENDMETHOD.
 
@@ -126,6 +125,16 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
     IF i_new = abap_true.
 
       FREE me->_chat_messages.
+
+    ENDIF.
+
+    IF me->_chat_messages IS INITIAL.
+
+      IF me->_system_instructions IS NOT INITIAL.
+
+        APPEND VALUE #( role = 'system' content = me->_system_instructions ) TO me->_chat_messages.
+
+      ENDIF.
 
       IF i_greeting IS NOT INITIAL.
 
@@ -278,6 +287,33 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD yif_aai_ollama~embed.
+
+    DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+
+    IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_ollama_embed_endpoint ).
+
+      DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_embed_request_s( model = me->_model
+                                                                                                      input = i_input ) ).
+
+      lo_aai_conn->set_body( l_json ).
+
+      FREE l_json.
+
+      lo_aai_conn->do_receive(
+        IMPORTING
+          e_response = l_json
+      ).
+
+      lo_aai_util->deserialize(
+        EXPORTING
+          i_json = l_json
+        IMPORTING
+          e_data = e_s_response
+      ).
+
+    ENDIF.
 
   ENDMETHOD.
 
