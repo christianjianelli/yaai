@@ -20,6 +20,7 @@ INTERFACE yif_aai_function_calling
 
          BEGIN OF ty_method_s,
            class_name  TYPE string,
+           proxy_class TYPE string,
            method_name TYPE string,
            description TYPE string,
          END OF ty_method_s,

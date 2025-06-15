@@ -106,7 +106,8 @@ INTERFACE yif_aai_openai
 
   METHODS bind_tools
     IMPORTING
-      i_o_function_calling TYPE REF TO yif_aai_func_call_openai.
+      i_o_function_calling TYPE REF TO yif_aai_func_call_openai
+      i_max_tools_calls    TYPE i DEFAULT 5.
 
   METHODS set_history
     IMPORTING

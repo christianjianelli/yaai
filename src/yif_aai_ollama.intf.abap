@@ -79,7 +79,8 @@ INTERFACE yif_aai_ollama
 
   METHODS bind_tools
     IMPORTING
-      i_o_function_calling TYPE REF TO yif_aai_function_calling.
+      i_o_function_calling TYPE REF TO yif_aai_function_calling
+      i_max_tools_calls    TYPE i DEFAULT 5.
 
   METHODS chat
     IMPORTING

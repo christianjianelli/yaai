@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS YCL_AAI_FUNCTION_CALLING IMPLEMENTATION.
+CLASS ycl_aai_function_calling IMPLEMENTATION.
 
   METHOD yif_aai_function_calling~add_methods.
 
@@ -42,7 +42,7 @@ CLASS YCL_AAI_FUNCTION_CALLING IMPLEMENTATION.
 
     DATA lo_class TYPE REF TO object.
 
-    DATA: lo_class_descr TYPE REF TO cl_abap_classdescr,
+    DATA: lo_class_descr  TYPE REF TO cl_abap_classdescr,
           lo_struct_descr TYPE REF TO cl_abap_structdescr.
 
     DATA lt_parameters TYPE abap_parmbind_tab.
@@ -84,6 +84,10 @@ CLASS YCL_AAI_FUNCTION_CALLING IMPLEMENTATION.
     IF sy-subrc <> 0.
       r_response = 'The function/tool called is not available.'.
       RETURN.
+    ENDIF.
+
+    IF ls_method-proxy_class IS NOT INITIAL.
+      ls_method-class_name = ls_method-proxy_class.
     ENDIF.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
@@ -174,7 +178,6 @@ CLASS YCL_AAI_FUNCTION_CALLING IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD yif_aai_function_calling~get_tools.
 
     DATA lt_tools TYPE STANDARD TABLE OF yif_aai_function_calling~ty_tool_s.
@@ -225,17 +228,16 @@ CLASS YCL_AAI_FUNCTION_CALLING IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD yif_aai_function_calling~remove_method.
 
     DELETE me->mt_methods WHERE class_name = i_s_method-class_name AND method_name = i_s_method-method_name.
 
   ENDMETHOD.
 
-
   METHOD yif_aai_function_calling~reset_methods.
 
     FREE me->mt_methods.
 
   ENDMETHOD.
+
 ENDCLASS.

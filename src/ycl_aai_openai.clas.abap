@@ -39,7 +39,8 @@ CLASS ycl_aai_openai DEFINITION
           _system_instructions      TYPE string,
           _openai_generate_request  TYPE yif_aai_openai~ty_openai_generate_request_s,
           _openai_generate_response TYPE yif_aai_openai~ty_openai_generate_response_s,
-          _messages                 TYPE yif_aai_openai~ty_generate_messages_t.
+          _messages                 TYPE yif_aai_openai~ty_generate_messages_t,
+          _max_tools_calls          TYPE i.
 
 ENDCLASS.
 
@@ -52,6 +53,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     me->_model = COND #( WHEN i_model IS NOT INITIAL THEN i_model ELSE 'gpt-4.1' ).
 
     me->_messages = i_t_history.
+
+    me->_temperature = 1.
+
+    me->_max_tools_calls = 5.
 
   ENDMETHOD.
 
@@ -90,6 +95,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   METHOD yif_aai_openai~bind_tools.
 
     me->mo_function_calling = i_o_function_calling.
+
+    IF i_max_tools_calls IS SUPPLIED.
+      me->_max_tools_calls = i_max_tools_calls.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -164,7 +173,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
-    DO 5 TIMES.
+    DO me->_max_tools_calls TIMES.
 
       IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_openai_generate_endpoint ).
 

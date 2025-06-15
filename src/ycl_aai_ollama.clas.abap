@@ -38,7 +38,8 @@ CLASS ycl_aai_ollama DEFINITION
           _system_instructions      TYPE string,
           _ollama_chat_response     TYPE yif_aai_ollama~ty_ollama_chat_response_s,
           _ollama_generate_response TYPE yif_aai_ollama~ty_ollama_generate_response_s,
-          _chat_messages            TYPE yif_aai_ollama~ty_chat_messages_t.
+          _chat_messages            TYPE yif_aai_ollama~ty_chat_messages_t,
+          _max_tools_calls          TYPE i.
 
 ENDCLASS.
 
@@ -66,6 +67,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     me->_temperature = 1.
 
+    me->_max_tools_calls = 5.
+
   ENDMETHOD.
 
   METHOD yif_aai_ollama~set_model.
@@ -89,6 +92,10 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
   METHOD yif_aai_ollama~bind_tools.
 
     me->mo_function_calling = i_o_function_calling.
+
+    IF i_max_tools_calls IS SUPPLIED.
+      me->_max_tools_calls = i_max_tools_calls.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -157,7 +164,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     ENDIF.
 
-    DO 5 TIMES.
+    DO me->_max_tools_calls TIMES.
 
       DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
 

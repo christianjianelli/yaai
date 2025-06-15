@@ -6,8 +6,6 @@ CLASS ycl_aai_func_call_openai DEFINITION
 
     INTERFACES yif_aai_func_call_openai.
 
-    INTERFACES if_oo_adt_classrun.
-
     ALIASES add_methods   FOR yif_aai_func_call_openai~add_methods.
     ALIASES get_tools     FOR yif_aai_func_call_openai~get_tools.
     ALIASES reset_methods FOR yif_aai_func_call_openai~reset_methods.
@@ -149,6 +147,10 @@ CLASS ycl_aai_func_call_openai IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    IF ls_method-proxy_class IS NOT INITIAL.
+      ls_method-class_name = ls_method-proxy_class.
+    ENDIF.
+
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
     lo_aai_util->get_method_importing_params(
@@ -218,10 +220,6 @@ CLASS ycl_aai_func_call_openai IMPLEMENTATION.
         PARAMETER-TABLE lt_parameters.
 
     ENDIF.
-
-  ENDMETHOD.
-
-  METHOD if_oo_adt_classrun~main.
 
   ENDMETHOD.
 
