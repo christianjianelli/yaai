@@ -24,6 +24,8 @@ CLASS ycl_aai_rag_chroma DEFINITION
     INTERFACES yif_aai_rag.
 
     ALIASES get_context FOR yif_aai_rag~get_context.
+    ALIASES augment_prompt FOR yif_aai_rag~augment_prompt.
+    ALIASES set_prompt_template FOR yif_aai_rag~set_prompt_template.
 
     METHODS constructor
       IMPORTING
@@ -34,9 +36,12 @@ CLASS ycl_aai_rag_chroma DEFINITION
 
   PRIVATE SECTION.
 
-    DATA: _api         TYPE string,
-          _endpoint    TYPE string,
-          _t_documents TYPE ty_chroma_api_response_tt.
+    DATA: _o_prompt_template TYPE REF TO yif_aai_prompt_template.
+
+    DATA: _t_documents TYPE ty_chroma_api_response_tt.
+
+    DATA: _api      TYPE string,
+          _endpoint TYPE string.
 
 ENDCLASS.
 
@@ -48,6 +53,12 @@ CLASS ycl_aai_rag_chroma IMPLEMENTATION.
 
     me->_api = i_api.
     me->_endpoint = i_endpoint.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_rag~set_prompt_template.
+
+    me->_o_prompt_template = io_prompt_template.
 
   ENDMETHOD.
 
@@ -118,6 +129,45 @@ CLASS ycl_aai_rag_chroma IMPLEMENTATION.
         e_context = |{ e_context } - { <ls_metadata>-source }\n|.
 
       ENDLOOP.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_rag~augment_prompt.
+
+    TYPES: BEGIN OF ty_params_s,
+             message TYPE string,
+             context TYPE string,
+           END OF ty_params_s.
+
+    DATA ls_params TYPE ty_params_s.
+
+    CLEAR e_augmented_prompt.
+
+    me->get_context(
+      EXPORTING
+        i_input            = i_prompt
+        i_new_context_only = i_new_context_only
+      IMPORTING
+        e_context          = DATA(l_context)
+    ).
+
+    IF l_context IS INITIAL.
+
+      e_augmented_prompt = i_prompt.
+
+      RETURN.
+
+    ENDIF.
+
+    IF me->_o_prompt_template IS BOUND.
+
+      ls_params-message = i_prompt.
+      ls_params-context = l_context.
+
+      e_augmented_prompt = NEW ycl_aai_prompt( )->generate_prompt_from_template( i_o_template = me->_o_prompt_template
+                                                                                 i_s_params   = ls_params ).
 
     ENDIF.
 
