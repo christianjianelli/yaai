@@ -3,6 +3,7 @@ INTERFACE yif_aai_prompt
 
   TYPES: BEGIN OF ty_params_basic_s,
            user_message TYPE string,
+           context      TYPE string,
          END OF ty_params_basic_s.
 
   DATA: m_placeholder_begin TYPE string READ-ONLY,
