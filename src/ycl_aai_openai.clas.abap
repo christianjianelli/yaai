@@ -10,6 +10,7 @@ CLASS ycl_aai_openai DEFINITION
     ALIASES set_model FOR yif_aai_openai~set_model.
     ALIASES set_temperature FOR yif_aai_openai~set_temperature.
     ALIASES set_system_instructions FOR yif_aai_openai~set_system_instructions.
+    ALIASES set_connection FOR yif_aai_openai~set_connection.
     ALIASES bind_tools FOR yif_aai_openai~bind_tools.
     ALIASES generate FOR yif_aai_openai~generate.
     ALIASES embed FOR yif_aai_openai~embed.
@@ -27,12 +28,15 @@ CLASS ycl_aai_openai DEFINITION
 
     METHODS constructor
       IMPORTING
-        i_model     TYPE csequence OPTIONAL
-        i_t_history TYPE yif_aai_openai~ty_generate_messages_t OPTIONAL.
+        i_model        TYPE csequence OPTIONAL
+        i_t_history    TYPE yif_aai_openai~ty_generate_messages_t OPTIONAL
+        i_o_connection TYPE REF TO yif_aai_conn OPTIONAL.
 
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+
+    DATA: _o_connection TYPE REF TO yif_aai_conn.
 
     DATA: _model                    TYPE string,
           _temperature              TYPE p LENGTH 2 DECIMALS 1,
@@ -57,6 +61,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     me->_temperature = 1.
 
     me->_max_tools_calls = 5.
+
+    IF i_o_connection IS SUPPLIED.
+      me->_o_connection = i_o_connection.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -89,6 +97,12 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   METHOD yif_aai_openai~set_system_instructions.
 
     me->_system_instructions = i_system_instructions.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_openai~set_connection.
+
+    me->_o_connection = i_o_connection.
 
   ENDMETHOD.
 
@@ -154,6 +168,23 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       ENDIF.
 
+    ELSE.
+
+      IF me->_system_instructions IS NOT INITIAL.
+
+        READ TABLE me->_messages TRANSPORTING NO FIELDS
+          WITH KEY role = 'developer'.
+
+        IF sy-subrc <> 0.
+
+          INSERT VALUE #( role = 'developer'
+                          content = me->_system_instructions
+                          type = 'message' ) INTO me->_messages INDEX 1.
+
+        ENDIF.
+
+      ENDIF.
+
     ENDIF.
 
     APPEND VALUE #( role = 'user'
@@ -169,13 +200,17 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     ENDIF.
 
-    DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
+    "DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
+
+    IF me->_o_connection IS NOT BOUND.
+      me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
+    ENDIF.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
     DO me->_max_tools_calls TIMES.
 
-      IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_openai_generate_endpoint ).
+      IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_openai_generate_endpoint ).
 
         FREE me->_openai_generate_response.
 
@@ -184,11 +219,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                                                                                                            input = me->get_conversation( )
                                                                                                            tools = l_tools ) ).
 
-        lo_aai_conn->set_body( l_json ).
+        me->_o_connection->set_body( l_json ).
 
         FREE l_json.
 
-        lo_aai_conn->do_receive(
+        me->_o_connection->do_receive(
           IMPORTING
             e_response = l_json
         ).
@@ -336,20 +371,24 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD yif_aai_openai~embed.
 
-    DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
+    "DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
 
-    IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_openai_embed_endpoint ).
+    IF me->_o_connection IS NOT BOUND.
+      me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
+    ENDIF.
+
+    IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_openai_embed_endpoint ).
 
       DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
       DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_embed_request_s( model = me->_model
                                                                                                       input = i_input ) ).
 
-      lo_aai_conn->set_body( l_json ).
+      me->_o_connection->set_body( l_json ).
 
       FREE l_json.
 
-      lo_aai_conn->do_receive(
+      me->_o_connection->do_receive(
         IMPORTING
           e_response = l_json
       ).

@@ -77,10 +77,18 @@ INTERFACE yif_aai_ollama
     IMPORTING
       i_system_instructions TYPE string.
 
+  METHODS set_connection
+    IMPORTING
+      i_o_connection TYPE REF TO yif_aai_conn.
+
   METHODS bind_tools
     IMPORTING
       i_o_function_calling TYPE REF TO yif_aai_function_calling
       i_max_tools_calls    TYPE i DEFAULT 5.
+
+  METHODS set_history
+    IMPORTING
+      i_t_history TYPE ty_chat_messages_t.
 
   METHODS chat
     IMPORTING

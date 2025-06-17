@@ -99,16 +99,13 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url                = me->_url         " URL
-*        proxy_host         =                 " Logical destination (specified in function call)
-*        proxy_service      =                 " Port Number
-*        ssl_id             =                 " SSL Identity
-*        sap_username       =                 " ABAP System, User Logon Name
-*        sap_client         =                 " R/3 system (client number from logon)
-*        proxy_user         =                 " Proxy user
-*        proxy_passwd       =                 " Proxy password
+        url                = me->_url                          " URL
+        proxy_host         = me->yif_aai_conn~m_proxy_host     " Logical destination (specified in function call)
+        proxy_service      = me->yif_aai_conn~m_proxy_service  " Port Number
+        proxy_user         = me->yif_aai_conn~m_proxy_user     " Proxy user
+        proxy_passwd       = me->yif_aai_conn~m_proxy_passwd   " Proxy password
       IMPORTING
-        client             = me->_o_http_client                 " HTTP Client Abstraction
+        client             = me->_o_http_client                " HTTP Client Abstraction
       EXCEPTIONS
         argument_not_found = 1                " Communication parameter (host or service) not available
         plugin_not_active  = 2                " HTTP/HTTPS communication not available
@@ -252,6 +249,15 @@ CLASS ycl_aai_conn IMPLEMENTATION.
   METHOD yif_aai_conn~set_api_key.
 
     me->_api_key = i_api_key.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~set_proxy.
+
+    me->yif_aai_conn~m_proxy_host = i_proxy_host.
+    me->yif_aai_conn~m_proxy_service = i_proxy_service.
+    me->yif_aai_conn~m_proxy_user = i_proxy_user.
+    me->yif_aai_conn~m_proxy_passwd = i_proxy_passwd.
 
   ENDMETHOD.
 

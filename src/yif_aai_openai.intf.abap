@@ -104,6 +104,10 @@ INTERFACE yif_aai_openai
     IMPORTING
       i_system_instructions TYPE string.
 
+  METHODS set_connection
+    IMPORTING
+      i_o_connection TYPE REF TO yif_aai_conn.
+
   METHODS bind_tools
     IMPORTING
       i_o_function_calling TYPE REF TO yif_aai_func_call_openai

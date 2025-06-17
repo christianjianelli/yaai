@@ -10,6 +10,7 @@ CLASS ycl_aai_ollama DEFINITION
     ALIASES set_model FOR yif_aai_ollama~set_model.
     ALIASES set_temperature FOR yif_aai_ollama~set_temperature.
     ALIASES set_system_instructions FOR yif_aai_ollama~set_system_instructions.
+    ALIASES set_connection FOR yif_aai_ollama~set_connection.
     ALIASES bind_tools FOR yif_aai_ollama~bind_tools.
     ALIASES chat FOR yif_aai_ollama~chat.
     ALIASES generate FOR yif_aai_ollama~generate.
@@ -27,11 +28,14 @@ CLASS ycl_aai_ollama DEFINITION
 
     METHODS constructor
       IMPORTING
-        i_model TYPE csequence OPTIONAL.
+        i_model        TYPE csequence OPTIONAL
+        i_o_connection TYPE REF TO yif_aai_conn OPTIONAL.
 
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+
+    DATA: _o_connection TYPE REF TO yif_aai_conn.
 
     DATA: _model                    TYPE string,
           _temperature              TYPE p LENGTH 2 DECIMALS 1,
@@ -69,6 +73,10 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     me->_max_tools_calls = 5.
 
+    IF i_o_connection IS SUPPLIED.
+      me->_o_connection = i_o_connection.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD yif_aai_ollama~set_model.
@@ -86,6 +94,18 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
   METHOD yif_aai_ollama~set_system_instructions.
 
     me->_system_instructions = i_system_instructions.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_ollama~set_history.
+
+    me->_chat_messages = i_t_history.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_ollama~set_connection.
+
+    me->_o_connection = i_o_connection.
 
   ENDMETHOD.
 
@@ -149,6 +169,21 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       ENDIF.
 
+    ELSE.
+
+      IF me->_system_instructions IS NOT INITIAL.
+
+        READ TABLE me->_chat_messages TRANSPORTING NO FIELDS
+          WITH KEY role = 'system'.
+
+        IF sy-subrc <> 0.
+
+          INSERT VALUE #( role = 'system' content = me->_system_instructions ) INTO me->_chat_messages INDEX 1.
+
+        ENDIF.
+
+      ENDIF.
+
     ENDIF.
 
     APPEND VALUE #( role = 'user' content = i_message ) TO me->_chat_messages.
@@ -166,9 +201,11 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     DO me->_max_tools_calls TIMES.
 
-      DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+      IF me->_o_connection IS NOT BOUND.
+        me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+      ENDIF.
 
-      IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_ollama_chat_endpoint ).
+      IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_ollama_chat_endpoint ).
 
         FREE me->_ollama_chat_response.
 
@@ -177,11 +214,11 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
                                                                                                        messages = me->_chat_messages
                                                                                                        tools = l_tools ) ).
 
-        lo_aai_conn->set_body( l_json ).
+        me->_o_connection->set_body( l_json ).
 
         FREE l_json.
 
-        lo_aai_conn->do_receive(
+        me->_o_connection->do_receive(
           IMPORTING
             e_response = l_json
         ).
@@ -253,9 +290,11 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+    IF me->_o_connection IS NOT BOUND.
+      me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+    ENDIF.
 
-    IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_ollama_generate_endpoint ).
+    IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_ollama_generate_endpoint ).
 
       DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
@@ -263,11 +302,11 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
                                                                                                          prompt = i_message
                                                                                                          stream = abap_false ) ).
 
-      lo_aai_conn->set_body( l_json ).
+      me->_o_connection->set_body( l_json ).
 
       FREE l_json.
 
-      lo_aai_conn->do_receive(
+      me->_o_connection->do_receive(
         IMPORTING
           e_response = l_json
       ).
@@ -295,20 +334,22 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   METHOD yif_aai_ollama~embed.
 
-    DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+    IF me->_o_connection IS NOT BOUND.
+      me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+    ENDIF.
 
-    IF lo_aai_conn->create_connection( i_endpoint = yif_aai_const=>c_ollama_embed_endpoint ).
+    IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_ollama_embed_endpoint ).
 
       DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
       DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_embed_request_s( model = me->_model
                                                                                                       input = i_input ) ).
 
-      lo_aai_conn->set_body( l_json ).
+      me->_o_connection->set_body( l_json ).
 
       FREE l_json.
 
-      lo_aai_conn->do_receive(
+      me->_o_connection->do_receive(
         IMPORTING
           e_response = l_json
       ).
