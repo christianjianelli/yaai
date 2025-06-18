@@ -14,6 +14,7 @@ CLASS ycl_aai_openai DEFINITION
     ALIASES bind_tools FOR yif_aai_openai~bind_tools.
     ALIASES generate FOR yif_aai_openai~generate.
     ALIASES embed FOR yif_aai_openai~embed.
+    ALIASES chat FOR yif_aai_chat~chat.
     ALIASES set_history FOR yif_aai_openai~set_history.
     ALIASES get_conversation FOR yif_aai_openai~get_conversation.
 
@@ -370,8 +371,6 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD yif_aai_openai~embed.
-
-    "DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
 
     IF me->_o_connection IS NOT BOUND.
       me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).

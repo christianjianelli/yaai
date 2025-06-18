@@ -14,11 +14,12 @@ CLASS ycl_aai_conn DEFINITION
     ALIASES do_receive FOR yif_aai_conn~do_receive.
     ALIASES get_response FOR yif_aai_conn~get_response.
     ALIASES set_api_key FOR yif_aai_conn~set_api_key.
+    ALIASES set_base_url FOR yif_aai_conn~set_base_url.
 
     METHODS
       constructor
         IMPORTING
-          i_api TYPE string.
+          i_api TYPE string OPTIONAL.
 
   PROTECTED SECTION.
 
@@ -48,6 +49,10 @@ CLASS ycl_aai_conn IMPLEMENTATION.
     DATA l_name TYPE tvarvc-name.
 
     me->m_api = i_api.
+
+    IF i_api IS INITIAL.
+      RETURN.
+    ENDIF.
 
     me->set_api_key( NEW ycl_aai_api_keys( )->read( i_api ) ).
 
@@ -243,6 +248,12 @@ CLASS ycl_aai_conn IMPLEMENTATION.
                                 message_v3 = sy-msgv3
                                 message_v4 = sy-msgv4 ) ).
     ENDIF.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~set_base_url.
+
+    me->m_base_url = i_base_url.
 
   ENDMETHOD.
 
