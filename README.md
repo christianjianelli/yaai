@@ -88,10 +88,7 @@ START-OF-SELECTION.
 
 The following screenshot shows the output you can expect after running the example ABAP report. The response from the LLM will be displayed line by line in the SAP GUI output window.
 
-
-![Output of the ABAP AI LLM quickstart application](docs/images/QuickstartReportRun.png)
-
-
+![Output of the ABAP AI LLM quickstart application](docs/images/QuickstartReportRunOpenAI.png)
 
 ## Next Steps:
 
