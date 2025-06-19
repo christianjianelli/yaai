@@ -32,7 +32,10 @@ You can install the ABAP AI Tools into your SAP system using abapGit. Follow the
 
 You have now successfully installed the `ABAP AI Tools!`
 
-## Quickstart: Running Your First LLM ABAP Application
+## Quickstart
+
+**Running Your First LLM ABAP Application**
+
 This quickstart demonstrates how to create a simple LLM application without requiring any configuration. It shows you how to connect to the LLM and perform a basic chat interaction.
 
 **Requirements:** 
