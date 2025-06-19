@@ -59,7 +59,7 @@ START-OF-SELECTION.
   DATA(o_aai_conn) = NEW ycl_aai_conn( ).
 
   " The hardcoded base URL in this example is intended for testing and development only. 
-  o_aai_conn->set_base_url( i_base_url = 'http://192.168.1.173/openai' ).
+  o_aai_conn->set_base_url( i_base_url = 'https://api.openai.com' ).
  
   " The hardcoded API key in this example is intended for testing and development only.
   " Hardcoding API keys directly into your ABAP code is highly discouraged.
