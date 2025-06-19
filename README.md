@@ -31,3 +31,49 @@ You can install the ABAP AI Tools into your SAP system using abapGit. Follow the
   - After activation, all the `ABAP AI Tools` objects (interfaces, classes, etc.) will be available in your specified package. You can verify this by checking transaction `SE80` for the package you used.
 
 You have now successfully installed the `ABAP AI Tools!`
+
+## Quickstart: Running Your First LLM ABAP Application
+This quickstart demonstrates how to create a simple LLM application without requiring any configuration. It shows you how to connect to the LLM and perform a basic chat interaction.
+
+**Requirements:** 
+*   You have a valid OpenAI API Key.
+
+**Steps:**
+1.  Create an ABAP AI Connection instance;
+2.  Set the Base URL;
+3.  Set the API Key;
+4.  Create an ABAP AI OpenAI instance;
+5.  Call the CHAT method.
+
+**Example:**
+
+```ABAP
+
+REPORT yaai_r_simple_llm_app_openai LINE-SIZE 500.
+
+START-OF-SELECTION.
+
+  DATA(o_aai_conn) = NEW ycl_aai_conn( ).
+
+  " The hardcoded base URL in this example is intended for testing and development only. 
+  o_aai_conn->set_base_url( i_base_url = 'http://192.168.1.173/openai' ).
+ 
+  " The hardcoded API key in this example is intended for testing and development only.
+  " Hardcoding API keys directly into your ABAP code is highly discouraged.
+  o_aai_conn->set_api_key( i_api_key = 'REPLACE_THIS_TEXT_WITH_YOUR_OPENAI_API_KEY' ).
+
+  DATA(o_aai_openai) = NEW ycl_aai_openai( i_model = 'gpt-4.1' i_o_connection = o_aai_conn ).
+
+  o_aai_openai->chat(
+    EXPORTING
+      i_message    = 'Hi, there!'
+    IMPORTING
+      e_t_response = DATA(t_response)
+  ).
+
+  " Display the LLM response on the screen
+  LOOP AT t_response INTO DATA(l_response_line).
+    WRITE: / l_response_line.
+  ENDLOOP.
+
+``` 
