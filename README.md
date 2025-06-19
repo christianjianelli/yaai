@@ -42,6 +42,8 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
 *   You have a valid OpenAI API Key.
 *   Import OpenAI server certificates into SAP trust manager. The [abapGit documentation](https://docs.abapgit.org/user-guide/setup/ssl-setup.html) explains in detail how to do it.
 
+**Note**: To run the application on SAP NetWeaver AS ABAP Developer Edition, we recommend using NGINX as a reverse proxy to expose a local HTTP endpoint—it’s much simpler than manually configuring SSL on the SAP system.
+
 **Steps:**
 1.  Create an ABAP AI Connection instance;
 2.  Set the Base URL;
