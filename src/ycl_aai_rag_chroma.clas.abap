@@ -136,13 +136,6 @@ CLASS ycl_aai_rag_chroma IMPLEMENTATION.
 
   METHOD yif_aai_rag~augment_prompt.
 
-    TYPES: BEGIN OF ty_params_s,
-             message TYPE string,
-             context TYPE string,
-           END OF ty_params_s.
-
-    DATA ls_params TYPE ty_params_s.
-
     CLEAR e_augmented_prompt.
 
     me->get_context(
@@ -163,11 +156,11 @@ CLASS ycl_aai_rag_chroma IMPLEMENTATION.
 
     IF me->_o_prompt_template IS BOUND.
 
-      ls_params-message = i_prompt.
-      ls_params-context = l_context.
+      DATA(ls_params) = VALUE yif_aai_prompt=>ty_params_basic_s( user_message = i_prompt
+                                                                 context = l_context ).
 
       e_augmented_prompt = NEW ycl_aai_prompt( )->generate_prompt_from_template( i_o_template = me->_o_prompt_template
-                                                                                 i_s_params   = ls_params ).
+                                                                                 i_s_params = ls_params ).
 
     ENDIF.
 
