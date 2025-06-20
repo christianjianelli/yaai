@@ -34,7 +34,7 @@ You have now successfully installed the `ABAP AI Tools!`
 
 ## Quickstart
 
-**Running Your First LLM ABAP Application**
+### Running Your First ABAP AI Application
 
 This quickstart demonstrates how to create a simple LLM application. It shows you how to connect to the LLM and perform a basic chat interaction.
 
@@ -86,9 +86,83 @@ START-OF-SELECTION.
 
 **Result:**
 
-The following screenshot shows the output you can expect after running the example ABAP report. The response from the LLM will be displayed line by line in the SAP GUI output window.
+The following screenshot shows the output you can expect after running the example ABAP AI report. The response from the LLM will be displayed line by line in the SAP GUI output window.
 
 ![Output of the ABAP AI LLM quickstart application](docs/images/QuickstartReportRunOpenAI.png)
+
+
+### Running a simple ABAP AI Chat Application
+
+The ABAP AI Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
+
+```ABAP
+
+REPORT yaai_r_simple_llm_chat_openai.
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
+
+PARAMETERS: p_model  TYPE string DEFAULT 'gpt-4.1' LOWER CASE VISIBLE LENGTH 20,
+            p_prompt TYPE string DEFAULT 'What is the capital of France?' LOWER CASE VISIBLE LENGTH 50.
+
+SELECTION-SCREEN: SKIP 1,
+
+BEGIN OF LINE,
+PUSHBUTTON 68(10) button USER-COMMAND cli1,
+END OF LINE.
+SELECTION-SCREEN END OF BLOCK b1.
+
+INITIALIZATION.
+
+  "Set text for the selection screen fields and button
+  %_p_model_%_app_%-text = 'Model'.
+  %_p_prompt_%_app_%-text = 'Prompt'.
+  button = 'Send'.
+
+  DATA(o_aai_conn) = NEW ycl_aai_conn( ).
+
+  o_aai_conn->set_base_url( i_base_url = 'https://api.openai.com' ).
+
+  " The hardcoded API key in this example is intended for testing and development only.
+  " Hardcoding API keys directly into your ABAP code is highly discouraged.
+  o_aai_conn->set_api_key( i_api_key = 'REPLACE_THIS_TEXT_WITH_YOUR_OPENAI_API_KEY' ).
+
+  DATA(o_aai_openai) = NEW ycl_aai_openai( i_model = p_model i_o_connection = o_aai_conn ).
+
+
+AT SELECTION-SCREEN.
+
+  o_aai_openai->chat(
+    EXPORTING
+      i_message = p_prompt
+  ).
+
+  DATA(json) = /ui2/cl_json=>serialize(
+    EXPORTING
+      data        = o_aai_openai->get_conversation( )
+      compress    = abap_true
+      pretty_name = abap_true
+
+  ).
+
+  IF json IS NOT INITIAL.
+
+    cl_demo_output=>display_json( json ).
+
+  ENDIF.
+
+``` 
+
+**Result:**
+
+The following screenshots show the output you can expect after running the example ABAP AI Chat report.
+
+![Output of the ABAP AI Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_1.png)
+
+![Output of the ABAP AI Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_2.png)
+
+![Output of the ABAP AI Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_3.png)
+
+![Output of the ABAP AI Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_4.png)
 
 ## Next Steps:
 
