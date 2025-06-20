@@ -1,8 +1,24 @@
 # ABAP AI Tools
 This repository provides a set of tools designed to facilitate Artificial Intelligence capabilities within ABAP environments.
 
+## Key Features
+- **OpenAI and Ollama Support**: Seamlessly connect your ABAP applications to both OpenAI (cloud-based) and Ollama (local/self-hosted) LLM APIs, enabling flexible deployment options.
+- **Conversation Management**: Maintain and manage multi-turn conversations, with full access to conversation history for advanced chat scenarios.
+- **Tool/Function Calling**: Integrate ABAP business logic with LLMs using function/tool calling, allowing AI models to trigger ABAP methods.
+- **Retrieval-Augmented Generation (RAG)**: Enhance LLM outputs by incorporating enterprise data, enabling more accurate and relevant answers through retrieval-augmented generation workflows.
+
+These features empower you to build intelligent, enterprise-ready ABAP applications that leverage the latest advancements in AI.
+
+  **Disclaimer:** ABAP AI tools are experimental and released under the MIT License. It is provided "as is", without warranty of any kind, express or implied. This means you use these tools at your own risk, and the authors are not liable for any damages or issues arising from their use.
+
+This repository focuses on backend AI integration for ABAP. For a ready-to-use user interface—including chat and code assistance apps—check out our companion project: 
+
+  [**ABAP AI UI**](https://github.com/christianjianelli/yaai_ui)
+  
+  The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
+
 ## Installation
-You can install the ABAP AI Tools into your SAP system using abapGit. Follow the steps below:
+You can install the ABAP AI Tools into your SAP system using abapGit. 
 
 ## Prerequisites
  - **abapGit**: Ensure that `abapGit` is installed and configured in your ABAP system. If not, you can find the latest version and installation instructions on the official abapGit website: https://docs.abapgit.org/
@@ -53,7 +69,7 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
 
 **Example:**
 
-```ABAP
+```abap
 
 REPORT yaai_r_simple_llm_app_openai LINE-SIZE 500.
 
@@ -95,7 +111,7 @@ The following screenshot shows the output you can expect after running the examp
 
 The ABAP AI Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
 
-```ABAP
+```abap
 
 REPORT yaai_r_simple_llm_chat_openai.
 
@@ -164,5 +180,14 @@ The following screenshots show the output you can expect after running the examp
 
 ![Output of the ABAP AI Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_4.png)
 
-## Next Steps:
 
+## Next Steps
+
+  Now that you've run your first ABAP AI applications, consider exploring additional features 😊.
+
+  ### Choose Your API: OpenAI or Ollama
+
+  ABAP AI supports both OpenAI and Ollama APIs. To get started with your preferred provider, check out the dedicated guides:
+
+  - [OpenAI Integration Guide](docs/openai/openai.md#features): Learn how to configure and use ABAP AI with OpenAI models.
+  - [Ollama Integration Guide](docs/ollama/ollama.md): Learn how to configure and use ABAP AI with with local or self-hosted Ollama models.
