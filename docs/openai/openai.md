@@ -6,8 +6,6 @@
 
 This quickstart demonstrates how to create a simple LLM application. It shows you how to connect to the LLM and perform a basic chat interaction.
 
-[features](#features)
-
 **Requirements:** 
 *   You have a valid OpenAI API Key.
 *   Import OpenAI server certificates into SAP trust manager. The [abapGit documentation](https://docs.abapgit.org/user-guide/setup/ssl-setup.html) explains in detail how to do it.

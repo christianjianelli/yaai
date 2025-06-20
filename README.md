@@ -189,5 +189,5 @@ The following screenshots show the output you can expect after running the examp
 
   ABAP AI supports both OpenAI and Ollama APIs. To get started with your preferred provider, check out the dedicated guides:
 
-  - [OpenAI Integration Guide](docs/openai/openai.md#features): Learn how to configure and use ABAP AI with OpenAI models.
+  - [OpenAI Integration Guide](docs/openai/openai.md#Explore-ABAP-AI-Features): Learn how to configure and use ABAP AI with OpenAI models.
   - [Ollama Integration Guide](docs/ollama/ollama.md): Learn how to configure and use ABAP AI with with local or self-hosted Ollama models.
