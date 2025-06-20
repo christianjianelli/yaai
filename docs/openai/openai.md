@@ -136,8 +136,7 @@ The following screenshots show the output you can expect after running the examp
 
 
 <a name="features></a>
-
-Now that you've run your first ABAP AI applications, consider exploring additional features 😊.
+Now that you've run your first ABAP AI applications, consider exploring additional features.😊
 
   - **Prompt Templates:** Learn how to define and use [prompt templates](prompt_templates.md) for more dynamic and reusable prompts.
   - **LLM System Instructions:** Pass [system instructions](system_instructions.md) to guide the behavior of the language model for specific tasks.
