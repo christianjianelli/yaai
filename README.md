@@ -67,7 +67,7 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
 4.  Create an ABAP AI OpenAI instance;
 5.  Call the CHAT method.
 
-**Example:**
+**Complete Example:**
 
 ```abap
 
@@ -110,6 +110,8 @@ The following screenshot shows the output you can expect after running the examp
 ### Running a simple ABAP AI Chat Application
 
 The ABAP AI Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
+
+#### Complete Example
 
 ```abap
 
@@ -183,7 +185,7 @@ The following screenshots show the output you can expect after running the examp
 
 ## Next Steps
 
-  Now that you've run your first ABAP AI applications, consider exploring additional features 😊.
+  Now that you've run your first ABAP AI applications, consider exploring additional features. 😊
 
   ### Choose Your API: OpenAI or Ollama
 
