@@ -117,6 +117,10 @@ INTERFACE yif_aai_openai
     IMPORTING
       i_t_history TYPE ty_generate_messages_t.
 
+  METHODS get_history
+    EXPORTING
+      e_t_history TYPE ty_generate_messages_t.
+
   METHODS get_conversation
     RETURNING
       VALUE(r_conversation) TYPE /ui2/cl_json=>json.

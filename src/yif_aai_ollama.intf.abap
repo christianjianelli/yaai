@@ -90,6 +90,10 @@ INTERFACE yif_aai_ollama
     IMPORTING
       i_t_history TYPE ty_chat_messages_t.
 
+  METHODS get_history
+    EXPORTING
+      e_t_history TYPE ty_chat_messages_t.
+
   METHODS chat
     IMPORTING
       i_message    TYPE csequence

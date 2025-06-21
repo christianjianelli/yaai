@@ -103,6 +103,12 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD yif_aai_ollama~get_history.
+
+    e_t_history = me->_chat_messages.
+
+  ENDMETHOD.
+
   METHOD yif_aai_ollama~set_connection.
 
     me->_o_connection = i_o_connection.

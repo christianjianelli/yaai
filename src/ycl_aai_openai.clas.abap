@@ -324,6 +324,12 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD yif_aai_openai~get_history.
+
+    e_t_history = me->_messages.
+
+  ENDMETHOD.
+
   METHOD yif_aai_openai~get_conversation.
 
     DATA l_json TYPE string.
