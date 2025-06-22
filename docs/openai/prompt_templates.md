@@ -1,4 +1,4 @@
-# ABAP AI Prompt Templates
+# yaai - ABAP AI tools - Prompt Templates
 
 This guide explains how to use the classes `ycl_aai_prompt` and `ycl_aai_prompt_template` to generate prompts from templates in ABAP AI.
 

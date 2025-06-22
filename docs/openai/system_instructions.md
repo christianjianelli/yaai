@@ -1,4 +1,4 @@
-# ABAP AI System Instructions
+# yaai - ABAP AI tools - System Instructions
 
 ## Overview
 

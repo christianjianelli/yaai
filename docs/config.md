@@ -1,4 +1,4 @@
-# ABAP AI Tools Configuration Parameters
+# yaai - ABAP AI tools Configuration Parameters
 
 The ABAP AI tools require specific configuration parameters to be maintained in the SAP table `TVARVC` (accessible via transaction STVARV). These parameters define the base URLs for external AI services and are used to construct the full API endpoints for service calls.
 

@@ -1,1 +1,1 @@
-# ABAP AI - Ollama
+# yaai - ABAP AI tools - Ollama

@@ -1,4 +1,4 @@
-# ABAP AI - OpenAI
+# yaai - ABAP AI tools - OpenAI
 
 ## Quickstart
 

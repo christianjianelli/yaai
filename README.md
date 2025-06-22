@@ -1,4 +1,4 @@
-# ABAP AI Tools
+# yaai - ABAP AI tools
 This repository provides a set of tools designed to facilitate Artificial Intelligence capabilities within ABAP environments.
 
 ## Key Features
@@ -13,7 +13,7 @@ These features empower you to build intelligent, enterprise-ready ABAP applicati
 
 This repository focuses on backend AI integration for ABAP. For a ready-to-use user interface—including chat and code assistance apps—check out our companion project: 
 
-  [**ABAP AI UI**](https://github.com/christianjianelli/yaai_ui)
+  [**yaai ui - ABAP AI User Interface**](https://github.com/christianjianelli/yaai_ui)
   
   The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
 

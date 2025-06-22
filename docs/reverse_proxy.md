@@ -1,4 +1,4 @@
-# ABAP AI Tools – Using a Reverse Proxy
+# yaai- ABAP AI tools – Using a Reverse Proxy
 
 When using the SAP Netweaver ABAP Developer Edition to experiment with the ABAP AI tools, you may encounter SSL configuration challenges when connecting to external APIs such as OpenAI.
 
