@@ -41,10 +41,10 @@ To simplify connectivity, you can use a reverse proxy to expose remote HTTPS end
 3. **Restart NGINX**
    - After saving your changes, restart NGINX to apply the new configuration.
 
-4. **Update ABAP AI Tools Configuration**
+4. **Update ABAP AI tools Configuration**
    - Set the base URL in your configuration (e.g., `YAAI_OPENAI_BASE_URL`) to point to your local proxy, such as `http://localhost/openai/`.
 
-    > **Note:** The configuration example above assumes that both SAP and NGINX are running on the same host (i.e., `localhost`). If NGINX is running on a different machine, update the base URL in your ABAP AI Tools configuration to use the appropriate hostname or IP address of the NGINX server (e.g., `http://<nginx-host>/openai/`).
+    > **Note:** The configuration example above assumes that both SAP and NGINX are running on the same host (i.e., `localhost`). If NGINX is running on a different machine, update the base URL in your ABAP AI tools configuration to use the appropriate hostname or IP address of the NGINX server (e.g., `http://<nginx-host>/openai/`).
 
 ## References
 - [NGINX Reverse Proxy Guide](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/)

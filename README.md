@@ -14,11 +14,18 @@ These features empower you to build intelligent, enterprise-ready ABAP applicati
 This repository focuses on backend AI integration for ABAP. For a ready-to-use user interface—including chat and code assistance apps—check out our companion project: 
 
   [**yaai ui - ABAP AI User Interface**](https://github.com/christianjianelli/yaai_ui)
-  
   The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
+  
+  <p>
+    <a href="https://github.com/christianjianelli/yaai_ui">
+      ABAP AI Chat and Code Assistant</br>
+      <img src="docs/images/yaai_ui_chat_bp.png" alt="ABAP AI UI Chat Screenshot" height="200px">
+      <img src="docs/images/yaai_ui_chat_code_assist.png" alt="ABAP AI UI Code Assistant" height="200px">
+    </a>
+  </p>
 
 ## Installation
-You can install the ABAP AI Tools into your SAP system using abapGit. 
+You can install the ABAP AI tools into your SAP system using abapGit. 
 
 ## Prerequisites
  - **abapGit**: Ensure that `abapGit` is installed and configured in your ABAP system. If not, you can find the latest version and installation instructions on the official abapGit website: https://docs.abapgit.org/
@@ -44,9 +51,9 @@ You can install the ABAP AI Tools into your SAP system using abapGit.
   - Activate any inactive objects if prompted.
 
 6 - **Verify Installation**:
-  - After activation, all the `ABAP AI Tools` objects (interfaces, classes, etc.) will be available in your specified package. You can verify this by checking transaction `SE80` for the package you used.
+  - After activation, all the `ABAP AI tools` objects (interfaces, classes, etc.) will be available in your specified package. You can verify this by checking transaction `SE80` for the package you used.
 
-You have now successfully installed the `ABAP AI Tools!`
+You have now successfully installed the `ABAP AI tools!`
 
 ## Quickstart
 
