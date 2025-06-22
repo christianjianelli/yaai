@@ -1,8 +1,8 @@
-# yaai - ABAP AI tools - System Instructions - OpenAI
+# yaai - ABAP AI tools - System Instructions - Ollama
 
 ## Overview
 
-System instructions (also known as "system prompts") are special messages provided to a Large Language Model (LLM) to guide its behavior, tone, or constraints during a conversation. In ABAP AI, you can pass system instructions to the LLM using the `set_system_instructions` method of the `ycl_aai_openai` class.
+System instructions (also known as "system prompts") are special messages provided to a Large Language Model (LLM) to guide its behavior, tone, or constraints during a conversation. In ABAP AI, you can pass system instructions to the LLM using the `set_system_instructions` method of the `ycl_aai_ollama` class.
 
 ## Purpose
 
@@ -17,11 +17,11 @@ System instructions are typically used to:
 
 1. **Create/Open the LLM Client Instance**
 
-  You will have an instance of a class implementing `yif_aai_openai`, such as `ycl_aai_openai`.
+   You will have an instance of a class implementing `yif_aai_ollama`, such as `ycl_aai_ollama`.
 
    ```abap
-   "This example assumes that the API base URL and the API Key are properly configured
-    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_model = 'gpt-4.1' ).
+   "This example assumes that the API base URL is properly configured
+    DATA(lo_aai_ollama) = NEW ycl_aai_ollama( i_model = 'gemma3:latest' ).
    ```
 
 2. **Set the System Instructions**
@@ -36,15 +36,15 @@ System instructions are typically used to:
     " ... 
     " ... 
 
-    lo_aai_openai->set_system_instructions( l_system_instructions ).
+    lo_aai_ollama->set_system_instructions( l_system_instructions ).
    ```
 
 3. **Continue with Message Generation**
 
    After setting the system instructions, you can proceed to generate messages as usual. The instructions will be included in the conversation context sent to the LLM.
-
    ```abap
-    lo_aai_openai->chat(
+    
+    lo_aai_ollama->chat(
       EXPORTING
         i_message    = 'Before we begin, can you confirm your area of expertise? I want to ensure my question aligns with your capabilities.'
       IMPORTING
@@ -55,7 +55,7 @@ System instructions are typically used to:
 ## Complete Example
 
 ```abap
-REPORT yaai_r_syst_instruc_openai.
+REPORT yaai_r_syst_instruc_ollama.
 
 CLASS lcl_app DEFINITION.
 
@@ -71,8 +71,8 @@ CLASS lcl_app IMPLEMENTATION.
 
     DATA l_system_instructions TYPE string.
 
-    "This example assumes that the API base URL and the API Key are properly configured
-    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_model = 'gpt-4.1' ).
+    "This example assumes that the API base URL is properly configured
+    DATA(lo_aai_ollama) = NEW ycl_aai_ollama( i_model = 'gemma3:latest' ).
 
     l_system_instructions = |# Identity\n|.
     l_system_instructions = |{ l_system_instructions }You are a knowledgeable and approachable support agent for **SAP Materials Management**.\n|.
@@ -85,9 +85,9 @@ CLASS lcl_app IMPLEMENTATION.
     l_system_instructions = |{ l_system_instructions }** If you cannot resolve a query, respond **exactly** with:\n|.
     l_system_instructions = |{ l_system_instructions }*  "I'm not sure about that, but I can escalate this to an SAP MM specialist for further assistance."|.
 
-    lo_aai_openai->set_system_instructions( l_system_instructions ).
+    lo_aai_ollama->set_system_instructions( l_system_instructions ).
 
-    lo_aai_openai->chat(
+    lo_aai_ollama->chat(
       EXPORTING
         i_message    = 'Before we begin, can you confirm your area of expertise? I want to ensure my question aligns with your capabilities.'
       IMPORTING

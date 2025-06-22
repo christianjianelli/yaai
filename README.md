@@ -77,7 +77,6 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
 **Complete Example:**
 
 ```abap
-
 REPORT yaai_r_simple_llm_app_openai LINE-SIZE 500.
 
 START-OF-SELECTION.
@@ -104,7 +103,6 @@ START-OF-SELECTION.
   LOOP AT t_response INTO DATA(l_response_line).
     WRITE: / l_response_line.
   ENDLOOP.
-
 ``` 
 
 **Result:**
@@ -121,7 +119,6 @@ The ABAP AI Chat stores all conversation exchanges in memory. At any time, you c
 #### Complete Example
 
 ```abap
-
 REPORT yaai_r_simple_llm_chat_openai.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
@@ -174,7 +171,6 @@ AT SELECTION-SCREEN.
     cl_demo_output=>display_json( json ).
 
   ENDIF.
-
 ``` 
 
 **Result:**
