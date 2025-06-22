@@ -9,8 +9,6 @@ This repository provides a set of tools designed to facilitate Artificial Intell
 
 These features empower you to build intelligent, enterprise-ready ABAP applications that leverage the latest advancements in AI.
 
-  **Disclaimer:** ABAP AI tools are experimental and released under the MIT License. It is provided "as is", without warranty of any kind, express or implied. This means you use these tools at your own risk, and the authors are not liable for any damages or issues arising from their use.
-
 This repository focuses on backend AI integration for ABAP. For a ready-to-use user interface—including chat and code assistance apps—check out our companion project: 
 
   [**yaai ui - ABAP AI User Interface**](https://github.com/christianjianelli/yaai_ui)
@@ -18,14 +16,16 @@ This repository focuses on backend AI integration for ABAP. For a ready-to-use u
   
   <p>
     <a href="https://github.com/christianjianelli/yaai_ui">
-      ABAP AI Chat and Code Assistant</br>
       <img src="docs/images/yaai_ui_chat_bp.png" alt="ABAP AI UI Chat Screenshot" height="200px">
       <img src="docs/images/yaai_ui_chat_code_assist.png" alt="ABAP AI UI Code Assistant" height="200px">
+      </br>ABAP AI Chat and Code Assistant
     </a>
   </p>
 
 ## Installation
 You can install the ABAP AI tools into your SAP system using abapGit. 
+
+  **Disclaimer:** ABAP AI tools is experimental and released under the MIT License. It is provided "as is", without warranty of any kind, express or implied. This means you use these tools at your own risk, and the authors are not liable for any damages or issues arising from their use.
 
 ## Prerequisites
  - **abapGit**: Ensure that `abapGit` is installed and configured in your ABAP system. If not, you can find the latest version and installation instructions on the official abapGit website: https://docs.abapgit.org/
