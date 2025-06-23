@@ -501,6 +501,8 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
     DATA lt_json_properties TYPE STANDARD TABLE OF ty_properties.
 
+    DATA l_required TYPE string.
+
     DATA: l_json                TYPE string,
           l_escaped_description TYPE string.
 
@@ -518,6 +520,8 @@ CLASS ycl_aai_util IMPLEMENTATION.
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
     LOOP AT lt_components ASSIGNING FIELD-SYMBOL(<ls_components>).
+
+      CLEAR l_required.
 
       CASE <ls_components>-type->kind.
 
@@ -568,6 +572,18 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
               APPEND INITIAL LINE TO lt_json_properties ASSIGNING <ls_json_properties>.
 
+              IF ls_flddescr-fieldtext(1) = '*'.
+
+                ls_flddescr-fieldtext = ls_flddescr-fieldtext+1.
+
+                IF l_required IS INITIAL.
+                  l_required = |"{ <ls_ddic_object>-fieldname }"|.
+                ELSE.
+                  l_required = |{ l_required }, "{ <ls_ddic_object>-fieldname }"|.
+                ENDIF.
+
+              ENDIF.
+
               l_json = /ui2/cl_json=>serialize( EXPORTING data = ls_flddescr-fieldtext ).
 
               <ls_json_properties>-name = <ls_components>-name.
@@ -607,6 +623,18 @@ CLASS ycl_aai_util IMPLEMENTATION.
               ).
 
               APPEND INITIAL LINE TO lt_json_properties ASSIGNING <ls_json_properties>.
+
+              IF ls_flddescr-fieldtext(1) = '*'.
+
+                ls_flddescr-fieldtext = ls_flddescr-fieldtext+1.
+
+                IF l_required IS INITIAL.
+                  l_required = |"{ <ls_ddic_object>-fieldname }"|.
+                ELSE.
+                  l_required = |{ l_required }, "{ <ls_ddic_object>-fieldname }"|.
+                ENDIF.
+
+              ENDIF.
 
               l_json = /ui2/cl_json=>serialize( EXPORTING data = ls_flddescr-fieldtext ).
 
@@ -669,10 +697,10 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
       IF sy-subrc = 0.
         IF <ls_json_properties>-kind = 'S'.
-          l_json = l_json && '}}'.
+          l_json = l_json && '}, "required": [' && l_required && ']}'.
         ENDIF.
         IF <ls_json_properties>-kind = 'T'.
-          l_json = l_json && '}}}'.
+          l_json = l_json && '}, "required": [' && l_required && ']}}'.
         ENDIF.
       ENDIF.
 
@@ -689,6 +717,12 @@ CLASS ycl_aai_util IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD if_oo_adt_classrun~main.
+
+    out->write( me->get_json_schema(
+      EXPORTING
+        i_class_name  = 'YCL_AAI_BP_TOOLS_EXAMPLE'
+        i_method_name = 'CREATE_PERSON'
+    ) ).
 
   ENDMETHOD.
 
