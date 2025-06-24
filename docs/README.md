@@ -24,16 +24,16 @@ This repository focuses on backend AI integration for ABAP. For a ready-to-use u
 
 # Get Started
 
-  - [Installation](installation.md): Learn how to install ABAP AI.
+  - [Installation](installation.md): See how to install ABAP AI.
   - [Quickstart](quickstart.md): Run your first ABAP AI applications.
   - [Configuration](configuration.md): See how to configure Connections.
 
 # APIs
 
-  - [OpenAI Guide](openai/README.md): Learn how to configure and use ABAP AI with OpenAI models.
-  - [Ollama Guide](ollama/README.md): Learn how to configure and use ABAP AI with with local or self-hosted Ollama models.
+  - [OpenAI Guide](openai/README.md): Learn how to use ABAP AI with OpenAI models.
+  - [Ollama Guide](ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
 
 # Features
-- [System Instructions](system_instructions.md): Run your first ABAP AI applications.
-- [Prompt Templates](prompt_templates.md): Run your first ABAP AI applications.
-- [Function Calling](quickstart.md): Run your first ABAP AI applications.
+- [System Instructions](system_instructions.md): Learn how to pass System Instructions to a LLM.
+- [Prompt Templates](prompt_templates.md): Learn how to use Prompt Templates.
+- [Function Calling](function_calling.md): Learn how to use Function Calling.
