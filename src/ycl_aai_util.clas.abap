@@ -14,8 +14,6 @@ CLASS ycl_aai_util DEFINITION
 
            ty_importing_params_tt TYPE STANDARD TABLE OF ty_importing_params_s WITH EMPTY KEY.
 
-    INTERFACES if_oo_adt_classrun.
-
     METHODS serialize
       IMPORTING
                 i_data        TYPE data
@@ -31,12 +29,6 @@ CLASS ycl_aai_util DEFINITION
       IMPORTING
                 i_content        TYPE string
       RETURNING VALUE(r_content) TYPE string.
-
-    METHODS get_method_importing_params2
-      IMPORTING
-                i_class_name                TYPE csequence
-                i_method_name               TYPE csequence
-      RETURNING VALUE(r_t_importing_params) TYPE ty_importing_params_tt.
 
     METHODS get_method_importing_params
       IMPORTING
@@ -203,90 +195,6 @@ CLASS ycl_aai_util IMPLEMENTATION.
         ls_component-type ?= lo_descr_ref.
 
         APPEND ls_component TO e_t_importing_params.
-
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD get_method_importing_params2.
-
-    DATA: lo_class_descr TYPE REF TO cl_abap_classdescr,
-          lo_elem_descr  TYPE REF TO cl_abap_elemdescr,
-          lt_methods     TYPE abap_methdescr_tab,
-          lt_parameters  TYPE abap_parmdescr_tab,
-          ls_parameter   TYPE abap_parmdescr.
-
-    " Get the class descriptor
-    CALL METHOD cl_abap_classdescr=>describe_by_name
-      EXPORTING
-        p_name         = to_upper( i_class_name )     " Type name
-      RECEIVING
-        p_descr_ref    = DATA(lo_descr)   " Reference to description object
-      EXCEPTIONS
-        type_not_found = 1                " Type with name p_name could not be found
-        OTHERS         = 2.
-
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    lo_class_descr ?= lo_descr.
-
-    " Get all methods of the class
-    lt_methods = lo_class_descr->methods.
-
-    READ TABLE lt_methods ASSIGNING FIELD-SYMBOL(<ls_method>) WITH KEY name = to_upper( i_method_name ).
-
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    LOOP AT <ls_method>-parameters ASSIGNING FIELD-SYMBOL(<ls_parameter>).
-
-      IF <ls_parameter>-parm_kind <> 'I'.
-        CONTINUE.
-      ENDIF.
-
-      lo_class_descr->get_method_parameter_type(
-        EXPORTING
-          p_method_name       = i_method_name         " Method name
-          p_parameter_name    = <ls_parameter>-name   " Parameter Name
-        RECEIVING
-          p_descr_ref         = DATA(lo_descr_ref)    " Description object
-        EXCEPTIONS
-          parameter_not_found = 1                     " Parameter could not be found
-          method_not_found    = 2                     " Method was not found
-          OTHERS              = 3
-      ).
-
-      IF sy-subrc = 0.
-
-        lo_elem_descr ?= lo_descr_ref.
-
-        IF lo_elem_descr->is_ddic_type( ) = abap_true.
-
-          lo_elem_descr->get_ddic_field(
-            EXPORTING
-              p_langu      = sy-langu           " Current Language
-            RECEIVING
-              p_flddescr   = DATA(ls_flddescr)  " Field Description
-            EXCEPTIONS
-              not_found    = 0                  " Type could not be found
-              no_ddic_type = 0                  " Typ is not a dictionary type
-              OTHERS       = 0
-          ).
-
-        ENDIF.
-
-        APPEND VALUE #( name = <ls_parameter>-name
-                        type = me->get_parameter_type( i_o_type_descr = lo_elem_descr )
-                        format = me->get_parameter_format( i_o_type_descr = lo_elem_descr )
-                        required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
-                        description = ls_flddescr-fieldtext ) TO r_t_importing_params.
-
-        CLEAR ls_flddescr.
 
       ENDIF.
 
@@ -501,6 +409,8 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
     DATA lt_json_properties TYPE STANDARD TABLE OF ty_properties.
 
+    DATA l_required TYPE string.
+
     DATA: l_json                TYPE string,
           l_escaped_description TYPE string.
 
@@ -518,6 +428,8 @@ CLASS ycl_aai_util IMPLEMENTATION.
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
     LOOP AT lt_components ASSIGNING FIELD-SYMBOL(<ls_components>).
+
+      CLEAR l_required.
 
       CASE <ls_components>-type->kind.
 
@@ -568,6 +480,18 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
               APPEND INITIAL LINE TO lt_json_properties ASSIGNING <ls_json_properties>.
 
+              IF ls_flddescr-fieldtext(1) = '*'.
+
+                ls_flddescr-fieldtext = ls_flddescr-fieldtext+1.
+
+                IF l_required IS INITIAL.
+                  l_required = |"{ <ls_ddic_object>-fieldname }"|.
+                ELSE.
+                  l_required = |{ l_required }, "{ <ls_ddic_object>-fieldname }"|.
+                ENDIF.
+
+              ENDIF.
+
               l_json = /ui2/cl_json=>serialize( EXPORTING data = ls_flddescr-fieldtext ).
 
               <ls_json_properties>-name = <ls_components>-name.
@@ -607,6 +531,18 @@ CLASS ycl_aai_util IMPLEMENTATION.
               ).
 
               APPEND INITIAL LINE TO lt_json_properties ASSIGNING <ls_json_properties>.
+
+              IF ls_flddescr-fieldtext(1) = '*'.
+
+                ls_flddescr-fieldtext = ls_flddescr-fieldtext+1.
+
+                IF l_required IS INITIAL.
+                  l_required = |"{ <ls_ddic_object>-fieldname }"|.
+                ELSE.
+                  l_required = |{ l_required }, "{ <ls_ddic_object>-fieldname }"|.
+                ENDIF.
+
+              ENDIF.
 
               l_json = /ui2/cl_json=>serialize( EXPORTING data = ls_flddescr-fieldtext ).
 
@@ -669,10 +605,10 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
       IF sy-subrc = 0.
         IF <ls_json_properties>-kind = 'S'.
-          l_json = l_json && '}}'.
+          l_json = l_json && '}, "required": [' && l_required && ']}'.
         ENDIF.
         IF <ls_json_properties>-kind = 'T'.
-          l_json = l_json && '}}}'.
+          l_json = l_json && '}, "required": [' && l_required && ']}}'.
         ENDIF.
       ENDIF.
 
@@ -685,10 +621,6 @@ CLASS ycl_aai_util IMPLEMENTATION.
     ENDLOOP.
 
     r_json_schema = '{' && r_json_schema && '}'.
-
-  ENDMETHOD.
-
-  METHOD if_oo_adt_classrun~main.
 
   ENDMETHOD.
 
