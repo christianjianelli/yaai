@@ -38,7 +38,8 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_data> TYPE any.
 
-    DATA lr_data TYPE REF TO data.
+    DATA: lr_data    TYPE REF TO data,
+          lo_ex_root TYPE REF TO cx_root.
 
     DATA lo_class TYPE REF TO object.
 
@@ -109,9 +110,9 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
         ASSIGN lr_data->* TO <ls_data>.
 
-      CATCH cx_root INTO DATA(lo_ex).
+      CATCH cx_sy_create_data_error INTO DATA(lo_ex_create_data_error).
 
-        r_response = |An error occurred while calling the tool. Error description: { lo_ex->get_text( ) }|.
+        r_response = |An error occurred while calling the tool. Error description: { lo_ex_create_data_error->get_text( ) }|.
 
     ENDTRY.
 
@@ -160,17 +161,15 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
           CALL METHOD lo_class->(ls_method-method_name)
             PARAMETER-TABLE lt_parameters.
 
-        CATCH cx_sy_create_object_error INTO DATA(lo_ex_create_object_error).
+        CATCH cx_sy_create_object_error
+              cx_sy_dyn_call_illegal_class
+              cx_sy_dyn_call_illegal_method
+              cx_sy_dyn_call_illegal_type
+              cx_sy_dyn_call_param_missing
+              cx_sy_dyn_call_param_not_found
+              cx_sy_ref_is_initial INTO lo_ex_root.
 
-          r_response = |An error occurred while calling the function/tool. Error: { lo_ex_create_object_error->get_text( ) }|.
-
-        CATCH cx_sy_dyn_call_illegal_method INTO DATA(lo_ex_dyn_call_illegal_method).
-
-          r_response = |'An error occurred while calling the function/tool. Error: { lo_ex_dyn_call_illegal_method->get_text( ) }|.
-
-        CATCH cx_sy_dyn_call_illegal_type INTO DATA(lo_ex_dyn_call_illegal_type).
-
-          r_response = |'An error occurred while calling the function/tool. Error: { lo_ex_dyn_call_illegal_type->get_text( ) }|.
+          r_response = |An error occurred while calling the function/tool. Error description: { lo_ex_root->get_text( ) }|.
 
       ENDTRY.
 

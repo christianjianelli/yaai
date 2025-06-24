@@ -201,8 +201,6 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     ENDIF.
 
-    "DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
-
     IF me->_o_connection IS NOT BOUND.
       me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
     ENDIF.
