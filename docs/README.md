@@ -26,7 +26,7 @@ This repository focuses on backend AI integration for ABAP. For a ready-to-use u
 
   - [Installation](installation.md): See how to install ABAP AI.
   - [Quickstart](quickstart.md): Run your first ABAP AI applications.
-  - [Configuration](configuration.md): See how to configure Connections.
+  - [Configuration](config.md): See how to configure Connections.
 
 # APIs
 
