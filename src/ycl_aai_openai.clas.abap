@@ -8,11 +8,13 @@ CLASS ycl_aai_openai DEFINITION
     INTERFACES yif_aai_chat.
 
     ALIASES set_model FOR yif_aai_openai~set_model.
+    ALIASES use_completions FOR yif_aai_openai~use_completions.
     ALIASES set_temperature FOR yif_aai_openai~set_temperature.
     ALIASES set_system_instructions FOR yif_aai_openai~set_system_instructions.
     ALIASES set_connection FOR yif_aai_openai~set_connection.
     ALIASES bind_tools FOR yif_aai_openai~bind_tools.
     ALIASES generate FOR yif_aai_openai~generate.
+    ALIASES chat_completions FOR yif_aai_openai~chat_completions.
     ALIASES embed FOR yif_aai_openai~embed.
     ALIASES chat FOR yif_aai_chat~chat.
     ALIASES set_history FOR yif_aai_openai~set_history.
@@ -29,9 +31,10 @@ CLASS ycl_aai_openai DEFINITION
 
     METHODS constructor
       IMPORTING
-        i_model        TYPE csequence OPTIONAL
-        i_t_history    TYPE yif_aai_openai~ty_generate_messages_t OPTIONAL
-        i_o_connection TYPE REF TO yif_aai_conn OPTIONAL.
+        i_model           TYPE csequence OPTIONAL
+        i_use_completions TYPE abap_bool DEFAULT abap_false
+        i_t_history       TYPE yif_aai_openai~ty_generate_messages_t OPTIONAL
+        i_o_connection    TYPE REF TO yif_aai_conn OPTIONAL.
 
   PROTECTED SECTION.
 
@@ -39,13 +42,15 @@ CLASS ycl_aai_openai DEFINITION
 
     DATA: _o_connection TYPE REF TO yif_aai_conn.
 
-    DATA: _model                    TYPE string,
-          _temperature              TYPE p LENGTH 2 DECIMALS 1,
-          _system_instructions      TYPE string,
-          _openai_generate_request  TYPE yif_aai_openai~ty_openai_generate_request_s,
-          _openai_generate_response TYPE yif_aai_openai~ty_openai_generate_response_s,
-          _messages                 TYPE yif_aai_openai~ty_generate_messages_t,
-          _max_tools_calls          TYPE i.
+    DATA: _model                     TYPE string,
+          _use_completions           TYPE abap_bool VALUE abap_false,
+          _temperature               TYPE p LENGTH 2 DECIMALS 1,
+          _system_instructions       TYPE string,
+          _openai_generate_request   TYPE yif_aai_openai~ty_openai_generate_request_s,
+          _openai_generate_response  TYPE yif_aai_openai~ty_openai_generate_response_s,
+          _openai_chat_comp_response TYPE yif_aai_openai~ty_openai_chat_comp_resp_s,
+          _messages                  TYPE yif_aai_openai~ty_generate_messages_t,
+          _max_tools_calls           TYPE i.
 
 ENDCLASS.
 
@@ -80,6 +85,12 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     ENDIF.
 
     r_ref = m_ref.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_openai~use_completions.
+
+    me->_use_completions = i_use_completions.
 
   ENDMETHOD.
 
@@ -119,15 +130,31 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD yif_aai_chat~chat.
 
-    me->generate(
-      EXPORTING
-        i_message    = i_message
-        i_new        = i_new
-        i_greeting   = i_greeting
-      IMPORTING
-        e_response   = e_response
-        e_t_response = e_t_response
-    ).
+    IF me->_use_completions = abap_false.
+
+      me->generate(
+        EXPORTING
+          i_message    = i_message
+          i_new        = i_new
+          i_greeting   = i_greeting
+        IMPORTING
+          e_response   = e_response
+          e_t_response = e_t_response
+      ).
+
+    ELSE.
+
+      me->chat_completions(
+        EXPORTING
+          i_message    = i_message
+          i_new        = i_new
+          i_greeting   = i_greeting
+        IMPORTING
+          e_response   = e_response
+          e_t_response = e_t_response
+      ).
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -299,6 +326,191 @@ CLASS ycl_aai_openai IMPLEMENTATION.
             e_response = e_response && <ls_content>-text.
 
           ENDLOOP.
+
+        ENDLOOP.
+
+        EXIT.
+
+      ENDIF.
+
+    ENDDO.
+
+    IF e_t_response IS REQUESTED.
+
+      SPLIT e_response AT cl_abap_char_utilities=>newline INTO TABLE e_t_response.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_openai~chat_completions.
+
+    FIELD-SYMBOLS <l_data> TYPE string.
+
+    DATA lr_data TYPE REF TO data.
+
+    DATA: l_json  TYPE string,
+          l_tools TYPE string VALUE '[]'.
+
+    CLEAR e_response.
+
+    FREE e_t_response.
+
+    IF me->_model IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    IF i_new = abap_true.
+      FREE me->_messages.
+    ENDIF.
+
+    IF me->_messages IS INITIAL.
+
+      IF me->_system_instructions IS NOT INITIAL.
+
+        APPEND VALUE #( role = 'developer'
+                        content = me->_system_instructions
+                        type = 'message' ) TO me->_messages.
+
+      ENDIF.
+
+      IF i_greeting IS NOT INITIAL.
+
+        APPEND VALUE #( role = 'assistant'
+                        content = i_greeting
+                        type = 'message' ) TO me->_messages.
+
+      ENDIF.
+
+    ELSE.
+
+      IF me->_system_instructions IS NOT INITIAL.
+
+        READ TABLE me->_messages TRANSPORTING NO FIELDS
+          WITH KEY role = 'developer'.
+
+        IF sy-subrc <> 0.
+
+          INSERT VALUE #( role = 'developer'
+                          content = me->_system_instructions
+                          type = 'message' ) INTO me->_messages INDEX 1.
+
+        ENDIF.
+
+      ENDIF.
+
+    ENDIF.
+
+    APPEND VALUE #( role = 'user'
+                    content = i_message
+                    type = 'message' ) TO me->_messages.
+
+    IF me->mo_function_calling IS BOUND.
+
+      me->mo_function_calling->get_tools(
+        IMPORTING
+          e_tools = l_tools
+      ).
+
+    ENDIF.
+
+    IF me->_o_connection IS NOT BOUND.
+      me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
+    ENDIF.
+
+    DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+    DO me->_max_tools_calls TIMES.
+
+      IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_openai_completions_endpoint ).
+
+        FREE me->_openai_generate_response.
+
+        IF l_tools = '[]'.
+
+          l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_completions_req_s( model = me->_model
+                                                                                                      stream = abap_false
+                                                                                                      messages = me->get_conversation( ) ) ).
+
+        ELSE.
+
+          l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_comp_tools_req_s( model = me->_model
+                                                                                                     stream = abap_false
+                                                                                                     messages = me->get_conversation( )
+                                                                                                     tools = l_tools ) ).
+
+        ENDIF.
+
+        me->_o_connection->set_body( l_json ).
+
+        FREE l_json.
+
+        me->_o_connection->do_receive(
+          IMPORTING
+            e_response = l_json
+        ).
+
+        lo_aai_util->deserialize(
+          EXPORTING
+            i_json = l_json
+          IMPORTING
+            e_data = me->_openai_chat_comp_response
+        ).
+
+        DATA(l_function_call) = abap_false.
+
+        LOOP AT me->_openai_chat_comp_response-choices ASSIGNING FIELD-SYMBOL(<ls_choices>).
+
+          IF <ls_choices>-tool_calls IS INITIAL.
+            CONTINUE.
+          ENDIF.
+
+          l_function_call = abap_true.
+
+*          APPEND VALUE #( type = 'function_call'
+*                          arguments = <ls_output>-arguments
+*                          call_id = <ls_output>-call_id
+*                          name = <ls_output>-name ) TO me->_messages.
+*
+*          " This deserialization is necessary because we need to parse the string passed in the arguments to a JSON.
+*          " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
+*          lo_aai_util->deserialize(
+*            EXPORTING
+*              i_json = <ls_output>-arguments
+*            IMPORTING
+*              e_data = lr_data
+*          ).
+*
+*          ASSIGN lr_data->* TO <l_data>.
+*
+*          me->mo_function_calling->call_tool(
+*            EXPORTING
+*              i_tool_name   = to_upper( <ls_output>-name )
+*              i_json        = <l_data>
+*            RECEIVING
+*              r_response    = DATA(l_tool_response)
+*          ).
+*
+*          APPEND VALUE #( type = 'function_call_output'
+*                          call_id = <ls_output>-call_id
+*                          output = l_tool_response ) TO me->_messages.
+
+        ENDLOOP.
+
+        IF l_function_call = abap_true.
+          CONTINUE.
+        ENDIF.
+
+        LOOP AT me->_openai_chat_comp_response-choices ASSIGNING <ls_choices>.
+
+          IF <ls_choices>-message-role <> 'assistant'.
+            CONTINUE.
+          ENDIF.
+
+          e_response = lo_aai_util->replace_unicode_escape_seq( <ls_choices>-message-content ).
+
+          APPEND VALUE #( role = <ls_choices>-message-role
+                          content = e_response ) TO me->_messages.
 
         ENDLOOP.
 

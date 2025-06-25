@@ -30,7 +30,26 @@ INTERFACE yif_aai_openai
            type    TYPE string,
            call_id TYPE string,
            output  TYPE string,
-         END OF ty_function_call_output_s.
+         END OF ty_function_call_output_s,
+
+         BEGIN OF ty_function_s,
+           name      TYPE string,
+           arguments TYPE string,
+         END OF ty_function_s,
+
+         BEGIN OF ty_function_call_chat_comp_s,
+           id       TYPE string,
+           type     TYPE string,
+           function TYPE ty_function_s,
+         END OF ty_function_call_chat_comp_s,
+
+         ty_function_call_chat_comp_t TYPE STANDARD TABLE OF ty_generate_message_s WITH EMPTY KEY,
+
+         BEGIN OF ty_type_message_chat_comp_s,
+           role       TYPE string,
+           content    TYPE string,
+           tool_calls TYPE ty_function_call_chat_comp_t,
+         END OF ty_type_message_chat_comp_s.
 
   TYPES: BEGIN OF ty_openai_generate_request_s,
            model       TYPE string,
@@ -39,6 +58,21 @@ INTERFACE yif_aai_openai
            input       TYPE /ui2/cl_json=>json,
            tools       TYPE /ui2/cl_json=>json,
          END OF ty_openai_generate_request_s.
+
+  TYPES: BEGIN OF ty_openai_completions_req_s,
+           model       TYPE string,
+           stream      TYPE abap_bool,
+           temperature TYPE p LENGTH 2 DECIMALS 1,
+           messages    TYPE /ui2/cl_json=>json,
+         END OF ty_openai_completions_req_s.
+
+  TYPES: BEGIN OF ty_openai_comp_tools_req_s,
+           model       TYPE string,
+           stream      TYPE abap_bool,
+           temperature TYPE p LENGTH 2 DECIMALS 1,
+           messages    TYPE /ui2/cl_json=>json,
+           tools       TYPE /ui2/cl_json=>json,
+         END OF ty_openai_comp_tools_req_s.
 
   TYPES: BEGIN OF ty_content_s,
            type TYPE string,
@@ -61,6 +95,14 @@ INTERFACE yif_aai_openai
 
   TYPES: ty_output_t TYPE STANDARD TABLE OF ty_output_s WITH NON-UNIQUE KEY id.
 
+  TYPES: BEGIN OF ty_choices_s,
+           index      TYPE i,
+           message    TYPE ty_type_message_s,
+           tool_calls TYPE ty_type_message_chat_comp_s,
+         END OF ty_choices_s.
+
+  TYPES: ty_choices_t TYPE STANDARD TABLE OF ty_choices_s WITH NON-UNIQUE KEY index.
+
   TYPES: BEGIN OF ty_openai_generate_response_s,
            id          TYPE string,
            status      TYPE string,
@@ -68,6 +110,13 @@ INTERFACE yif_aai_openai
            temperature TYPE string,
            output      TYPE ty_output_t,
          END OF ty_openai_generate_response_s.
+
+  TYPES: BEGIN OF ty_openai_chat_comp_resp_s,
+           id      TYPE string,
+           object  TYPE string,
+           model   TYPE string,
+           choices TYPE ty_choices_t,
+         END OF ty_openai_chat_comp_resp_s.
 
   TYPES: BEGIN OF ty_openai_embed_request_s,
            model TYPE string,
@@ -91,6 +140,10 @@ INTERFACE yif_aai_openai
          END OF ty_openai_embed_response_s.
 
   DATA: mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY.
+
+  METHODS use_completions
+    IMPORTING
+      i_use_completions TYPE abap_bool DEFAULT abap_true.
 
   METHODS set_model
     IMPORTING
@@ -126,6 +179,15 @@ INTERFACE yif_aai_openai
       VALUE(r_conversation) TYPE /ui2/cl_json=>json.
 
   METHODS generate
+    IMPORTING
+      i_message    TYPE csequence
+      i_new        TYPE abap_bool DEFAULT abap_false
+      i_greeting   TYPE csequence OPTIONAL
+    EXPORTING
+      e_response   TYPE string
+      e_t_response TYPE rswsourcet.
+
+  METHODS chat_completions
     IMPORTING
       i_message    TYPE csequence
       i_new        TYPE abap_bool DEFAULT abap_false

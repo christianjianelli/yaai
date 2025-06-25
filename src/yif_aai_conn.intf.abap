@@ -5,13 +5,14 @@ INTERFACE yif_aai_conn
 
   DATA mt_msg TYPE bapiret2_t READ-ONLY.
 
-  DATA: m_api           TYPE string READ-ONLY,
-        m_base_url      TYPE string READ-ONLY,
-        m_endpoint      TYPE string READ-ONLY,
-        m_proxy_host    TYPE string READ-ONLY,
-        m_proxy_service TYPE string READ-ONLY,
-        m_proxy_user    TYPE string READ-ONLY,
-        m_proxy_passwd  TYPE string READ-ONLY.
+  DATA: m_api                   TYPE string READ-ONLY,
+        m_base_url              TYPE string READ-ONLY,
+        m_endpoint              TYPE string READ-ONLY,
+        m_proxy_host            TYPE string READ-ONLY,
+        m_proxy_service         TYPE string READ-ONLY,
+        m_proxy_user            TYPE string READ-ONLY,
+        m_proxy_passwd          TYPE string READ-ONLY,
+        m_suppress_content_type TYPE abap_bool READ-ONLY.
 
   METHODS
     create_connection
@@ -39,6 +40,11 @@ INTERFACE yif_aai_conn
         i_proxy_service TYPE string OPTIONAL
         i_proxy_user    TYPE string OPTIONAL
         i_proxy_passwd  TYPE string OPTIONAL.
+
+  METHODS
+    suppress_content_type
+      IMPORTING
+        i_suppress_content_type TYPE abap_bool DEFAULT abap_true.
 
   METHODS
     set_body

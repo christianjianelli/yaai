@@ -48,6 +48,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     DATA l_name TYPE tvarvc-name.
 
+    me->yif_aai_conn~m_suppress_content_type = abap_false.
+
     me->m_api = i_api.
 
     IF i_api IS INITIAL.
@@ -129,11 +131,19 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     me->_o_http_client->request->set_method( i_http_method ).
 
-    me->_o_http_client->request->set_header_field(
-      EXPORTING
-        name  = 'Content-Type'                 " Name of the header field
-        value = 'application/json'             " HTTP header field value
-    ).
+    IF me->yif_aai_conn~m_suppress_content_type = abap_false.
+
+      me->_o_http_client->request->set_header_field(
+        EXPORTING
+          name  = 'Content-Type'                 " Name of the header field
+          value = 'application/json'             " HTTP header field value
+      ).
+
+    ELSE.
+
+      me->_o_http_client->request->suppress_content_type( me->yif_aai_conn~m_suppress_content_type ).
+
+    ENDIF.
 
     IF me->_api_key IS NOT INITIAL.
 
@@ -269,6 +279,12 @@ CLASS ycl_aai_conn IMPLEMENTATION.
     me->yif_aai_conn~m_proxy_service = i_proxy_service.
     me->yif_aai_conn~m_proxy_user = i_proxy_user.
     me->yif_aai_conn~m_proxy_passwd = i_proxy_passwd.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~suppress_content_type.
+
+    me->yif_aai_conn~m_suppress_content_type = i_suppress_content_type.
 
   ENDMETHOD.
 
