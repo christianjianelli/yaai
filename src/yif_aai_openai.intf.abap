@@ -43,7 +43,23 @@ INTERFACE yif_aai_openai
            function TYPE ty_function_s,
          END OF ty_function_call_chat_comp_s,
 
-         ty_function_call_chat_comp_t TYPE STANDARD TABLE OF ty_generate_message_s WITH EMPTY KEY,
+         ty_function_call_chat_comp_t TYPE STANDARD TABLE OF ty_function_call_chat_comp_s WITH EMPTY KEY,
+
+         BEGIN OF ty_type_message_chat_comp_nt_s, " Message
+           role       TYPE string,
+           content    TYPE string,
+         END OF ty_type_message_chat_comp_nt_s,
+
+         BEGIN OF ty_type_message_chat_comp_tc_s, " Function/Tool Calling Message
+           role       TYPE string,
+           tool_calls TYPE ty_function_call_chat_comp_t,
+         END OF ty_type_message_chat_comp_tc_s,
+
+         BEGIN OF ty_type_message_chat_comp_tr_s, " Function/Tool Response Message
+           role         TYPE string,
+           content      TYPE string,
+           tool_call_id TYPE string,
+         END OF ty_type_message_chat_comp_tr_s,
 
          BEGIN OF ty_type_message_chat_comp_s,
            role       TYPE string,
@@ -97,8 +113,7 @@ INTERFACE yif_aai_openai
 
   TYPES: BEGIN OF ty_choices_s,
            index      TYPE i,
-           message    TYPE ty_type_message_s,
-           tool_calls TYPE ty_type_message_chat_comp_s,
+           message    TYPE ty_type_message_chat_comp_s,
          END OF ty_choices_s.
 
   TYPES: ty_choices_t TYPE STANDARD TABLE OF ty_choices_s WITH NON-UNIQUE KEY index.
@@ -175,6 +190,10 @@ INTERFACE yif_aai_openai
       e_t_history TYPE ty_generate_messages_t.
 
   METHODS get_conversation
+    RETURNING
+      VALUE(r_conversation) TYPE /ui2/cl_json=>json.
+
+  METHODS get_conversation_chat_comp
     RETURNING
       VALUE(r_conversation) TYPE /ui2/cl_json=>json.
 

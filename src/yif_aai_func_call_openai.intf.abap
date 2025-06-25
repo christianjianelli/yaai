@@ -16,6 +16,19 @@ INTERFACE yif_aai_func_call_openai
 
          ty_tools_t TYPE STANDARD TABLE OF ty_tool_s WITH EMPTY KEY,
 
+         BEGIN OF ty_function_s,
+           name        TYPE string,
+           description TYPE string,
+           parameters  TYPE ty_parameters_s,
+         END OF ty_function_s,
+
+         BEGIN OF ty_tool_chat_completion_s,
+           type        TYPE string,
+           function    TYPE ty_function_s,
+         END OF ty_tool_chat_completion_s,
+
+         ty_tools_chat_completion_t TYPE STANDARD TABLE OF ty_tool_chat_completion_s WITH EMPTY KEY,
+
          BEGIN OF ty_method_s,
            class_name  TYPE string,
            proxy_class TYPE string,
@@ -30,6 +43,8 @@ INTERFACE yif_aai_func_call_openai
   METHODS add_methods IMPORTING i_t_methods TYPE ty_methods_t.
 
   METHODS get_tools EXPORTING e_tools TYPE string.
+
+  METHODS get_tools_chat_completions EXPORTING e_tools TYPE string.
 
   METHODS reset_methods.
 

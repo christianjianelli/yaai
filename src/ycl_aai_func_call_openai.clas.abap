@@ -6,13 +6,14 @@ CLASS ycl_aai_func_call_openai DEFINITION
 
     INTERFACES yif_aai_func_call_openai.
 
-    ALIASES add_methods   FOR yif_aai_func_call_openai~add_methods.
-    ALIASES get_tools     FOR yif_aai_func_call_openai~get_tools.
+    ALIASES add_methods FOR yif_aai_func_call_openai~add_methods.
+    ALIASES get_tools FOR yif_aai_func_call_openai~get_tools.
+    ALIASES get_tools_chat_completions FOR yif_aai_func_call_openai~get_tools_chat_completions.
     ALIASES reset_methods FOR yif_aai_func_call_openai~reset_methods.
     ALIASES remove_method FOR yif_aai_func_call_openai~remove_method.
-    ALIASES call_tool     FOR yif_aai_func_call_openai~call_tool.
+    ALIASES call_tool FOR yif_aai_func_call_openai~call_tool.
 
-    ALIASES mt_methods    FOR yif_aai_func_call_openai~mt_methods.
+    ALIASES mt_methods FOR yif_aai_func_call_openai~mt_methods.
 
   PROTECTED SECTION.
 
@@ -89,6 +90,56 @@ CLASS ycl_aai_func_call_openai IMPLEMENTATION.
 
     IF lt_tools[] IS INITIAL.
       e_tools = '[]'.
+      RETURN.
+    ENDIF.
+
+    e_tools = NEW ycl_aai_util( )->serialize( i_data = lt_tools ).
+
+  ENDMETHOD.
+
+  METHOD yif_aai_func_call_openai~get_tools_chat_completions.
+
+    DATA lt_tools TYPE yif_aai_func_call_openai~ty_tools_chat_completion_t.
+
+    DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+    LOOP AT me->mt_methods ASSIGNING FIELD-SYMBOL(<ls_method>).
+
+      lo_aai_util->get_method_importing_params(
+        EXPORTING
+          i_class_name         = <ls_method>-class_name
+          i_method_name        = <ls_method>-method_name
+        IMPORTING
+          e_t_importing_params = DATA(lt_importing_params)
+      ).
+
+      APPEND INITIAL LINE TO lt_tools ASSIGNING FIELD-SYMBOL(<ls_tool>).
+
+      <ls_tool>-type = 'function'.
+      <ls_tool>-function-name = |{ <ls_method>-class_name }_{ <ls_method>-method_name }|.
+      <ls_tool>-function-description = <ls_method>-description.
+      <ls_tool>-function-parameters-type = 'object'.
+
+      LOOP AT lt_importing_params ASSIGNING FIELD-SYMBOL(<ls_importing_param>).
+
+        IF <ls_importing_param>-required = abap_true.
+
+          APPEND <ls_importing_param>-name TO <ls_tool>-function-parameters-required.
+
+        ENDIF.
+
+      ENDLOOP.
+
+      <ls_tool>-function-parameters-properties = lo_aai_util->get_json_schema(
+        EXPORTING
+          i_class_name  = <ls_method>-class_name
+          i_method_name = <ls_method>-method_name
+      ).
+
+    ENDLOOP.
+
+    IF lt_tools[] IS INITIAL.
+      e_tools = ''.
       RETURN.
     ENDIF.
 

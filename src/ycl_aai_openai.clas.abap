@@ -19,6 +19,7 @@ CLASS ycl_aai_openai DEFINITION
     ALIASES chat FOR yif_aai_chat~chat.
     ALIASES set_history FOR yif_aai_openai~set_history.
     ALIASES get_conversation FOR yif_aai_openai~get_conversation.
+    ALIASES get_conversation_chat_comp FOR yif_aai_openai~get_conversation_chat_comp.
 
     ALIASES mo_function_calling FOR yif_aai_openai~mo_function_calling.
 
@@ -407,7 +408,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     IF me->mo_function_calling IS BOUND.
 
-      me->mo_function_calling->get_tools(
+      me->mo_function_calling->get_tools_chat_completions(
         IMPORTING
           e_tools = l_tools
       ).
@@ -424,19 +425,19 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_openai_completions_endpoint ).
 
-        FREE me->_openai_generate_response.
+        FREE me->_openai_chat_comp_response.
 
         IF l_tools = '[]'.
 
           l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_completions_req_s( model = me->_model
                                                                                                       stream = abap_false
-                                                                                                      messages = me->get_conversation( ) ) ).
+                                                                                                      messages = me->get_conversation_chat_comp( ) ) ).
 
         ELSE.
 
           l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_comp_tools_req_s( model = me->_model
                                                                                                      stream = abap_false
-                                                                                                     messages = me->get_conversation( )
+                                                                                                     messages = me->get_conversation_chat_comp( )
                                                                                                      tools = l_tools ) ).
 
         ENDIF.
@@ -461,39 +462,46 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         LOOP AT me->_openai_chat_comp_response-choices ASSIGNING FIELD-SYMBOL(<ls_choices>).
 
-          IF <ls_choices>-tool_calls IS INITIAL.
+          IF <ls_choices>-message-tool_calls IS INITIAL.
             CONTINUE.
           ENDIF.
 
           l_function_call = abap_true.
 
-*          APPEND VALUE #( type = 'function_call'
-*                          arguments = <ls_output>-arguments
-*                          call_id = <ls_output>-call_id
-*                          name = <ls_output>-name ) TO me->_messages.
+          LOOP AT <ls_choices>-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool_calls>).
+
+            APPEND VALUE #( role = <ls_choices>-message-role
+                            type = 'function_call'
+                            arguments = <ls_tool_calls>-function-arguments
+                            call_id = <ls_tool_calls>-id
+                            name = <ls_tool_calls>-function-name ) TO me->_messages.
+
+*            " This deserialization is necessary because we need to parse the string passed in the arguments to a JSON.
+*            " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
+*            lo_aai_util->deserialize(
+*              EXPORTING
+*                i_json = <ls_tool_calls>-function-arguments
+*              IMPORTING
+*                e_data = lr_data
+*            ).
 *
-*          " This deserialization is necessary because we need to parse the string passed in the arguments to a JSON.
-*          " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
-*          lo_aai_util->deserialize(
-*            EXPORTING
-*              i_json = <ls_output>-arguments
-*            IMPORTING
-*              e_data = lr_data
-*          ).
-*
-*          ASSIGN lr_data->* TO <l_data>.
-*
-*          me->mo_function_calling->call_tool(
-*            EXPORTING
-*              i_tool_name   = to_upper( <ls_output>-name )
-*              i_json        = <l_data>
-*            RECEIVING
-*              r_response    = DATA(l_tool_response)
-*          ).
-*
-*          APPEND VALUE #( type = 'function_call_output'
-*                          call_id = <ls_output>-call_id
-*                          output = l_tool_response ) TO me->_messages.
+*            ASSIGN lr_data->* TO <l_data>.
+
+            me->mo_function_calling->call_tool(
+              EXPORTING
+                i_tool_name   = to_upper( <ls_tool_calls>-function-name )
+*                i_json        = <l_data>
+                i_json        = <ls_tool_calls>-function-arguments
+              RECEIVING
+                r_response    = DATA(l_tool_response)
+            ).
+
+            APPEND VALUE #( role = 'tool'
+                            type = 'function_call_output'
+                            call_id = <ls_tool_calls>-id
+                            output = l_tool_response ) TO me->_messages.
+
+          ENDLOOP.
 
         ENDLOOP.
 
@@ -569,6 +577,60 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         WHEN 'function_call_output'.
 
           DATA(ls_function_call_output) = CORRESPONDING yif_aai_openai~ty_function_call_output_s( <ls_message> ).
+
+          l_json = lo_aai_util->serialize( ls_function_call_output ).
+
+      ENDCASE.
+
+      IF r_conversation IS INITIAL.
+        r_conversation = l_json.
+      ELSE.
+        r_conversation = |{ r_conversation }, { l_json }|.
+      ENDIF.
+
+    ENDLOOP.
+
+    r_conversation = |[{ r_conversation }]|.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_openai~get_conversation_chat_comp.
+
+    DATA l_json TYPE string.
+
+    CLEAR r_conversation.
+
+    DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+    LOOP AT me->_messages ASSIGNING FIELD-SYMBOL(<ls_message>).
+
+      CLEAR l_json.
+
+      CASE to_lower( <ls_message>-type ).
+
+        WHEN 'message'.
+
+          DATA(ls_message) = CORRESPONDING yif_aai_openai~ty_type_message_chat_comp_nt_s( <ls_message> ).
+
+          l_json = lo_aai_util->serialize( ls_message ).
+
+        WHEN 'function_call'.
+
+          DATA(ls_function_call) = CORRESPONDING yif_aai_openai~ty_type_message_chat_comp_tc_s( <ls_message> ).
+
+          ls_function_call-tool_calls = VALUE #( ( id = <ls_message>-call_id
+                                                   type = 'function'
+                                                   function = VALUE #( name = <ls_message>-name
+                                                                       arguments = <ls_message>-arguments ) ) ).
+
+          l_json = lo_aai_util->serialize( ls_function_call ).
+
+        WHEN 'function_call_output'.
+
+          DATA(ls_function_call_output) = CORRESPONDING yif_aai_openai~ty_type_message_chat_comp_tr_s( <ls_message> ).
+
+          ls_function_call_output-content = <ls_message>-output.
+          ls_function_call_output-tool_call_id = <ls_message>-call_id.
 
           l_json = lo_aai_util->serialize( ls_function_call_output ).
 
