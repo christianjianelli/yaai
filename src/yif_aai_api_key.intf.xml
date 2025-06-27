@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOINTERF>
-    <CLSNAME>YIF_AAI_API_KEYS</CLSNAME>
+    <CLSNAME>YIF_AAI_API_KEY</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ABAP AI API Keys</DESCRIPT>
+    <DESCRIPT>ABAP AI API Key</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

@@ -1,7 +1,8 @@
 INTERFACE yif_aai_conn
   PUBLIC.
 
-  DATA mr_log TYPE REF TO ycl_aai_log READ-ONLY.
+  DATA: mo_log     TYPE REF TO ycl_aai_log READ-ONLY,
+        mo_api_key TYPE REF TO yif_aai_api_key READ-ONLY.
 
   DATA mt_msg TYPE bapiret2_t READ-ONLY.
 
@@ -31,7 +32,8 @@ INTERFACE yif_aai_conn
   METHODS
     set_api_key
       IMPORTING
-        i_api_key TYPE string.
+        i_o_api_key TYPE REF TO yif_aai_api_key OPTIONAL
+        i_api_key   TYPE string OPTIONAL.
 
   METHODS
     set_proxy

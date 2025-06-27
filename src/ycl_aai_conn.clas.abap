@@ -5,7 +5,9 @@ CLASS ycl_aai_conn DEFINITION
   PUBLIC SECTION.
 
     INTERFACES yif_aai_conn.
-    ALIASES mr_log FOR yif_aai_conn~mr_log.
+
+    ALIASES mo_log FOR yif_aai_conn~mo_log.
+    ALIASES mo_api_key FOR yif_aai_conn~mo_api_key.
     ALIASES mt_msg FOR yif_aai_conn~mt_msg.
     ALIASES m_api FOR yif_aai_conn~m_api.
     ALIASES m_base_url FOR yif_aai_conn~m_base_url.
@@ -55,8 +57,6 @@ CLASS ycl_aai_conn IMPLEMENTATION.
     IF i_api IS INITIAL.
       RETURN.
     ENDIF.
-
-    me->set_api_key( NEW ycl_aai_api_keys( )->read( i_api ) ).
 
     CASE me->m_api.
 
@@ -142,6 +142,18 @@ CLASS ycl_aai_conn IMPLEMENTATION.
     ELSE.
 
       me->_o_http_client->request->suppress_content_type( me->yif_aai_conn~m_suppress_content_type ).
+
+    ENDIF.
+
+    IF me->_api_key IS INITIAL AND me->m_api IS NOT INITIAL.
+
+      IF me->mo_api_key IS NOT BOUND.
+
+        me->mo_api_key = NEW ycl_aai_api_key( ).
+
+      ENDIF.
+
+      me->set_api_key( i_api_key = me->mo_api_key->read( me->m_api ) ).
 
     ENDIF.
 
@@ -240,17 +252,17 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
   METHOD log.
 
-    IF me->mr_log IS NOT BOUND.
-      me->mr_log = NEW #( ).
+    IF me->mo_log IS NOT BOUND.
+      me->mo_log = NEW #( ).
     ENDIF.
 
-    me->mr_log->add( i_s_msg = i_s_msg ).
+    me->mo_log->add( i_s_msg = i_s_msg ).
 
     IF sy-msgid IS NOT INITIAL AND
        sy-msgty IS NOT INITIAL AND
        sy-msgno IS NOT INITIAL.
 
-      me->mr_log->add( VALUE #( id = sy-msgid
+      me->mo_log->add( VALUE #( id = sy-msgid
                                 type = sy-msgty
                                 number = sy-msgno
                                 message_v1 = sy-msgv1

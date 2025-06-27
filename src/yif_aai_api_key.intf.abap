@@ -1,4 +1,4 @@
-INTERFACE yif_aai_api_keys
+INTERFACE yif_aai_api_key
   PUBLIC.
 
   METHODS create

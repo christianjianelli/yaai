@@ -1,14 +1,14 @@
-CLASS ycl_aai_api_keys DEFINITION
+CLASS ycl_aai_api_key DEFINITION
   PUBLIC
   CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    INTERFACES yif_aai_api_keys.
+    INTERFACES yif_aai_api_key.
 
-    ALIASES create FOR yif_aai_api_keys~create.
-    ALIASES read FOR yif_aai_api_keys~read.
-    ALIASES delete FOR yif_aai_api_keys~delete.
+    ALIASES create FOR yif_aai_api_key~create.
+    ALIASES read FOR yif_aai_api_key~read.
+    ALIASES delete FOR yif_aai_api_key~delete.
 
   PROTECTED SECTION.
 
@@ -29,7 +29,7 @@ ENDCLASS.
 
 
 
-CLASS ycl_aai_api_keys IMPLEMENTATION.
+CLASS ycl_aai_api_key IMPLEMENTATION.
 
   METHOD encode.
 
@@ -43,7 +43,7 @@ CLASS ycl_aai_api_keys IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_api_keys~read.
+  METHOD yif_aai_api_key~read.
 
     CLEAR r_api_key.
 
@@ -56,7 +56,7 @@ CLASS ycl_aai_api_keys IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_api_keys~create.
+  METHOD yif_aai_api_key~create.
 
     r_created = abap_false.
 
@@ -79,7 +79,7 @@ CLASS ycl_aai_api_keys IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_api_keys~delete.
+  METHOD yif_aai_api_key~delete.
 
     r_deleted = abap_false.
 
