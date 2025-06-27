@@ -16,7 +16,16 @@ The ABAP AI tools require specific configuration parameters to be maintained in 
 | YAAI_OPENAI_BASE_URL   | https://api.openai.com/               |
 | YAAI_OLLAMA_BASE_URL   | http://localhost:11434                |
 
-- The full API URL is constructed by concatenating the base URL with the specific service endpoint.
-- Ensure that these parameters are maintained and up to date for the ABAP AI tools to function correctly.
+### Configuration Parameters for Custom APIs
+
+If you want the ABAP AI to automatically construct the full API URL for a custom API, you need to create a parameter in TVARVC using the naming pattern `YAAI_{API_NAME}`. Replace `{API_NAME}` with your API's name (for example, `YAAI_MYAPI`). 
+
+When creating a connection to a custom API, specify the API name as a parameter. For example:
+
+```abap
+DATA(lo_conn) = NEW ycl_aai_conn( i_api = 'MYAPI' ).
+```
+
+---
 
 > **Note:** When using the SAP NetWeaver ABAP Developer Edition to experiment with the ABAP AI tools, you may encounter SSL configuration challenges when connecting to external APIs such as OpenAI. To simplify connectivity, you can use a reverse proxy. For detailed instructions, see [Reverse Proxy Setup](reverse_proxy.md).
