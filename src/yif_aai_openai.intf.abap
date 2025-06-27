@@ -46,8 +46,8 @@ INTERFACE yif_aai_openai
          ty_function_call_chat_comp_t TYPE STANDARD TABLE OF ty_function_call_chat_comp_s WITH EMPTY KEY,
 
          BEGIN OF ty_type_message_chat_comp_nt_s, " Message
-           role       TYPE string,
-           content    TYPE string,
+           role    TYPE string,
+           content TYPE string,
          END OF ty_type_message_chat_comp_nt_s,
 
          BEGIN OF ty_type_message_chat_comp_tc_s, " Function/Tool Calling Message
@@ -112,8 +112,8 @@ INTERFACE yif_aai_openai
   TYPES: ty_output_t TYPE STANDARD TABLE OF ty_output_s WITH NON-UNIQUE KEY id.
 
   TYPES: BEGIN OF ty_choices_s,
-           index      TYPE i,
-           message    TYPE ty_type_message_chat_comp_s,
+           index   TYPE i,
+           message TYPE ty_type_message_chat_comp_s,
          END OF ty_choices_s.
 
   TYPES: ty_choices_t TYPE STANDARD TABLE OF ty_choices_s WITH NON-UNIQUE KEY index.
@@ -170,7 +170,8 @@ INTERFACE yif_aai_openai
 
   METHODS set_system_instructions
     IMPORTING
-      i_system_instructions TYPE string.
+      i_system_instructions      TYPE string
+      i_system_instructions_role TYPE string DEFAULT 'developer'.
 
   METHODS set_connection
     IMPORTING

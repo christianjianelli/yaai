@@ -47,6 +47,7 @@ CLASS ycl_aai_openai DEFINITION
           _use_completions           TYPE abap_bool VALUE abap_false,
           _temperature               TYPE p LENGTH 2 DECIMALS 1,
           _system_instructions       TYPE string,
+          _system_instructions_role  TYPE string,
           _openai_generate_request   TYPE yif_aai_openai~ty_openai_generate_request_s,
           _openai_generate_response  TYPE yif_aai_openai~ty_openai_generate_response_s,
           _openai_chat_comp_response TYPE yif_aai_openai~ty_openai_chat_comp_resp_s,
@@ -62,6 +63,8 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   METHOD constructor.
 
     me->_model = COND #( WHEN i_model IS NOT INITIAL THEN i_model ELSE 'gpt-4.1' ).
+
+    me->_system_instructions_role = 'developer'.
 
     me->_messages = i_t_history.
 
@@ -110,6 +113,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   METHOD yif_aai_openai~set_system_instructions.
 
     me->_system_instructions = i_system_instructions.
+    me->_system_instructions_role = i_system_instructions_role.
 
   ENDMETHOD.
 
@@ -183,7 +187,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       IF me->_system_instructions IS NOT INITIAL.
 
-        APPEND VALUE #( role = 'developer'
+        APPEND VALUE #( role = me->_system_instructions_role
                         content = me->_system_instructions
                         type = 'message' ) TO me->_messages.
 
@@ -277,7 +281,9 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                           call_id = <ls_output>-call_id
                           name = <ls_output>-name ) TO me->_messages.
 
-          " This deserialization is necessary because we need to parse the string passed in the arguments to a JSON.
+          ASSIGN <ls_output>-arguments TO <l_data>.
+
+          " This deserialization may be necessary depending on how the arguments are passed. We may need to parse an escaped string to a JSON string.
           " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
           lo_aai_util->deserialize(
             EXPORTING
@@ -286,7 +292,14 @@ CLASS ycl_aai_openai IMPLEMENTATION.
               e_data = lr_data
           ).
 
-          ASSIGN lr_data->* TO <l_data>.
+          DATA(lo_typedescr) = cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+
+          " Make sure the deserialized object is a JSON string before assigning it
+          IF lo_typedescr->type_kind = cl_abap_typedescr=>typekind_string.
+
+            ASSIGN lr_data->* TO <l_data>.
+
+          ENDIF.
 
           me->mo_function_calling->call_tool(
             EXPORTING
@@ -369,7 +382,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       IF me->_system_instructions IS NOT INITIAL.
 
-        APPEND VALUE #( role = 'developer'
+        APPEND VALUE #( role = me->_system_instructions_role
                         content = me->_system_instructions
                         type = 'message' ) TO me->_messages.
 
@@ -476,22 +489,30 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                             call_id = <ls_tool_calls>-id
                             name = <ls_tool_calls>-function-name ) TO me->_messages.
 
-*            " This deserialization is necessary because we need to parse the string passed in the arguments to a JSON.
-*            " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
-*            lo_aai_util->deserialize(
-*              EXPORTING
-*                i_json = <ls_tool_calls>-function-arguments
-*              IMPORTING
-*                e_data = lr_data
-*            ).
-*
-*            ASSIGN lr_data->* TO <l_data>.
+            ASSIGN <ls_tool_calls>-function-arguments TO <l_data>.
+
+            " This deserialization may be necessary depending on how the arguments are passed. We may need to parse an escaped string to a JSON string.
+            " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
+            lo_aai_util->deserialize(
+              EXPORTING
+                i_json = <ls_tool_calls>-function-arguments
+              IMPORTING
+                e_data = lr_data
+            ).
+
+            DATA(lo_typedescr) = cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+
+            " Make sure the deserialized object is a JSON string before assigning it
+            IF lo_typedescr->type_kind = cl_abap_typedescr=>typekind_string.
+
+              ASSIGN lr_data->* TO <l_data>.
+
+            ENDIF.
 
             me->mo_function_calling->call_tool(
               EXPORTING
                 i_tool_name   = to_upper( <ls_tool_calls>-function-name )
-*                i_json        = <l_data>
-                i_json        = <ls_tool_calls>-function-arguments
+                i_json        = <l_data>
               RECEIVING
                 r_response    = DATA(l_tool_response)
             ).

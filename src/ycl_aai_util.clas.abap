@@ -38,13 +38,6 @@ CLASS ycl_aai_util DEFINITION
         e_t_importing_params TYPE ty_importing_params_tt
         e_t_components       TYPE cl_abap_structdescr=>component_table.
 
-    METHODS get_method_import_params
-      IMPORTING
-        i_class_name         TYPE csequence
-        i_method_name        TYPE csequence
-      EXPORTING
-        e_t_importing_params TYPE cl_abap_structdescr=>component_table.
-
     METHODS get_parameter_type
       IMPORTING
                 i_o_type_descr TYPE REF TO cl_abap_elemdescr
@@ -132,71 +125,6 @@ CLASS ycl_aai_util IMPLEMENTATION.
       l_length = <ls_match>-length.
 
       REPLACE ALL OCCURRENCES OF i_content+l_offset(l_length) IN r_content WITH l_character.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD get_method_import_params.
-
-    DATA: lo_class_descr TYPE REF TO cl_abap_classdescr.
-
-    DATA: lt_methods    TYPE abap_methdescr_tab,
-          lt_components TYPE cl_abap_structdescr=>component_table.
-
-    DATA: ls_component TYPE cl_abap_structdescr=>component.
-
-    " Get the class descriptor
-    CALL METHOD cl_abap_classdescr=>describe_by_name
-      EXPORTING
-        p_name         = to_upper( i_class_name )     " Type name
-      RECEIVING
-        p_descr_ref    = DATA(lo_descr)   " Reference to description object
-      EXCEPTIONS
-        type_not_found = 1                " Type with name p_name could not be found
-        OTHERS         = 2.
-
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    lo_class_descr ?= lo_descr.
-
-    " Get all methods of the class
-    lt_methods = lo_class_descr->methods.
-
-    READ TABLE lt_methods ASSIGNING FIELD-SYMBOL(<ls_method>) WITH KEY name = to_upper( i_method_name ).
-
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    LOOP AT <ls_method>-parameters ASSIGNING FIELD-SYMBOL(<ls_parameter>).
-
-      IF <ls_parameter>-parm_kind <> 'I'. " Importing parameters
-        CONTINUE.
-      ENDIF.
-
-      lo_class_descr->get_method_parameter_type(
-        EXPORTING
-          p_method_name       = 'TOOL1'         " Method name
-          p_parameter_name    = <ls_parameter>-name   " Parameter Name
-        RECEIVING
-          p_descr_ref         = DATA(lo_descr_ref)    " Description object
-        EXCEPTIONS
-          parameter_not_found = 1                     " Parameter could not be found
-          method_not_found    = 2                     " Method was not found
-          OTHERS              = 3
-      ).
-
-      IF sy-subrc = 0.
-
-        ls_component-name = <ls_parameter>-name.
-        ls_component-type ?= lo_descr_ref.
-
-        APPEND ls_component TO e_t_importing_params.
-
-      ENDIF.
 
     ENDLOOP.
 
