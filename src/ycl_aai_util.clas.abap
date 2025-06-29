@@ -17,13 +17,15 @@ CLASS ycl_aai_util DEFINITION
     METHODS serialize
       IMPORTING
                 i_data        TYPE data
+                i_camel_case  TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(r_json) TYPE string.
 
     METHODS deserialize
       IMPORTING
-        i_json TYPE string
+        i_json       TYPE string
+        i_camel_case TYPE abap_bool DEFAULT abap_false
       EXPORTING
-        e_data TYPE data.
+        e_data       TYPE data.
 
     METHODS replace_unicode_escape_seq
       IMPORTING
@@ -68,12 +70,18 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
     FREE r_json.
 
+    DATA(l_pretty_name) = /ui2/cl_json=>pretty_mode-low_case.
+
+    IF i_camel_case = abap_true.
+      l_pretty_name = /ui2/cl_json=>pretty_mode-camel_case.
+    ENDIF.
+
     r_json = /ui2/cl_json=>serialize(
      EXPORTING
        data = i_data
        compress         = abap_false
 *       name             =
-       pretty_name      = /ui2/cl_json=>pretty_mode-low_case
+       pretty_name      = l_pretty_name
 *       type_descr       =
 *       assoc_arrays     =
 *       ts_as_iso8601    =
@@ -88,11 +96,17 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
   METHOD deserialize.
 
+    DATA(l_pretty_name) = /ui2/cl_json=>pretty_mode-low_case.
+
+    IF i_camel_case = abap_true.
+      l_pretty_name = /ui2/cl_json=>pretty_mode-camel_case.
+    ENDIF.
+
     /ui2/cl_json=>deserialize(
       EXPORTING
-        json             = i_json          " JSON string
+        json            = i_json           " JSON string
 *      jsonx            =                  " JSON XString
-       pretty_name      = abap_true        " Pretty Print property names
+       pretty_name      = l_pretty_name    " Pretty Print property names
 *      assoc_arrays     =                  " Deserialize associative array as tables with unique keys
 *      assoc_arrays_opt =                  " Optimize rendering of name value maps
 *      name_mappings    =                  " ABAP<->JSON Name Mapping Table

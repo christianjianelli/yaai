@@ -76,6 +76,14 @@ CLASS ycl_aai_conn IMPLEMENTATION.
             AND numb = '0000'
            INTO @me->m_base_url.
 
+      WHEN yif_aai_const=>c_google.
+
+        SELECT SINGLE low FROM tvarvc
+          WHERE name = @yif_aai_const=>c_google_base_url_param
+            AND type = 'P'
+            AND numb = '0000'
+           INTO @me->m_base_url.
+
       WHEN OTHERS.
 
         l_name = |YAAI_{ i_api }|.
@@ -102,6 +110,32 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     IF i_endpoint IS NOT INITIAL AND i_endpoint(1) = '/'.
       me->_url = |{ me->_url }{ i_endpoint }|.
+    ENDIF.
+
+    IF me->_api_key IS INITIAL AND me->m_api IS NOT INITIAL.
+
+      IF me->mo_api_key IS NOT BOUND.
+
+        me->mo_api_key = NEW ycl_aai_api_key( ).
+
+      ENDIF.
+
+      me->set_api_key( i_api_key = me->mo_api_key->read( me->m_api ) ).
+
+    ENDIF.
+
+    "Google API expects to receive the API Key in the URL
+    DATA(l_apikey_url_placeholder) = |{ yif_aai_const=>c_placeholder_pattern }APIKEY{ yif_aai_const=>c_placeholder_pattern }|.
+
+    FIND l_apikey_url_placeholder IN me->_url.
+
+    IF sy-subrc = 0.
+
+      REPLACE l_apikey_url_placeholder IN me->_url WITH me->_api_key.
+
+      "If the API key is in the URL, skip adding the Bearer token to the HTTP header
+      DATA(l_skip_bearer_http_header) = abap_true.
+
     ENDIF.
 
     cl_http_client=>create_by_url(
@@ -145,19 +179,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     ENDIF.
 
-    IF me->_api_key IS INITIAL AND me->m_api IS NOT INITIAL.
-
-      IF me->mo_api_key IS NOT BOUND.
-
-        me->mo_api_key = NEW ycl_aai_api_key( ).
-
-      ENDIF.
-
-      me->set_api_key( i_api_key = me->mo_api_key->read( me->m_api ) ).
-
-    ENDIF.
-
-    IF me->_api_key IS NOT INITIAL.
+    IF me->_api_key IS NOT INITIAL AND l_skip_bearer_http_header = abap_false.
 
       _o_http_client->request->set_header_field(
         EXPORTING

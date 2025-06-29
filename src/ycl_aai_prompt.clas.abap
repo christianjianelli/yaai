@@ -25,7 +25,7 @@ CLASS ycl_aai_prompt IMPLEMENTATION.
 
   METHOD constructor.
 
-    me->m_placeholder_begin = '%'.
+    me->m_placeholder_begin = yif_aai_const=>c_placeholder_pattern. "% (percentage sign)
     me->m_placeholder_end = me->m_placeholder_begin.
 
   ENDMETHOD.

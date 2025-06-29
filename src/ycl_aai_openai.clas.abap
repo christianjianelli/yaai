@@ -23,7 +23,7 @@ CLASS ycl_aai_openai DEFINITION
 
     ALIASES mo_function_calling FOR yif_aai_openai~mo_function_calling.
 
-    CLASS-DATA m_ref TYPE REF TO ycl_aai_openai.
+    CLASS-DATA m_ref TYPE REF TO ycl_aai_openai READ-ONLY.
 
     CLASS-METHODS get_instance
       IMPORTING

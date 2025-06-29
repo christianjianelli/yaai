@@ -19,7 +19,7 @@ CLASS ycl_aai_ollama DEFINITION
 
     ALIASES mo_function_calling FOR yif_aai_ollama~mo_function_calling.
 
-    CLASS-DATA m_ref TYPE REF TO ycl_aai_ollama.
+    CLASS-DATA m_ref TYPE REF TO ycl_aai_ollama READ-ONLY.
 
     CLASS-METHODS get_instance
       IMPORTING
