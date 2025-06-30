@@ -151,6 +151,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
         ENDIF.
 
+        ls_generate_request-generation_config-temperature = me->_temperature.
+
         ASSIGN ls_generate_request TO <ls_generate_request>.
 
         IF me->_system_instructions IS NOT INITIAL.
@@ -161,6 +163,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
           ls_generate_request_sys-system_instruction = VALUE #( parts = VALUE #( ( text = me->_system_instructions ) ) ).
 
           ls_generate_request_sys-contents = ls_generate_request-contents.
+          ls_generate_request_sys-generation_config = CORRESPONDING #( ls_generate_request-generation_config ).
           ls_generate_request_sys-tools = ls_generate_request-tools.
 
           ASSIGN ls_generate_request_sys TO <ls_generate_request>.
