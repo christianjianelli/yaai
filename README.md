@@ -3,9 +3,9 @@ This repository provides a set of tools designed to facilitate Artificial Intell
 
 ## Key Features
 - **Multi-Provider LLM API Support**: ABAP AI tools support seamless integration with multiple large language model APIs, giving you flexibility in choosing your provider and deployment model. The list of supported APIs will continue to grow as the project evolves. Currently supported APIs include:
-  - **[OpenAI](openai/README.md)** (cloud-based)
-  - **[Ollama](ollama/README.md)** (local/self-hosted)
-  - **[Google Gemini](google/README.md)** (cloud-based)
+  - **[OpenAI](docs/openai/README.md)** (cloud-based)
+  - **[Ollama](docs/ollama/README.md)** (local/self-hosted)
+  - **[Google Gemini](docs/google/README.md)** (cloud-based)
   - APIs from other providers, such as Nvidia, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.
 - **Conversation Management**: Maintain and manage multi-turn conversations, with full access to conversation history for advanced chat scenarios.
 - **Tool/Function Calling**: Integrate ABAP business logic with LLMs using function/tool calling, allowing AI models to trigger ABAP methods.
@@ -198,8 +198,9 @@ The following screenshots show the output you can expect after running the examp
 
   ABAP AI supports both OpenAI and Ollama APIs. To get started with your preferred provider, check out the dedicated guides:
 
-  - [OpenAI Guide](docs/openai/openai.md): Learn how to use ABAP AI with OpenAI models.
-  - [Ollama Guide](docs/ollama/ollama.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
+  - [OpenAI Guide](docs/openai/README.md): Learn how to use ABAP AI with OpenAI models.
+  - [Ollama Guide](docs/ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
+  - [Google Gemini Guide](docs/google/README.md): Learn how to use ABAP AI with Google Gemini models.
 
   ### Read the documentation
 
