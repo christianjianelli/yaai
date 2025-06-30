@@ -6,3 +6,4 @@ The ABAP AI function calling feature integrates LLM's function calling capabilit
 
 - [OpenAI Function Calling](openai/function_calling.md)
 - [Ollama Function Calling](ollama/function_calling.md)
+- [Google Function Calling](google/function_calling.md)

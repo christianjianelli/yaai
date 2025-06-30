@@ -121,10 +121,13 @@ The following screenshots show the output you can expect after running the examp
 ![Output of the ABAP AI Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_4.png)
 
 
-Now that you've run your first ABAP AI Ollama applications, consider exploring additional features.😊
+Now that you've run your first Ollama ABAP AI applications, consider exploring additional features.😊
 
-## [Explore ABAP AI Features](#features) 
+## Explore ABAP AI Features
   - **Prompt Templates:** Learn how to define and use [prompt templates](../prompt_templates.md) for more dynamic and reusable prompts.
   - **LLM System Instructions:** Pass [system instructions](system_instructions.md) to guide the behavior of the language model for specific tasks.
   - **Tool/Function Calling:** Enable LLM applications to trigger ABAP logic or workflows.
   - **Retrieval-Augmented Generation (RAG):** Enhance your LLM applications by incorporating external knowledge sources and retrieval mechanisms.
+
+## Ollama API Documentation
+  - [GitHub](https://github.com/ollama/ollama/blob/main/docs/api.md)    

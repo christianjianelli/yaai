@@ -4,7 +4,7 @@ The ABAP AI function calling feature integrates Ollama's function calling capabi
 
 ## Overview
 
-Ollama function calling enables LLMs to interact with external functions by describing them in a machine-readable format. In the ABAP AI context, this means exposing ABAP class methods as callable functions. The ABAP AI framework serializes method signatures and parameters, allowing the LLM to understand available methods and their expected inputs and outputs.
+Ollama function calling enables LLMs to interact with external functions by describing them in a machine-readable format. In the ABAP AI context, this means exposing ABAP class methods as callable functions. The ABAP AI framework serializes method signatures and parameters, allowing the LLM to understand available methods and their expected inputs.
 
 Supported parameter types:
 - Scalar types (e.g., `STRING`, `INT4`, `P`, `D`, `C`, ...)
@@ -17,7 +17,12 @@ Supported parameter types:
     Create a global class with instance methods you want to expose. Ensure method parameters are scalar, flat structures, or flat tables. The method can only have `IMPORTING` parameters; `EXPORTING` and `CHANGING` parameters are not supported. The method must have a `RETURNING` parameter named `R_RESPONSE` of type `STRING`.
 
 2. **Register the Class/Method**  
-    Use the ABAP AI framework to register the class and method for function calling. The framework will generate a function schema compatible with Ollama.
+    Use the ABAP AI framework to register the class and method for function calling.  
+    The method `add_methods` of the class `ycl_aai_function_calling` must be used to register the methods you want to expose for function calling.  
+    The framework will generate a function schema compatible with Ollama.
+
+3. **Bind Tools to Ollama**  
+    The ABAP AI OpenAI `bind_tools` method expects an object (instance) of the class `ycl_aai_function_calling` as its argument. This object manages the registration and invocation of ABAP methods as callable tools for Ollama function calling.
 
 3. **Describe Functions to Ollama**  
     The ABAP AI framework provides a JSON schema describing available methods and their parameters. This schema is sent to the Ollama API as part of the function calling setup.

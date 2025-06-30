@@ -2,7 +2,11 @@
 This repository provides a set of tools designed to facilitate Artificial Intelligence capabilities within ABAP environments.
 
 ## Key Features
-- **OpenAI and Ollama Support**: Seamlessly connect your ABAP applications to both OpenAI (cloud-based) and Ollama (local/self-hosted) LLM APIs, enabling flexible deployment options. APIs from other providers (such as Nvidia) that implement the OpenAI API standards may also work with ABAP AI tools, possibly requiring some small tweaks.
+- **Multi-Provider LLM API Support**: ABAP AI tools support seamless integration with multiple large language model APIs, giving you flexibility in choosing your provider and deployment model. The list of supported APIs will continue to grow as the project evolves. Currently supported APIs include:
+  - **[OpenAI](openai/README.md)** (cloud-based)
+  - **[Ollama](ollama/README.md)** (local/self-hosted)
+  - **[Google Gemini](google/README.md)** (cloud-based)
+  - APIs from other providers, such as Nvidia, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.
 - **Conversation Management**: Maintain and manage multi-turn conversations, with full access to conversation history for advanced chat scenarios.
 - **Tool/Function Calling**: Integrate ABAP business logic with LLMs using function/tool calling, allowing AI models to trigger ABAP methods.
 - **Retrieval-Augmented Generation (RAG)**: Enhance LLM outputs by incorporating enterprise data, enabling more accurate and relevant answers through retrieval-augmented generation workflows.

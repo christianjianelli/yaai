@@ -1,10 +1,10 @@
-# yaai - ABAP AI tools - Function Calling - OpenAI
+# yaai - ABAP AI tools - Function Calling - Google Gemini
 
-The ABAP AI function calling feature integrates OpenAI's function calling capabilities with ABAP global classes, enabling large language models (LLMs) to invoke ABAP instance methods programmatically. This allows for dynamic, AI-driven workflows where LLMs can request the execution of ABAP logic and receive structured results.
+The ABAP AI function calling feature integrates Google Gemini's function calling capabilities with ABAP global classes, enabling large language models (LLMs) to invoke ABAP instance methods programmatically. This allows for dynamic, AI-driven workflows where LLMs can request the execution of ABAP logic and receive structured results.
 
 ## Overview
 
-OpenAI function calling enables LLMs to interact with external functions by describing them in a machine-readable format. In the ABAP AI context, this means exposing ABAP class methods as callable functions. The ABAP AI framework serializes method signatures and parameters, allowing the LLM to understand available methods and their expected inputs.
+Google Gemini function calling enables LLMs to interact with external functions by describing them in a machine-readable format. In the ABAP AI context, this means exposing ABAP class methods as callable functions. The ABAP AI framework serializes method signatures and parameters, allowing the LLM to understand available methods and their expected inputs.
 
 Supported parameter types:
 - Scalar types (e.g., `STRING`, `INT4`, `P`, `D`, `C`, ...)
@@ -18,25 +18,25 @@ Supported parameter types:
 
 2. **Register the Class/Method**  
     Use the ABAP AI framework to register the class and method for function calling.  
-    The method `add_methods` of the class `ycl_aai_func_call_openai` must be used to register the methods you want to expose for function calling.  
-    The framework will generate a function schema compatible with OpenAI.
+    The method `add_methods` of the class `ycl_aai_func_call_google` must be used to register the methods you want to expose for function calling.  
+    The framework will generate a function schema compatible with Google Gemini.
 
     ```abap
-    DATA(lo_function_calling) = NEW ycl_aai_func_call_openai( ).
+    DATA(lo_function_calling) = NEW ycl_aai_func_call_google( ).
 
     lo_function_calling->add_methods( VALUE #( ( class_name = 'ycl_aai_bp_tools' method_name = 'create_person' description = 'Use this method to create a Business Partner for a Person' )
                                                ( class_name = 'ycl_aai_bp_tools' method_name = 'create_organization' description = 'Use this method to create a Business Partner for an Organization' ) ) ).
-    ```
+    ```    
 
-3. **Bind Tools to OpenAI**  
-    The ABAP AI OpenAI `bind_tools` method expects an object (instance) of the class `ycl_aai_func_call_openai` as its argument. This object manages the registration and invocation of ABAP methods as callable tools for OpenAI function calling.
+3. **Bind Tools to Google Gemini**  
+    The ABAP AI Google Gemini `bind_tools` method expects an object (instance) of the class `ycl_aai_func_call_google` as its argument. This object manages the registration and invocation of ABAP methods as callable tools for Gemini function calling.
 
     ```abap
     lo_aai_google->bind_tools( lo_function_calling ).
     ```
 
-4. **Describe Functions to OpenAI**  
-    The ABAP AI framework provides a JSON schema describing available methods and their parameters. This schema is sent to the OpenAI API as part of the function calling setup.
+4. **Describe Functions to Google Gemini**  
+    The ABAP AI framework provides a JSON schema describing available methods and their parameters. This schema is sent to the Google Gemini API as part of the function calling setup.
 
 5. **Invoke via LLM**  
     When the LLM determines a function call is needed, it returns a function call request with parameter values. The ABAP AI framework parses this request and invokes the corresponding ABAP method.
@@ -47,10 +47,10 @@ Supported parameter types:
 **Complete Example:**
 
 ```abap
-REPORT yaai_r_simple_func_call_openai.
+REPORT yaai_r_simple_func_call_google.
 
 PARAMETERS: p_prompt TYPE c LENGTH 200 LOWER CASE OBLIGATORY,
-            p_model  TYPE c LENGTH 30 LOWER CASE OBLIGATORY DEFAULT 'gpt-4.1',
+            p_model  TYPE c LENGTH 30 LOWER CASE OBLIGATORY DEFAULT 'gemini-2.5-flash',
             p_tempe  TYPE p LENGTH 2 DECIMALS 1 DEFAULT 1.
 
 CLASS lcl_app DEFINITION.
@@ -68,7 +68,7 @@ CLASS lcl_app IMPLEMENTATION.
     DATA l_system_instructions TYPE string.
 
     "This example assumes that the API base URL and the API Key are properly configured
-    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_model = p_model ).
+    DATA(lo_aai_google) = NEW ycl_aai_google( ).
 
     l_system_instructions = |# Role\n|.
     l_system_instructions = |{ l_system_instructions }You are a knowledgeable and approachable support agent for SAP Business Partner Management.\n|.
@@ -82,16 +82,16 @@ CLASS lcl_app IMPLEMENTATION.
     l_system_instructions = |{ l_system_instructions }    - **User Guidance**: If the user needs further assistance or has additional questions,|.
     l_system_instructions = |{ l_system_instructions } guide them on the next steps or where to find more information|.
 
-    lo_aai_openai->set_system_instructions( l_system_instructions ).
+    lo_aai_google->set_system_instructions( l_system_instructions ).
 
-    DATA(lo_function_calling) = NEW ycl_aai_func_call_openai( ).
+    DATA(lo_function_calling) = NEW ycl_aai_func_call_google( ).
 
     lo_function_calling->add_methods( VALUE #( ( class_name = 'ycl_aai_bp_tools' method_name = 'create_person' description = 'Use this method to create a Business Partner for a Person' )
                                                ( class_name = 'ycl_aai_bp_tools' method_name = 'create_organization' description = 'Use this method to create a Business Partner for an Organization' ) ) ).
 
-    lo_aai_openai->bind_tools( lo_function_calling ).
+    lo_aai_google->bind_tools( lo_function_calling ).
 
-    lo_aai_openai->chat(
+    lo_aai_google->chat(
       EXPORTING
         i_message    = p_prompt
       IMPORTING
@@ -129,4 +129,4 @@ START-OF-SELECTION.
 - Nested structures and tables are not supported.
 - Complex data types (e.g., objects, deep structures) are not supported.
 
-For more details, refer to the ABAP AI framework documentation and OpenAI function calling API reference.
+For more details, refer to the ABAP AI framework documentation and Google Gemini function calling API reference.
