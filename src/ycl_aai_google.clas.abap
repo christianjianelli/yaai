@@ -14,6 +14,7 @@ CLASS ycl_aai_google DEFINITION
     ALIASES bind_tools FOR yif_aai_google~bind_tools.
     ALIASES chat FOR yif_aai_chat~chat.
     ALIASES generate FOR yif_aai_google~generate.
+    ALIASES get_conversation FOR yif_aai_google~get_conversation.
 
     ALIASES mo_function_calling FOR yif_aai_google~mo_function_calling.
 
@@ -321,6 +322,11 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
   METHOD yif_aai_google~get_conversation.
 
+    r_conversation = NEW ycl_aai_util( )->serialize(
+      EXPORTING
+        i_data = me->_chat_messages
+    ).
+
   ENDMETHOD.
 
   METHOD _append_to_history.
@@ -379,8 +385,6 @@ CLASS ycl_aai_google IMPLEMENTATION.
       ENDDO.
 
     ENDLOOP.
-
-    l_json_parts = |[{ l_json_parts }]|.
 
     APPEND l_json_parts TO ls_request-parts.
 
