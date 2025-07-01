@@ -194,7 +194,7 @@ The following screenshots show the output you can expect after running the examp
 
   Now that you've run your first ABAP AI applications, consider exploring additional features. 😊
 
-  ### Choose Your API: OpenAI or Ollama
+  ### Choose Your API:
 
   ABAP AI supports both OpenAI and Ollama APIs. To get started with your preferred provider, check out the dedicated guides:
 

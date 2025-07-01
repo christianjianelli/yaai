@@ -1,5 +1,9 @@
 # yaai - ABAP AI tools - Ollama
 
+<p>
+  <img src="https://ollama.com/public/ollama.png" alt="Ollama Logo" height="100">
+</p>
+
 ## Quickstart
 
 ### Running Your First ABAP AI Ollama Application
