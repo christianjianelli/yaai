@@ -20,8 +20,8 @@ This repository focuses on backend AI integration for ABAP. For a ready-to-use u
   
   <p>
     <a href="https://github.com/christianjianelli/yaai_ui">
-      <img src="docs/images/yaai_ui_chat_bp.png" alt="ABAP AI UI Chat Screenshot" height="200px">
-      <img src="docs/images/yaai_ui_chat_code_assist.png" alt="ABAP AI UI Code Assistant" height="200px">
+      <img src="docs/images/abap_ai_ui_chat.png" alt="ABAP AI UI Chat" height="200px">
+      <img src="docs/images/yaai_ui_code_assist.png" alt="ABAP AI UI Code Assistant" height="200px">
       </br>ABAP AI Chat and Code Assistant
     </a>
   </p>
