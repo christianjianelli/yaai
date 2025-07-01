@@ -1,10 +1,7 @@
 # yaai - ABAP AI tools - Google Gemini API
 
 <p>
-<img class="image" data-alt-override="false" alt="Gemini" srcset="
-                            https://www.gstatic.com/marketing-cms/assets/images/7e/a4/253561a944f4a8f5e6dec4f5f26f/gemini.webp=s48-fcrop64=1,00000000ffffffff-rw 1x,
-                            https://www.gstatic.com/marketing-cms/assets/images/7e/a4/253561a944f4a8f5e6dec4f5f26f/gemini.webp=s96-fcrop64=1,00000000ffffffff-rw 2x
-                          " width="100" height="100" loading="lazy" src="https://www.gstatic.com/marketing-cms/assets/images/7e/a4/253561a944f4a8f5e6dec4f5f26f/gemini.webp=s48-fcrop64=1,00000000ffffffff-rw">
+  <img src="../images/Gemini_2024_icon.svg" alt="Google Gemini Logo" height="100">
 </p>
 
 ## Quickstart
