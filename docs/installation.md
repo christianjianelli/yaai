@@ -4,6 +4,7 @@ You can install the ABAP AI tools into your SAP system using abapGit.
   **Disclaimer:** ABAP AI tools is experimental and released under the MIT License. It is provided "as is", without warranty of any kind, express or implied. This means you use these tools at your own risk, and the authors are not liable for any damages or issues arising from their use.
 
 ## Prerequisites
+ - **ABAP 7.52+**: You need an SAP system running ABAP version 7.52 or higher.
  - **abapGit**: Ensure that `abapGit` is installed and configured in your ABAP system. If not, you can find the latest version and installation instructions on the official abapGit website: https://docs.abapgit.org/
  - **Developer Access**: You need appropriate developer authorizations in your ABAP system to import objects.
 
