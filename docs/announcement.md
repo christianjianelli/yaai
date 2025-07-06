@@ -1,6 +1,6 @@
 ## **Unlock Native AI Power in ABAP: Introducing yaai & yaai_ui – Empowering Your SAP System with LLMs!**
 
-I'm thrilled to announce the public release of **yaai - ABAP AI tools** and its companion project, **yaai_ui - ABAP AI User Interface**! These two open-source repositories are designed to empower ABAP developers to seamlessly integrate Artificial Intelligence, specifically Large Language Models (LLMs), directly into their SAP systems using **pure ABAP code**.
+I'm happy to share **yaai - ABAP AI tools** and its companion project, **yaai_ui - ABAP AI User Interface** with the ABAP community! These two open-source repositories are designed to empower ABAP developers to seamlessly integrate Artificial Intelligence, specifically Large Language Models (LLMs), directly into their SAP systems using **pure ABAP code**.
 
 The goal of yaai and yaai_ui is to enable ABAP developers to learn and explore Artificial Intelligence capabilities within their familiar environment—completely free of charge. The only potential cost is for paid AI APIs (such as OpenAI), if you choose to use them. You can get started right away using free APIs like Google Gemini, or by running your own self-hosted LLMs with Ollama.
 
@@ -54,6 +54,6 @@ I encourage you to:
 
 Start building your intelligent ABAP applications today! 😊
 
-*This announcement was written with the help of Artificial Intelligence.*
+*This text was written with the help of Artificial Intelligence.*
 
 ---
