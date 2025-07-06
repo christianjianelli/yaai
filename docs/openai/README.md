@@ -1,7 +1,7 @@
 # yaai - ABAP AI tools - OpenAI
 
 <p>
-  <img src="../images/OpenAI-black-monoblossom.png" alt="OpenAI Logo" height="100px">
+  <img src="../images/OpenAI-black-monoblossom.png" alt="OpenAI Logo" width="100px">
 </p>
 
 ## Quickstart
