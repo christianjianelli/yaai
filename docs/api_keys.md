@@ -2,11 +2,15 @@
 
 API keys are required to authenticate requests to external AI services (such as OpenAI). The yaai ABAP AI tools provide a simple, optional mechanism for storing and retrieving API keys, but **do not offer a secure storage solution**. It is the responsibility of the user to implement a secure key management approach suitable for their environment.
 
+The yaai ABAP AI tools also support reading API keys from the user's local environment variables. This approach helps you avoid storing API keys on the server.
+
 ## Basic API Key Management
+
+### Using the class ycl_aai_api_key
 
 The class `ycl_aai_api_key` provides basic methods to manage API keys in the database table `yaai_api_key`. The API key is stored in Base64-encoded form, but this is **not** secure.
 
-### Methods
+#### Methods
 
 - `create( i_id, i_api_key )`: Stores a new API key for the given API identifier (e.g., 'OPENAI').
 - `read( i_id )`: Retrieves the API key for the given identifier.
@@ -27,7 +31,26 @@ DATA(l_api_key) = lo_key->read( i_id = 'OPENAI' ).
 lo_key->delete( i_id = 'OPENAI' ).
 ```
 
-### Integration with Connection Object
+### Using the class ycl_aai_api_key_env
+
+The class `ycl_aai_api_key_env` allows you to use API keys stored as environment variables on your local PC.
+
+<img src="images/abap_ai_api_key_env.png" alt="API Key Enviroment Variable" height="200px">
+
+#### Methods
+
+```abap
+DATA(lo_key) = NEW ycl_aai_api_key_env( ).
+
+" Read
+DATA(l_api_key) = lo_key->read( i_id = 'OPENAI_API_KEY' ).
+```
+
+### Using a custom API Key Management class
+
+You can create your own API key management solution by implementing the methods defined in the `yif_aai_api_key` interface.
+
+## Integration with Connection Object
 
 When you instantiate a `ycl_aai_conn` connection object with an API name, it will automatically attempt to retrieve the API key using `ycl_aai_api_key`. You can also set the API key manually if you use a different storage mechanism.
 

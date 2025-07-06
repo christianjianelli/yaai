@@ -15,7 +15,7 @@ You can install the ABAP AI tools into your SAP system using abapGit.
   - Click on the `+` button (Add Online Repo) or select "New Online" from the menu.
 
 3 - **Enter Repository URL**:
-  - In the "URL" field, paste the URL of this GitHub repository: `https://github.com/christianjianelli/yaai`
+  - In the "URL" field, paste the URL of this GitHub repository: `https://github.com/christianjianelli/yaai.git`
   - For the **Package**, we recommend creating a new package called `YAAI`. Remember to assign it to a transport request if necessary.
   - Click "OK" or press Enter.
 
