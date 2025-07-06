@@ -10,9 +10,9 @@ So, it's time to share this with the ABAP community. I hope to see many of you h
 
 ## **Introducing `yaai` & `yaai_ui`**
 
-I'm happy to share **yaai - ABAP AI tools** and its companion project, **yaai_ui - ABAP AI User Interface** with the ABAP community! These two open-source repositories are designed to empower ABAP developers to seamlessly integrate Artificial Intelligence, specifically Large Language Models (LLMs), directly into their SAP systems using **pure ABAP code**.
+I'm happy to share **yaai - ABAP AI tools** and its companion project, **yaai_ui - ABAP AI User Interface** with the ABAP community! These two open-source repositories are designed to equip ABAP developers to easily integrate Artificial Intelligence, specifically Large Language Models (LLMs), directly into their SAP systems using **pure ABAP code**.
 
-The goal of yaai and yaai_ui is to enable ABAP developers to learn and explore Artificial Intelligence capabilities within their familiar environment—completely free of charge. The only potential cost is for paid AI APIs (such as OpenAI), if you choose to use them. You can get started right away using free APIs like Google Gemini, or by running your own self-hosted LLMs with Ollama.
+The goal of yaai and yaai_ui is to enable ABAP developers to learn and explore Artificial Intelligence capabilities within their familiar environment—at no cost. The only potential cost is for paid AI APIs (such as OpenAI), if you choose to use them. You can get started right away using free APIs like Google Gemini, or by running your own self-hosted LLMs with Ollama.
 
 ### **Introducing yaai - ABAP AI tools: Your Backend AI Engine for ABAP**
 
@@ -25,7 +25,7 @@ The `christianjianelli/yaai` repository provides a set of tools focused on backe
 *   **Tool/Function Calling**: Integrate your existing **ABAP business logic with LLMs** using function/tool calling. This enables AI models to directly trigger ABAP methods, opening up new possibilities for intelligent automation and process enhancement.
 *   **Retrieval-Augmented Generation (RAG)**: Enhance the accuracy and relevance of LLM outputs by incorporating your **enterprise data**. This allows you to build applications that provide more context-aware and specific answers by pulling information from your SAP system.
 
-These features collectively empower you to learn how to build intelligent, **enterprise-ready ABAP applications** that leverage the latest advancements in AI.
+These features collectively can help you to learn how to build **intelligent ABAP applications** that leverage the latest advancements in AI.
 
 ### **Meet yaai_ui - ABAP AI User Interface: Bringing AI to the User's Fingertips**
 
