@@ -19,14 +19,12 @@ This repository focuses on backend AI integration for ABAP. For a ready-to-use u
   The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
   
   <p>
-    <a href="https://github.com/christianjianelli/yaai_ui">
-      <img src="images/abap_ai_ui_chat.png" alt="ABAP AI UI Chat" width="500px">
-      <br>ABAP AI Chat
-      <br>
-      <br>
-      <img src="images/yaai_ui_code_assist.png" alt="ABAP AI UI Code Assistant" width="500px">
-      <br>ABAP AI Code Assistant
-    </a>
+    <img src="images/abap_ai_ui_chat.png" alt="ABAP AI UI Chat" width="500px">
+    <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Chat</a>
+    <br>
+    <br>
+    <img src="images/yaai_ui_code_assist.png" alt="ABAP AI UI Code Assistant" width="500px">
+    <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Code Assistant</a>
   </p>
 
 # Get Started
