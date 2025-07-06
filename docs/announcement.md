@@ -1,4 +1,14 @@
-## **Introducing yaai & yaai_ui – Open-Source AI Tools for ABAP Developers**
+## **yaai & yaai_ui – Open-Source AI Tools for ABAP Developers**
+
+A few months ago, I embarked on a journey to learn about and explore large language models. After spending some time coding in Python and experimenting with Ollama, LangChain, LangGraph, and many other tools in the Python ecosystem, I decided to challenge myself to do similar things in ABAP, the programming language I've been working with for nearly two decades.
+
+Well, I'm still on this journey, and to be honest, as crazy as it might sound, I'm having a lot of fun. I've lost count of how many times I've found myself laughing, hardly believing what I was seeing while testing features like function calling and retrieval-augmented generation. Honestly, developing AI-powered applications in ABAP is something that never crossed my mind. For someone who started with ABAP version 4.6C, it's quite mind-blowing.
+
+I think the tools I've been developing over the last few months might be of interest to other ABAP developers who want to dive into the rabbit hole of large language models and all the things they are capable of. The possibilities are endless.
+
+So, it's time to share this with the ABAP community. I hope to see many of you having fun using AI right within ABAP, bringing new ideas, and hopefully contributing to these projects. 😊
+
+## **Introducing `yaai` & `yaai_ui`**
 
 I'm happy to share **yaai - ABAP AI tools** and its companion project, **yaai_ui - ABAP AI User Interface** with the ABAP community! These two open-source repositories are designed to empower ABAP developers to seamlessly integrate Artificial Intelligence, specifically Large Language Models (LLMs), directly into their SAP systems using **pure ABAP code**.
 
