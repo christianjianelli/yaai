@@ -1,7 +1,7 @@
 # yaai - ABAP AI tools - Ollama
 
 <p>
-  <img src="https://ollama.com/public/ollama.png" alt="Ollama Logo" height="100">
+  <img src="https://ollama.com/public/ollama.png" alt="Ollama Logo" height="100px">
 </p>
 
 ## Quickstart
