@@ -2,7 +2,7 @@
 
 A few months ago, I embarked on a journey to learn about and explore large language models. After spending some time coding in Python and experimenting with Ollama, LangChain, LangGraph, and many other tools in the Python ecosystem, I decided to challenge myself to do similar things in ABAP, the programming language I've been working with for nearly two decades.
 
-Well, I'm still on this journey, and to be honest, as crazy as it might sound, I'm having a lot of fun. I've lost count of how many times I've found myself laughing, hardly believing what I was seeing while testing features like function calling and retrieval-augmented generation. Honestly, developing AI-powered applications in ABAP is something that never crossed my mind. For someone who started with ABAP version 4.6C, it's quite mind-blowing.
+Well, I'm still on this journey, and to be honest, as crazy as it might sound, I'm having a lot of fun 🤓. I've lost count of how many times I've found myself laughing, hardly believing what I was seeing while testing features like function calling and retrieval-augmented generation. Honestly, developing AI-powered applications in ABAP is something that never crossed my mind. For someone who started with ABAP version 4.6C, it's quite mind-blowing.
 
 I think the tools I've been developing over the last few months might be of interest to other ABAP developers who want to dive into the rabbit hole of large language models and all the things they are capable of. The possibilities are endless.
 
@@ -10,13 +10,13 @@ So, it's time to share this with the ABAP community. I hope to see many of you h
 
 ## **Introducing `yaai` & `yaai_ui`**
 
-I'm happy to share **yaai - ABAP AI tools** and its companion project, **yaai_ui - ABAP AI User Interface** with the ABAP community! These two open-source repositories are designed to equip ABAP developers to easily integrate Artificial Intelligence, specifically Large Language Models (LLMs), directly into their SAP systems using **pure ABAP code**.
+I'm happy to share **yaai - ABAP AI tools** and its companion project, **yaai_ui - ABAP AI User Interface** with the ABAP community! These two open-source repositories are designed to equip ABAP developers to easily integrate Artificial Intelligence, specifically Large Language Models (LLMs), directly into their SAP systems using **only ABAP code**.
 
 The goal of yaai and yaai_ui is to enable ABAP developers to learn and explore Artificial Intelligence capabilities within their familiar environment—at no cost. The only potential cost is for paid AI APIs (such as OpenAI), if you choose to use them. You can get started right away using free APIs like Google Gemini, or by running your own self-hosted LLMs with Ollama.
 
 ### **Introducing yaai - ABAP AI tools: Your Backend AI Engine for ABAP**
 
-The `christianjianelli/yaai` repository provides a set of tools focused on backend AI integration for ABAP environments. It's built to facilitate powerful AI capabilities that you can leverage directly within your SAP applications.
+The `https://github.com/christianjianelli/yaai` repository provides a set of tools focused on backend AI integration for ABAP environments. It's built to facilitate powerful AI capabilities that you can leverage directly within your SAP applications.
 
 **Key Features of ABAP AI tools include:**
 
@@ -29,7 +29,7 @@ These features collectively can help you to learn how to build **intelligent ABA
 
 ### **Meet yaai_ui - ABAP AI User Interface: Bringing AI to the User's Fingertips**
 
-Complementing the backend tools, the `christianjianelli/yaai_ui` repository provides ready-to-use user interface components to interact with LLMs directly from your SAP system. This project simplifies the creation of engaging AI-powered frontends in ABAP.
+Complementing the backend tools, the `https://github.com/christianjianelli/yaai_ui` repository provides ready-to-use user interface components to interact with LLMs directly from your SAP system. This project simplifies the creation of engaging AI-powered frontends in ABAP.
 
 **The ABAP AI User Interface includes:**
 
