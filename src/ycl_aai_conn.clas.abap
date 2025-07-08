@@ -11,12 +11,14 @@ CLASS ycl_aai_conn DEFINITION
     ALIASES mt_msg FOR yif_aai_conn~mt_msg.
     ALIASES m_api FOR yif_aai_conn~m_api.
     ALIASES m_base_url FOR yif_aai_conn~m_base_url.
+    ALIASES m_ssl_id FOR yif_aai_conn~m_ssl_id.
     ALIASES create_connection FOR yif_aai_conn~create_connection.
     ALIASES set_body FOR yif_aai_conn~set_body.
     ALIASES do_receive FOR yif_aai_conn~do_receive.
     ALIASES get_response FOR yif_aai_conn~get_response.
     ALIASES set_api_key FOR yif_aai_conn~set_api_key.
     ALIASES set_base_url FOR yif_aai_conn~set_base_url.
+    ALIASES set_ssl_id FOR yif_aai_conn~set_ssl_id.
 
     METHODS
       constructor
@@ -49,6 +51,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
   METHOD constructor.
 
     DATA l_name TYPE tvarvc-name.
+
+    me->m_ssl_id = 'ANONYM'.
 
     me->yif_aai_conn~m_suppress_content_type = abap_false.
 
@@ -143,6 +147,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
         url                = me->_url                          " URL
         proxy_host         = me->yif_aai_conn~m_proxy_host     " Logical destination (specified in function call)
         proxy_service      = me->yif_aai_conn~m_proxy_service  " Port Number
+        ssl_id             = me->m_ssl_id
         proxy_user         = me->yif_aai_conn~m_proxy_user     " Proxy user
         proxy_passwd       = me->yif_aai_conn~m_proxy_passwd   " Proxy password
       IMPORTING
@@ -319,6 +324,12 @@ CLASS ycl_aai_conn IMPLEMENTATION.
   METHOD yif_aai_conn~suppress_content_type.
 
     me->yif_aai_conn~m_suppress_content_type = i_suppress_content_type.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~set_ssl_id.
+
+    me->m_ssl_id = i_ssl_id.
 
   ENDMETHOD.
 

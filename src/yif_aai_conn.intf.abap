@@ -13,7 +13,8 @@ INTERFACE yif_aai_conn
         m_proxy_service         TYPE string READ-ONLY,
         m_proxy_user            TYPE string READ-ONLY,
         m_proxy_passwd          TYPE string READ-ONLY,
-        m_suppress_content_type TYPE abap_bool READ-ONLY.
+        m_suppress_content_type TYPE abap_bool READ-ONLY,
+        m_ssl_id                TYPE ssfapplssl READ-ONLY.
 
   METHODS
     create_connection
@@ -42,6 +43,11 @@ INTERFACE yif_aai_conn
         i_proxy_service TYPE string OPTIONAL
         i_proxy_user    TYPE string OPTIONAL
         i_proxy_passwd  TYPE string OPTIONAL.
+
+  METHODS
+    set_ssl_id
+      IMPORTING
+        i_ssl_id TYPE ssfapplssl.
 
   METHODS
     suppress_content_type
