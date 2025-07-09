@@ -134,6 +134,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
         i_greeting   = i_greeting
       IMPORTING
         e_response   = e_response
+        e_failed     = e_failed
         e_t_response = e_t_response
     ).
 
@@ -147,7 +148,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     DATA l_tools TYPE string VALUE '[]'.
 
-    CLEAR e_response.
+    CLEAR: e_response,
+           e_failed.
 
     FREE e_t_response.
 
@@ -227,7 +229,24 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
         me->_o_connection->do_receive(
           IMPORTING
             e_response = l_json
+            e_failed   = e_failed
         ).
+
+        IF e_failed = abap_true.
+
+          me->_o_connection->get_error_text(
+            IMPORTING
+              e_error_text = e_response
+          ).
+
+          IF e_t_response IS REQUESTED.
+            APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
+            <l_response> = e_response.
+          ENDIF.
+
+          EXIT.
+
+        ENDIF.
 
         lo_aai_util->deserialize(
           EXPORTING
@@ -266,6 +285,19 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         ENDIF.
 
+        IF me->_ollama_chat_response-error IS NOT INITIAL.
+
+          e_response = me->_ollama_chat_response-error.
+
+          IF e_t_response IS REQUESTED.
+            APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
+            <l_response> = e_response.
+          ENDIF.
+
+          EXIT.
+
+        ENDIF.
+
         me->_ollama_chat_response-message-content = lo_aai_util->replace_unicode_escape_seq( me->_ollama_chat_response-message-content ).
 
         APPEND me->_ollama_chat_response-message TO me->_chat_messages.
@@ -273,6 +305,18 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
         e_response = me->_ollama_chat_response-message-content.
 
         EXIT.
+
+      ELSE.
+
+        me->_o_connection->get_error_text(
+          IMPORTING
+            e_error_text = e_response
+        ).
+
+        IF e_t_response IS REQUESTED.
+          APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
+          <l_response> = e_response.
+        ENDIF.
 
       ENDIF.
 
@@ -288,7 +332,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   METHOD yif_aai_ollama~generate.
 
-    CLEAR e_response.
+    CLEAR: e_response,
+           e_failed.
 
     FREE e_t_response.
 
@@ -315,18 +360,51 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
       me->_o_connection->do_receive(
         IMPORTING
           e_response = l_json
+          e_failed   = e_failed
       ).
 
-      lo_aai_util->deserialize(
-        EXPORTING
-          i_json = l_json
+      IF e_failed = abap_true.
+
+        me->_o_connection->get_error_text(
+          IMPORTING
+            e_error_text = e_response
+        ).
+
+        IF e_t_response IS REQUESTED.
+          APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
+          <l_response> = e_response.
+        ENDIF.
+
+        RETURN.
+
+      ELSE.
+
+        lo_aai_util->deserialize(
+          EXPORTING
+            i_json = l_json
+          IMPORTING
+            e_data = me->_ollama_generate_response
+        ).
+
+        me->_ollama_generate_response-response = lo_aai_util->replace_unicode_escape_seq( me->_ollama_generate_response-response ).
+
+        e_response = me->_ollama_generate_response-response.
+
+      ENDIF.
+
+    ELSE.
+
+      me->_o_connection->get_error_text(
         IMPORTING
-          e_data = me->_ollama_generate_response
+          e_error_text = e_response
       ).
 
-      me->_ollama_generate_response-response = lo_aai_util->replace_unicode_escape_seq( me->_ollama_generate_response-response ).
+      IF e_t_response IS REQUESTED.
+        APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
+        <l_response> = e_response.
+      ENDIF.
 
-      e_response = me->_ollama_generate_response-response.
+      RETURN.
 
     ENDIF.
 
@@ -339,6 +417,9 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD yif_aai_ollama~embed.
+
+    CLEAR: e_s_response,
+           e_failed.
 
     IF me->_o_connection IS NOT BOUND.
       me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
@@ -358,14 +439,23 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
       me->_o_connection->do_receive(
         IMPORTING
           e_response = l_json
+          e_failed   = e_failed
       ).
 
-      lo_aai_util->deserialize(
-        EXPORTING
-          i_json = l_json
-        IMPORTING
-          e_data = e_s_response
-      ).
+      IF e_failed = abap_true.
+
+        RETURN.
+
+      ELSE.
+
+        lo_aai_util->deserialize(
+          EXPORTING
+            i_json = l_json
+          IMPORTING
+            e_data = e_s_response
+        ).
+
+      ENDIF.
 
     ENDIF.
 

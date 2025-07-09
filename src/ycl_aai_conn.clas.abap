@@ -19,6 +19,7 @@ CLASS ycl_aai_conn DEFINITION
     ALIASES set_api_key FOR yif_aai_conn~set_api_key.
     ALIASES set_base_url FOR yif_aai_conn~set_base_url.
     ALIASES set_ssl_id FOR yif_aai_conn~set_ssl_id.
+    ALIASES get_error_text FOR yif_aai_conn~get_error_text.
 
     METHODS
       constructor
@@ -216,6 +217,10 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
   METHOD yif_aai_conn~do_receive.
 
+    "Tip: in case of certificate mismatch errors try to set the parameter "icm/HTTPS/client_sni_enabled" to "TRUE" (Transaction RZ10)
+
+    e_failed = abap_false.
+
     IF me->_o_http_client IS NOT BOUND.
       RETURN.
     ENDIF.
@@ -235,6 +240,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
       me->log( i_s_msg = VALUE #( number = '002' )
                i_log_system_message = abap_true ).
+
+      e_failed = abap_true.
 
       RETURN.
 
@@ -264,6 +271,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
       me->log( i_s_msg = VALUE #( number = '002' )
                i_log_system_message = abap_true ).
+
+      e_failed = abap_true.
 
       RETURN.
 
@@ -330,6 +339,33 @@ CLASS ycl_aai_conn IMPLEMENTATION.
   METHOD yif_aai_conn~set_ssl_id.
 
     me->m_ssl_id = i_ssl_id.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~get_error_text.
+
+    DATA l_text TYPE string.
+
+    CLEAR e_error_text.
+
+    LOOP AT me->mo_log->mt_msg ASSIGNING FIELD-SYMBOL(<ls_msg>).
+
+      IF <ls_msg>-id IS INITIAL OR <ls_msg>-type IS INITIAL OR <ls_msg>-number IS INITIAL.
+        CONTINUE.
+      ENDIF.
+
+      MESSAGE ID <ls_msg>-id
+        TYPE <ls_msg>-type
+        NUMBER <ls_msg>-number
+        WITH <ls_msg>-message_v1
+             <ls_msg>-message_v2
+             <ls_msg>-message_v3
+             <ls_msg>-message_v4
+        INTO l_text.
+
+      e_error_text = |{ e_error_text } { l_text }|.
+
+    ENDLOOP.
 
   ENDMETHOD.
 

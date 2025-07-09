@@ -97,7 +97,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
           l_greeting TYPE string,
           l_message  TYPE string.
 
-    CLEAR e_response.
+    CLEAR: e_response,
+           e_failed.
 
     FREE e_t_response.
 
@@ -179,7 +180,24 @@ CLASS ycl_aai_google IMPLEMENTATION.
         me->_o_connection->do_receive(
           IMPORTING
             e_response = l_json
+            e_failed   = e_failed
         ).
+
+        IF e_failed = abap_true.
+
+          me->_o_connection->get_error_text(
+            IMPORTING
+              e_error_text = e_response
+          ).
+
+          IF e_t_response IS REQUESTED.
+            APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
+            <l_response> = e_response.
+          ENDIF.
+
+          EXIT.
+
+        ENDIF.
 
         lo_aai_util->deserialize(
           EXPORTING
@@ -253,6 +271,18 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           SPLIT e_response AT cl_abap_char_utilities=>newline INTO TABLE e_t_response.
 
+        ENDIF.
+
+      ELSE.
+
+        me->_o_connection->get_error_text(
+          IMPORTING
+            e_error_text = e_response
+        ).
+
+        IF e_t_response IS REQUESTED.
+          APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
+          <l_response> = e_response.
         ENDIF.
 
       ENDIF.

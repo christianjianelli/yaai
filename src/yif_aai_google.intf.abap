@@ -126,6 +126,7 @@ INTERFACE yif_aai_google
       i_o_template TYPE REF TO yif_aai_prompt_template OPTIONAL
     EXPORTING
       e_response   TYPE string
+      e_failed     TYPE abap_bool
       e_t_response TYPE rswsourcet.
 
 ENDINTERFACE.

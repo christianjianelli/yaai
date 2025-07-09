@@ -62,11 +62,17 @@ INTERFACE yif_aai_conn
   METHODS
     do_receive
       EXPORTING
-        e_response TYPE string.
+        e_response TYPE string
+        e_failed   TYPE abap_bool.
 
   METHODS
     get_response
       EXPORTING
         e_response TYPE string.
+
+  METHODS
+    get_error_text
+      EXPORTING
+        e_error_text TYPE string.
 
 ENDINTERFACE.

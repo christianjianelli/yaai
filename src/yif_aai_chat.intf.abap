@@ -8,6 +8,7 @@ INTERFACE yif_aai_chat
       i_greeting   TYPE csequence OPTIONAL
     EXPORTING
       e_response   TYPE string
+      e_failed     TYPE abap_bool
       e_t_response TYPE rswsourcet.
 
 ENDINTERFACE.

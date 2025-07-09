@@ -144,6 +144,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
           i_greeting   = i_greeting
         IMPORTING
           e_response   = e_response
+          e_failed     = e_failed
           e_t_response = e_t_response
       ).
 
@@ -156,6 +157,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
           i_greeting   = i_greeting
         IMPORTING
           e_response   = e_response
+          e_failed     = e_failed
           e_t_response = e_t_response
       ).
 
@@ -171,7 +173,8 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     DATA l_tools TYPE string VALUE '[]'.
 
-    CLEAR e_response.
+    CLEAR: e_response,
+           e_failed.
 
     FREE e_t_response.
 
@@ -257,7 +260,24 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         me->_o_connection->do_receive(
           IMPORTING
             e_response = l_json
+            e_failed   = e_failed
         ).
+
+        IF e_failed = abap_true.
+
+          me->_o_connection->get_error_text(
+            IMPORTING
+              e_error_text = e_response
+          ).
+
+          IF e_t_response IS REQUESTED.
+            APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
+            <l_response> = e_response.
+          ENDIF.
+
+          EXIT.
+
+        ENDIF.
 
         lo_aai_util->deserialize(
           EXPORTING
@@ -319,6 +339,12 @@ CLASS ycl_aai_openai IMPLEMENTATION.
           CONTINUE.
         ENDIF.
 
+        IF _openai_generate_response-error IS NOT INITIAL.
+
+          e_response = |Error { _openai_generate_response-error-code }: { _openai_generate_response-error-message }|.
+
+        ENDIF.
+
         LOOP AT _openai_generate_response-output ASSIGNING <ls_output>.
 
           IF <ls_output>-type <> 'message' OR <ls_output>-role <> 'assistant'.
@@ -345,6 +371,18 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         EXIT.
 
+      ELSE.
+
+        me->_o_connection->get_error_text(
+          IMPORTING
+            e_error_text = e_response
+        ).
+
+        IF e_t_response IS REQUESTED.
+          APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
+          <l_response> = e_response.
+        ENDIF.
+
       ENDIF.
 
     ENDDO.
@@ -366,7 +404,8 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     DATA: l_json  TYPE string,
           l_tools TYPE string VALUE '[]'.
 
-    CLEAR e_response.
+    CLEAR: e_response,
+           e_failed.
 
     FREE e_t_response.
 
@@ -462,7 +501,24 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         me->_o_connection->do_receive(
           IMPORTING
             e_response = l_json
+            e_failed   = e_failed
         ).
+
+        IF e_failed = abap_true.
+
+          me->_o_connection->get_error_text(
+            IMPORTING
+              e_error_text = e_response
+          ).
+
+          IF e_t_response IS REQUESTED.
+            APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
+            <l_response> = e_response.
+          ENDIF.
+
+          EXIT.
+
+        ENDIF.
 
         lo_aai_util->deserialize(
           EXPORTING
@@ -544,6 +600,18 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         ENDLOOP.
 
         EXIT.
+
+      ELSE.
+
+        me->_o_connection->get_error_text(
+          IMPORTING
+            e_error_text = e_response
+        ).
+
+        IF e_t_response IS REQUESTED.
+          APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
+          <l_response> = e_response.
+        ENDIF.
 
       ENDIF.
 

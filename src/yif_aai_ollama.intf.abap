@@ -41,11 +41,13 @@ INTERFACE yif_aai_ollama
          BEGIN OF ty_ollama_generate_response_s,
            model    TYPE string,
            response TYPE string,
+           error    TYPE string,
          END OF ty_ollama_generate_response_s,
 
          BEGIN OF ty_ollama_chat_response_s,
            model   TYPE string,
            message TYPE ty_chat_message_s,
+           error    TYPE string,
          END OF ty_ollama_chat_response_s.
 
   TYPES: BEGIN OF ty_ollama_embed_request_s,
@@ -61,6 +63,7 @@ INTERFACE yif_aai_ollama
            total_duration    TYPE i,
            load_duration     TYPE i,
            prompt_eval_count TYPE i,
+           error             TYPE string,
          END OF ty_ollama_embed_response_s.
 
   DATA: mo_function_calling TYPE REF TO yif_aai_function_calling READ-ONLY.
@@ -101,6 +104,7 @@ INTERFACE yif_aai_ollama
       i_greeting   TYPE csequence OPTIONAL
     EXPORTING
       e_response   TYPE string
+      e_failed     TYPE abap_bool
       e_t_response TYPE rswsourcet.
 
   METHODS generate
@@ -109,12 +113,14 @@ INTERFACE yif_aai_ollama
       i_o_template TYPE REF TO yif_aai_prompt_template OPTIONAL
     EXPORTING
       e_response   TYPE string
+      e_failed     TYPE abap_bool
       e_t_response TYPE rswsourcet.
 
   METHODS embed
     IMPORTING
       i_input      TYPE csequence
     EXPORTING
+      e_failed     TYPE abap_bool
       e_s_response TYPE ty_ollama_embed_response_s.
 
   METHODS get_chat_messages

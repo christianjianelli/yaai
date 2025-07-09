@@ -19,6 +19,11 @@ INTERFACE yif_aai_openai
            type    TYPE string,
          END OF ty_type_message_s,
 
+         BEGIN OF ty_error_s,
+           code    TYPE string,
+           message TYPE string,
+         END OF ty_error_s,
+
          BEGIN OF ty_function_call_s,
            type      TYPE string,
            arguments TYPE string,
@@ -123,6 +128,7 @@ INTERFACE yif_aai_openai
            status      TYPE string,
            model       TYPE string,
            temperature TYPE string,
+           error       TYPE ty_error_s,
            output      TYPE ty_output_t,
          END OF ty_openai_generate_response_s.
 
@@ -130,6 +136,7 @@ INTERFACE yif_aai_openai
            id      TYPE string,
            object  TYPE string,
            model   TYPE string,
+           error   TYPE ty_error_s,
            choices TYPE ty_choices_t,
          END OF ty_openai_chat_comp_resp_s.
 
@@ -205,6 +212,7 @@ INTERFACE yif_aai_openai
       i_greeting   TYPE csequence OPTIONAL
     EXPORTING
       e_response   TYPE string
+      e_failed     TYPE abap_bool
       e_t_response TYPE rswsourcet.
 
   METHODS chat_completions
@@ -214,6 +222,7 @@ INTERFACE yif_aai_openai
       i_greeting   TYPE csequence OPTIONAL
     EXPORTING
       e_response   TYPE string
+      e_failed     TYPE abap_bool
       e_t_response TYPE rswsourcet.
 
   METHODS embed
