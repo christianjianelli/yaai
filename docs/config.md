@@ -28,6 +28,21 @@ When creating a connection to a custom API, specify the API name as a parameter.
 DATA(lo_conn) = NEW ycl_aai_conn( i_api = 'MYAPI' ).
 ```
 
----
+## SSL Setup
 
-> **Note:** When using the SAP NetWeaver ABAP Developer Edition to experiment with the ABAP AI tools, you may encounter SSL configuration challenges when connecting to external APIs such as OpenAI. To simplify connectivity, you can use a reverse proxy. For detailed instructions, see [Reverse Proxy Setup](reverse_proxy.md).
+To enable secure HTTPS connections to external APIs, you must import the relevant SSL certificates into your SAP system. This ensures that your ABAP system can establish trusted connections with services such as OpenAI or Google.
+
+**Steps for SSL setup:**
+1. Obtain the root and intermediate certificates from the API provider (e.g., OpenAI, Google).
+2. Import these certificates into the SAP system using transaction **STRUST**.
+3. Assign the certificates to the appropriate SSL client PSE (e.g., `ANONYM` or `DEFAULT`).
+
+For detailed, step-by-step instructions, refer to the abapGit documentation:
+- [abapGit SSL Setup Guide](https://docs.abapgit.org/user-guide/setup/ssl-setup.html)
+
+**Troubleshooting SSL errors:**
+- If you encounter SSL handshake or certificate errors when connecting to APIs, consult SAP Note **510007** for additional guidance:
+  - [SAP Note 510007 - Additional considerations about setting up SSL on Application Server ABAP](https://me.sap.com/notes/510007)
+
+**Tip:**  
+If you are using the SAP NetWeaver ABAP Developer Edition and face persistent SSL issues, consider using a reverse proxy to simplify connectivity. See [Reverse Proxy Setup](reverse_proxy.md) for more information.
