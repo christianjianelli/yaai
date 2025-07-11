@@ -1,10 +1,16 @@
 INTERFACE yif_aai_conn
   PUBLIC.
 
+  TYPES: BEGIN OF ty_http_header_s,
+           name  TYPE string,
+           value TYPE string,
+         END OF ty_http_header_s.
+
   DATA: mo_log     TYPE REF TO ycl_aai_log READ-ONLY,
         mo_api_key TYPE REF TO yif_aai_api_key READ-ONLY.
 
-  DATA mt_msg TYPE bapiret2_t READ-ONLY.
+  DATA: mt_msg         TYPE bapiret2_t READ-ONLY,
+        mt_http_header TYPE STANDARD TABLE OF ty_http_header_s READ-ONLY.
 
   DATA: m_api                   TYPE string READ-ONLY,
         m_base_url              TYPE string READ-ONLY,
@@ -74,5 +80,14 @@ INTERFACE yif_aai_conn
     get_error_text
       EXPORTING
         e_error_text TYPE string.
+
+  METHODS add_http_header_param
+    IMPORTING
+      i_name  TYPE csequence
+      i_value TYPE csequence.
+
+  METHODS remove_http_header_param
+    IMPORTING
+      i_name  TYPE csequence.
 
 ENDINTERFACE.

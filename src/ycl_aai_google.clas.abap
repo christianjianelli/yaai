@@ -109,7 +109,14 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     DATA(l_apikey_url_placeholder) = |{ yif_aai_const=>c_placeholder_pattern }APIKEY{ yif_aai_const=>c_placeholder_pattern }|.
 
-    l_endpoint = |/v1beta/models/{ me->_model }:generateContent?key={ l_apikey_url_placeholder }|.
+    "l_endpoint = |/v1beta/models/{ me->_model }:generateContent?key={ l_apikey_url_placeholder }|.
+    l_endpoint = |/v1beta/models/{ me->_model }:generateContent|.
+
+    me->_o_connection->add_http_header_param(
+      EXPORTING
+        i_name  = 'X-goog-api-key'
+        i_value = l_apikey_url_placeholder
+    ).
 
     IF i_new = abap_true.
 

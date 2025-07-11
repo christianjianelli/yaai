@@ -129,7 +129,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     ENDIF.
 
-    "Google API expects to receive the API Key in the URL
+    "If the API expects to receive the API Key in the URL
     DATA(l_apikey_url_placeholder) = |{ yif_aai_const=>c_placeholder_pattern }APIKEY{ yif_aai_const=>c_placeholder_pattern }|.
 
     FIND l_apikey_url_placeholder IN me->_url.
@@ -184,6 +184,26 @@ CLASS ycl_aai_conn IMPLEMENTATION.
       me->_o_http_client->request->suppress_content_type( me->yif_aai_conn~m_suppress_content_type ).
 
     ENDIF.
+
+    LOOP AT me->yif_aai_conn~mt_http_header INTO DATA(ls_http_header).
+
+      FIND l_apikey_url_placeholder IN ls_http_header-value.
+
+      IF sy-subrc = 0.
+
+        REPLACE l_apikey_url_placeholder IN ls_http_header-value WITH me->_api_key.
+
+        l_skip_bearer_http_header = abap_true.
+
+      ENDIF.
+
+      _o_http_client->request->set_header_field(
+        EXPORTING
+          name  = ls_http_header-name          " Name of the header field
+          value = ls_http_header-value         " HTTP header field value
+      ).
+
+    ENDLOOP.
 
     IF me->_api_key IS NOT INITIAL AND l_skip_bearer_http_header = abap_false.
 
@@ -366,6 +386,19 @@ CLASS ycl_aai_conn IMPLEMENTATION.
       e_error_text = |{ e_error_text } { l_text }|.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~add_http_header_param.
+
+    APPEND VALUE #( name = i_name
+                    value = i_value ) TO me->yif_aai_conn~mt_http_header.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~remove_http_header_param.
+
+    DELETE me->yif_aai_conn~mt_http_header WHERE name = i_name.
 
   ENDMETHOD.
 
