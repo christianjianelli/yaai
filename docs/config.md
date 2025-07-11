@@ -8,13 +8,15 @@ The ABAP AI tools require specific configuration parameters to be maintained in 
 |-------------------------|---------------------------------------------|
 | YAAI_OPENAI_BASE_URL    | Base URL for OpenAI API endpoints           |
 | YAAI_OLLAMA_BASE_URL    | Base URL for Ollama API endpoints           |
+| YAAI_GOOGLE_BASE_URL    | Base URL for Google Gemini API endpoints    |
 
 ### Example Entries in TVARVC
 
 | NAME                   | VALUE                                 |
-|------------------------|---------------------------------------|
-| YAAI_OPENAI_BASE_URL   | https://api.openai.com/               |
-| YAAI_OLLAMA_BASE_URL   | http://localhost:11434                |
+|------------------------|----------------------------------------------|
+| YAAI_OPENAI_BASE_URL   | https://api.openai.com/                      |
+| YAAI_OLLAMA_BASE_URL   | http://localhost:11434                       |
+| YAAI_GOOGLE_BASE_URL   | https://generativelanguage.googleapis.com    |
 
 ### Configuration Parameters for Custom APIs
 
