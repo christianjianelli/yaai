@@ -6,6 +6,12 @@ CLASS ycl_aai_func_call_openai DEFINITION
 
     INTERFACES yif_aai_func_call_openai.
 
+    ALIASES on_tool_call          FOR yif_aai_func_call_openai~on_tool_call.
+    ALIASES on_tool_call_response FOR yif_aai_func_call_openai~on_tool_call_response.
+    ALIASES on_tool_call_error    FOR yif_aai_func_call_openai~on_tool_call_error.
+
+    ALIASES mt_methods FOR yif_aai_func_call_openai~mt_methods.
+
     ALIASES add_methods FOR yif_aai_func_call_openai~add_methods.
     ALIASES get_tools FOR yif_aai_func_call_openai~get_tools.
     ALIASES get_tools_chat_completions FOR yif_aai_func_call_openai~get_tools_chat_completions.
@@ -13,7 +19,6 @@ CLASS ycl_aai_func_call_openai DEFINITION
     ALIASES remove_method FOR yif_aai_func_call_openai~remove_method.
     ALIASES call_tool FOR yif_aai_func_call_openai~call_tool.
 
-    ALIASES mt_methods FOR yif_aai_func_call_openai~mt_methods.
 
   PROTECTED SECTION.
 
@@ -181,8 +186,13 @@ CLASS ycl_aai_func_call_openai IMPLEMENTATION.
     ENDLOOP.
 
     IF ls_method IS INITIAL.
+
       r_response = 'The function/tool called is not available.'.
+
+      RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
+
       RETURN.
+
     ENDIF.
 
     CALL METHOD cl_abap_classdescr=>describe_by_name
@@ -195,8 +205,13 @@ CLASS ycl_aai_func_call_openai IMPLEMENTATION.
         OTHERS         = 2.
 
     IF sy-subrc <> 0.
+
       r_response = 'The function/tool called is not available.'.
+
+      RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
+
       RETURN.
+
     ENDIF.
 
     IF ls_method-proxy_class IS NOT INITIAL.
@@ -225,6 +240,8 @@ CLASS ycl_aai_func_call_openai IMPLEMENTATION.
       CATCH cx_sy_create_data_error INTO DATA(lo_ex).
 
         r_response = |An error occurred while calling the function/tool. Error description: { lo_ex->get_text( ) }|.
+
+        RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
 
     ENDTRY.
 
@@ -266,12 +283,22 @@ CLASS ycl_aai_func_call_openai IMPLEMENTATION.
 
     IF lt_parameters[] IS NOT INITIAL.
 
+      RAISE EVENT on_tool_call
+        EXPORTING
+          class_name = ls_method-class_name
+          method_name = ls_method-method_name
+          parameters_table = lt_parameters.
+
       TRY.
 
           CREATE OBJECT lo_class TYPE (ls_method-class_name).
 
           CALL METHOD lo_class->(ls_method-method_name)
             PARAMETER-TABLE lt_parameters.
+
+          RAISE EVENT on_tool_call_response
+            EXPORTING
+              tool_response = r_response.
 
         CATCH cx_sy_create_object_error
               cx_sy_dyn_call_illegal_class
@@ -282,6 +309,8 @@ CLASS ycl_aai_func_call_openai IMPLEMENTATION.
               cx_sy_ref_is_initial INTO lo_ex_root.
 
           r_response = |An error occurred while calling the function/tool. Error description: { lo_ex_root->get_text( ) }|.
+
+          RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
 
       ENDTRY.
 

@@ -23,8 +23,8 @@ INTERFACE yif_aai_func_call_openai
          END OF ty_function_s,
 
          BEGIN OF ty_tool_chat_completion_s,
-           type        TYPE string,
-           function    TYPE ty_function_s,
+           type     TYPE string,
+           function TYPE ty_function_s,
          END OF ty_tool_chat_completion_s,
 
          ty_tools_chat_completion_t TYPE STANDARD TABLE OF ty_tool_chat_completion_s WITH EMPTY KEY,
@@ -37,6 +37,20 @@ INTERFACE yif_aai_func_call_openai
          END OF ty_method_s,
 
          ty_methods_t TYPE STANDARD TABLE OF ty_method_s WITH EMPTY KEY.
+
+  EVENTS on_tool_call
+    EXPORTING
+      VALUE(class_name)       TYPE string
+      VALUE(method_name)      TYPE string
+      VALUE(parameters_table) TYPE abap_parmbind_tab.
+
+  EVENTS on_tool_call_response
+    EXPORTING
+      VALUE(tool_response) TYPE string.
+
+  EVENTS on_tool_call_error
+    EXPORTING
+      VALUE(error_text) TYPE string.
 
   DATA: mt_methods TYPE ty_methods_t READ-ONLY.
 

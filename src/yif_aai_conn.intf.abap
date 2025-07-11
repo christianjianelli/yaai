@@ -22,6 +22,10 @@ INTERFACE yif_aai_conn
         m_suppress_content_type TYPE abap_bool READ-ONLY,
         m_ssl_id                TYPE ssfapplssl READ-ONLY.
 
+  EVENTS on_request_send.
+  EVENTS on_response_received.
+  EVENTS on_connection_error.
+
   METHODS
     create_connection
       IMPORTING

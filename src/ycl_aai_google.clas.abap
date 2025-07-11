@@ -7,6 +7,10 @@ CLASS ycl_aai_google DEFINITION
     INTERFACES yif_aai_google.
     INTERFACES yif_aai_chat.
 
+    ALIASES on_message_send FOR yif_aai_chat~on_message_send.
+    ALIASES on_response_received FOR yif_aai_chat~on_response_received.
+    ALIASES on_message_failed FOR yif_aai_chat~on_message_failed.
+
     ALIASES set_model FOR yif_aai_google~set_model.
     ALIASES set_temperature FOR yif_aai_google~set_temperature.
     ALIASES set_system_instructions FOR yif_aai_google~set_system_instructions.
@@ -184,6 +188,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
         FREE l_json.
 
+        RAISE EVENT on_message_send.
+
         me->_o_connection->do_receive(
           IMPORTING
             e_response = l_json
@@ -202,6 +208,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
+          RAISE EVENT on_message_failed.
+
           EXIT.
 
         ENDIF.
@@ -217,6 +225,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           "Add LLM response to the chat history
           me->_append_to_history( <ls_candidates>-content ).
+
+          RAISE EVENT on_response_received.
 
           DATA(l_function_call) = abap_false.
 

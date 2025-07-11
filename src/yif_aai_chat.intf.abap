@@ -1,6 +1,10 @@
 INTERFACE yif_aai_chat
   PUBLIC.
 
+  EVENTS on_message_send.
+  EVENTS on_response_received.
+  EVENTS on_message_failed.
+
   METHODS chat
     IMPORTING
       i_message    TYPE csequence

@@ -7,6 +7,10 @@ CLASS ycl_aai_openai DEFINITION
     INTERFACES yif_aai_openai.
     INTERFACES yif_aai_chat.
 
+    ALIASES on_message_send FOR yif_aai_chat~on_message_send.
+    ALIASES on_response_received FOR yif_aai_chat~on_response_received.
+    ALIASES on_message_failed FOR yif_aai_chat~on_message_failed.
+
     ALIASES set_model FOR yif_aai_openai~set_model.
     ALIASES use_completions FOR yif_aai_openai~use_completions.
     ALIASES set_temperature FOR yif_aai_openai~set_temperature.

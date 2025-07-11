@@ -7,6 +7,10 @@ CLASS ycl_aai_ollama DEFINITION
     INTERFACES yif_aai_ollama.
     INTERFACES yif_aai_chat.
 
+    ALIASES on_message_send FOR yif_aai_chat~on_message_send.
+    ALIASES on_response_received FOR yif_aai_chat~on_response_received.
+    ALIASES on_message_failed FOR yif_aai_chat~on_message_failed.
+
     ALIASES set_model FOR yif_aai_ollama~set_model.
     ALIASES set_temperature FOR yif_aai_ollama~set_temperature.
     ALIASES set_system_instructions FOR yif_aai_ollama~set_system_instructions.

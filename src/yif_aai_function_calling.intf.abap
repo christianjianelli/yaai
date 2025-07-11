@@ -27,6 +27,20 @@ INTERFACE yif_aai_function_calling
 
          ty_methods_t TYPE STANDARD TABLE OF ty_method_s WITH EMPTY KEY.
 
+  EVENTS on_tool_call
+    EXPORTING
+      VALUE(class_name)       TYPE string
+      VALUE(method_name)      TYPE string
+      VALUE(parameters_table) TYPE abap_parmbind_tab.
+
+  EVENTS on_tool_call_response
+    EXPORTING
+      VALUE(tool_response) TYPE string.
+
+  EVENTS on_tool_call_error
+    EXPORTING
+      VALUE(error_text) TYPE string.
+
   DATA: mt_methods TYPE ty_methods_t READ-ONLY.
 
   METHODS add_methods IMPORTING i_t_methods TYPE ty_methods_t.

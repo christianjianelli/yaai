@@ -6,12 +6,17 @@ CLASS ycl_aai_conn DEFINITION
 
     INTERFACES yif_aai_conn.
 
+    ALIASES on_request_send FOR yif_aai_conn~on_request_send.
+    ALIASES on_response_received FOR yif_aai_conn~on_response_received.
+    ALIASES on_connection_error FOR yif_aai_conn~on_connection_error.
+
     ALIASES mo_log FOR yif_aai_conn~mo_log.
     ALIASES mo_api_key FOR yif_aai_conn~mo_api_key.
     ALIASES mt_msg FOR yif_aai_conn~mt_msg.
     ALIASES m_api FOR yif_aai_conn~m_api.
     ALIASES m_base_url FOR yif_aai_conn~m_base_url.
     ALIASES m_ssl_id FOR yif_aai_conn~m_ssl_id.
+
     ALIASES create_connection FOR yif_aai_conn~create_connection.
     ALIASES set_body FOR yif_aai_conn~set_body.
     ALIASES do_receive FOR yif_aai_conn~do_receive.
@@ -165,6 +170,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
       me->log( i_s_msg = VALUE #( number = '001' )
                i_log_system_message = abap_true ).
 
+      RAISE EVENT on_connection_error.
+
       RETURN.
 
     ENDIF.
@@ -245,6 +252,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    RAISE EVENT on_request_send.
+
     me->_o_http_client->send(
 *      EXPORTING
 *        timeout                    = co_timeout_default " Timeout of Answer Waiting Time
@@ -263,6 +272,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
       e_failed = abap_true.
 
+      RAISE EVENT on_connection_error.
+
       RETURN.
 
     ENDIF.
@@ -279,6 +290,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
       me->_response = me->_o_http_client->response->get_cdata( ).
 
+      RAISE EVENT on_response_received.
+
       e_response = me->_response.
 
       me->_o_http_client->close(
@@ -291,6 +304,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
       me->log( i_s_msg = VALUE #( number = '002' )
                i_log_system_message = abap_true ).
+
+      RAISE EVENT on_connection_error.
 
       e_failed = abap_true.
 
@@ -370,7 +385,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     LOOP AT me->mo_log->mt_msg ASSIGNING FIELD-SYMBOL(<ls_msg>).
 
-      IF <ls_msg>-id IS INITIAL OR <ls_msg>-type IS INITIAL OR <ls_msg>-number IS INITIAL.
+      IF <ls_msg>-id IS INITIAL OR <ls_msg>-type <> 'E' OR <ls_msg>-number IS INITIAL.
         CONTINUE.
       ENDIF.
 
@@ -383,7 +398,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
              <ls_msg>-message_v4
         INTO l_text.
 
-      e_error_text = |{ e_error_text } { l_text }|.
+      e_error_text = |{ e_error_text } ; { l_text }|.
 
     ENDLOOP.
 
