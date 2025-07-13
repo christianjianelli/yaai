@@ -15,7 +15,7 @@ System instructions are typically used to:
 
 ## How to Use
 
-1. **Create/Open the LLM Client Instance**
+1. **Create the LLM Client Instance**
 
    You will have an instance of a class implementing `yif_aai_ollama`, such as `ycl_aai_ollama`.
 

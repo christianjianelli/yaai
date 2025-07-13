@@ -6,6 +6,7 @@ This repository provides a set of tools designed to facilitate Artificial Intell
   - **[OpenAI](docs/openai/README.md)** (cloud-based)
   - **[Ollama](docs/ollama/README.md)** (local/self-hosted)
   - **[Google Gemini](docs/google/README.md)** (cloud-based)
+  - **[Anthropic](docs/anthropic/README.md)** (cloud-based)
   - APIs from other providers, such as Nvidia, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.
 - **Conversation Management**: Maintain and manage multi-turn conversations, with full access to conversation history for advanced chat scenarios.
 - **Tool/Function Calling**: Integrate ABAP business logic with LLMs using function/tool calling, allowing AI models to trigger ABAP methods.
