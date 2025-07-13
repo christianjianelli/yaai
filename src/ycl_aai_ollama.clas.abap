@@ -322,11 +322,13 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           <l_response> = e_response.
         ENDIF.
 
+        EXIT.
+
       ENDIF.
 
     ENDDO.
 
-    IF e_t_response IS REQUESTED.
+    IF e_t_response IS REQUESTED AND me->_ollama_chat_response-error IS INITIAL.
 
       SPLIT e_response AT cl_abap_char_utilities=>newline INTO TABLE e_t_response.
 

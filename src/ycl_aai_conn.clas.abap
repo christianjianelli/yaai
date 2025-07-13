@@ -94,6 +94,14 @@ CLASS ycl_aai_conn IMPLEMENTATION.
             AND numb = '0000'
            INTO @me->m_base_url.
 
+      WHEN yif_aai_const=>c_anthropic.
+
+        SELECT SINGLE low FROM tvarvc
+          WHERE name = @yif_aai_const=>c_anthropic_base_url_param
+            AND type = 'P'
+            AND numb = '0000'
+           INTO @me->m_base_url.
+
       WHEN OTHERS.
 
         l_name = |YAAI_{ i_api }|.
@@ -353,6 +361,12 @@ CLASS ycl_aai_conn IMPLEMENTATION.
   METHOD yif_aai_conn~set_api_key.
 
     me->_api_key = i_api_key.
+
+    IF i_o_api_key IS SUPPLIED.
+
+      me->mo_api_key = i_o_api_key.
+
+    ENDIF.
 
   ENDMETHOD.
 
