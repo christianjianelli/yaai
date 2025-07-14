@@ -234,7 +234,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
             IF <ls_parts>-functioncall IS INITIAL.
 
-              e_response = e_response && <ls_parts>-text.
+              e_response = e_response && lo_aai_util->replace_unicode_escape_seq( <ls_parts>-text ).
 
               CONTINUE.
 
