@@ -136,9 +136,9 @@ The following screenshots show the output you can expect after running the examp
 Now that you've run your first Anthropic ABAP AI applications, consider exploring additional features.😊
 
 ## Explore ABAP AI Features
-  - **Prompt Templates:** Learn how to define and use [prompt templates](prompt_templates.md) for more dynamic and reusable prompts.
+  - **Prompt Templates:** Learn how to define and use [prompt templates](../prompt_templates.md) for more dynamic and reusable prompts.
   - **LLM System Instructions:** Pass [system instructions](system_instructions.md) to guide the behavior of the language model for specific tasks.
-  - **Tool/Function Calling:** Enable LLM applications to trigger ABAP logic or workflows.
+  - **Tool Use/Function Calling:** Enable LLM applications to trigger ABAP logic via [tool use](function_calling.md).
   - **Retrieval-Augmented Generation (RAG):** Enhance your LLM applications by incorporating external knowledge sources and retrieval mechanisms.
 
 ## Anthropic API Documentation
