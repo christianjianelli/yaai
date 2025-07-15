@@ -39,6 +39,7 @@ This repository focuses on backend AI integration for ABAP. For a ready-to-use u
   - [OpenAI Guide](openai/README.md): Learn how to use ABAP AI with OpenAI models.
   - [Ollama Guide](ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
   - [Google Gemini Guide](google/README.md): Learn how to use ABAP AI with Google Gemini models.
+  - [Anthropic Guide](anthropic/README.md): Learn how to use ABAP AI with Anthropic models.
 
 # Features
 - [System Instructions](system_instructions.md): Learn how to pass System Instructions to a LLM.

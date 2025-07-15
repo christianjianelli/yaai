@@ -129,4 +129,132 @@ START-OF-SELECTION.
 - Nested structures and tables are not supported.
 - Complex data types (e.g., objects, deep structures) are not supported.
 
-For more details, refer to the ABAP AI framework documentation and OpenAI function calling API reference.
+## Function Calling with Proxy Class Support
+
+### Overview
+
+ABAP AI Tools supports the execution of ABAP logic via Large Language Models (LLMs) by allowing methods to be called dynamically. However, because ABAP is a strongly typed language, the parameters expected by ABAP methods must be in precise formats and types.
+
+LLMs, on the other hand, often struggle to provide perfectly formatted values. To bridge this gap and avoid runtime errors (e.g. type conversion errors, short dumps), we introduce the Proxy Class Pattern.
+
+### Problem
+
+When LLMs call ABAP tools, they must provide parameter values that exactly match the expected ABAP data types defined in the method signatures. For instance:
+
+```abap
+METHODS calculate_total
+  IMPORTING
+    value1 TYPE f
+    value2 TYPE f
+  RETURNING VALUE(r_response) TYPE string.
+```
+
+A minor mismatch in types or formats (e.g., a string `"10.00"` instead of a number) can lead to a short dump.
+
+### Solution: Proxy Class Interface
+
+To prevent type mismatch issues, ABAP AI Tools allows you to define a Proxy Class alongside your concrete implementation.
+
+ - The **Concrete Class** is used to generate the **JSON Schema** that will be sent to the LLM, ensuring it understands the method signature and data format.
+
+ - The **Proxy Class** is used to receive and validate/convert inputs coming from the LLM, before calling the concrete method.
+ 
+ The developer handles type conversion, error handling, and validation inside the proxy method.
+
+ **Example**:
+
+1. Concrete Class (Strict Types)
+
+```abap
+CLASS zcl_calculator DEFINITION.
+  
+  PUBLIC SECTION.
+  
+    METHODS calculate_total
+      IMPORTING 
+        value1 TYPE f
+        value2 TYPE f
+      RETURNING VALUE(r_response) TYPE string.
+
+ENDCLASS.
+
+CLASS zcl_calculator IMPLEMENTATION.
+
+  METHOD calculate_total.
+
+    DATA(l_result) = value1 + value2.
+
+    r_response = |{ value1 } + { value2 } = { l_result }|.
+
+  ENDMETHOD.
+
+ENDCLASS.
+```
+
+2. Proxy Class (Flexible Types)
+
+```abap
+CLASS zcl_calculator_proxy DEFINITION.
+  
+  PUBLIC SECTION.
+    
+    METHODS calculate_total
+      IMPORTING 
+        value1 TYPE string
+        value2 TYPE string
+      RETURNING VALUE(r_response) TYPE string.
+
+ENDCLASS.
+
+CLASS zcl_calculator_proxy IMPLEMENTATION.
+
+  METHOD calculate_total.
+
+    DATA: l_val1 TYPE f,
+          l_val2 TYPE f.
+      
+    "Handle type convertions and/or execute validations before calling the concrete method
+    TRY.
+        
+        l_val1 = value1.
+        l_val2 = value2.
+        
+      CATCH cx_sy_conversion_no_number.
+        r_response = 'Error: Invalid number format'.
+    ENDTRY.
+    
+    "Instantiate the concrete class
+    DATA(lo_calculator) = NEW zcl_calculator_proxy( ).
+
+    "Call the concrete method
+    r_response = lo_calculator->calculate_total( 
+      EXPORTING value1 = l_val1
+                value2 = l_val2 
+    ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+```
+### How It Works Internally
+
+1. Schema Generation: ABAP AI Tools uses **RTTI (Runtime Type Information)** to inspect the concrete class method signature and generate a JSON schema.
+
+2. Execution: When the LLM returns a tool call, ABAP AI Tools:
+  - Calls the proxy class method with the LLM-provided input values.
+  - Inside the proxy, the values are validated and/or converted.
+  - Finally, the concrete class logic is invoked with the correctly typed parameters.
+
+### Using the Proxy Class
+
+To use a proxy class for function calling, simply specify its name in the `proxy_class` parameter when invoking the `add_methods` method.
+
+**Example**:
+
+```abap
+DATA(lo_function_calling) = NEW ycl_aai_func_call_openai( ).
+
+lo_function_calling->add_methods( VALUE #( ( proxy_class = 'zcl_calculator_proxy' class_name = 'zcl_calculator' method_name = 'calculate_total' description = 'Calculate total' ) ) ).
+
+lo_aai_openai->bind_tools( lo_function_calling ).
+```
