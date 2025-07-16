@@ -139,7 +139,7 @@ Now that you've run your first Anthropic ABAP AI applications, consider explorin
   - **Prompt Templates:** Learn how to define and use [prompt templates](../prompt_templates.md) for more dynamic and reusable prompts.
   - **LLM System Instructions:** Pass [system instructions](system_instructions.md) to guide the behavior of the language model for specific tasks.
   - **Tool Use/Function Calling:** Enable LLM applications to trigger ABAP logic via [tool use](function_calling.md).
-  - **Retrieval-Augmented Generation (RAG):** Enhance your LLM applications by incorporating external knowledge sources and retrieval mechanisms.
+  - **Retrieval-Augmented Generation (RAG):** Enhance your LLM applications by incorporating [external knowledge sources and retrieval mechanisms](../rag.md).
 
 ## Anthropic API Documentation
   - [Anthropic API reference](https://docs.anthropic.com/en/api/messages)  

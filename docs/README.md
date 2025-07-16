@@ -45,3 +45,4 @@ This repository focuses on backend AI integration for ABAP. For a ready-to-use u
 - [System Instructions](system_instructions.md): Learn how to pass System Instructions to a LLM.
 - [Prompt Templates](prompt_templates.md): Learn how to use Prompt Templates.
 - [Function Calling](function_calling.md): Learn how to use Function Calling.
+- [Retrieval-Augmented Generation (RAG)](rag.md): Enhance your LLM applications by incorporating external knowledge sources and retrieval mechanisms.

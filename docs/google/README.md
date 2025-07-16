@@ -126,7 +126,7 @@ Now that you've run your first Google Gemini ABAP AI applications, consider expl
   - **Prompt Templates:** Learn how to define and use [prompt templates](../prompt_templates.md) for more dynamic and reusable prompts.
   - **LLM System Instructions:** Pass [system instructions](system_instructions.md) to guide the behavior of the language model for specific tasks.
   - **Tool/Function Calling:** Enable LLM applications to trigger ABAP logic using [tools](function_calling.md).
-  - **Retrieval-Augmented Generation (RAG):** Enhance your LLM applications by incorporating external knowledge sources and retrieval mechanisms.
+  - **Retrieval-Augmented Generation (RAG):** Enhance your LLM applications by incorporating [external knowledge sources and retrieval mechanisms](../rag.md).
 
 ## Google Gemini API Documentation
   - [Gemini Developer API](https://ai.google.dev/gemini-api/docs)     
