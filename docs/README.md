@@ -7,7 +7,9 @@ This repository provides a set of tools designed to facilitate Artificial Intell
   - **[Ollama](ollama/README.md)** (local/self-hosted)
   - **[Google Gemini](google/README.md)** (cloud-based)
   - **[Anthropic](anthropic/README.md)** (cloud-based)
-  - APIs from other providers, such as Nvidia, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.
+  - APIs from other providers, such as Nvidia and Mistral, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.
+      - **[Nvidia](openai_compatible/nvidia.md)** (cloud-based)
+      - **[Mistral](openai_compatible/mistral.md)** (cloud-based)
 - **Conversation Management**: Maintain and manage multi-turn conversations, with full access to conversation history for advanced chat scenarios.
 - **Tool/Function Calling**: Integrate ABAP business logic with LLMs using function/tool calling, allowing AI models to trigger ABAP methods.
 - **Retrieval-Augmented Generation (RAG)**: Enhance LLM outputs by incorporating enterprise data, enabling more accurate and relevant answers through retrieval-augmented generation workflows.

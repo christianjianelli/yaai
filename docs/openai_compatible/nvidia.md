@@ -34,7 +34,7 @@ START-OF-SELECTION.
 
   o_aai_conn->set_base_url( i_base_url = 'https://integrate.api.nvidia.com' ).
 
-  o_aai_conn->set_api_key( i_api_key = 'REPLACE_THIS_TEXT_WITH_YOUR_OPENAI_API_KEY' ).
+  o_aai_conn->set_api_key( i_api_key = 'REPLACE_THIS_TEXT_WITH_YOUR_NVIDIA_API_KEY' ).
 
   " The Nvidia API does not accept the 'charset=utf-8' so the workaround is to suppress the content type
   " {"error":"Unsupported media type: application/json; charset=utf-8. It must be application/json"}

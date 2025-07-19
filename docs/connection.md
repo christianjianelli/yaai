@@ -11,18 +11,20 @@ The Connection object retrieves base URLs for supported APIs from the SAP table 
 For example, you can maintain the following parameters (see also [Configuration Parameters](config.md)):
 
 | Parameter Name           | Description                                 |
-|-------------------------|---------------------------------------------|
-| YAAI_OPENAI_BASE_URL    | Base URL for OpenAI API endpoints           |
-| YAAI_OLLAMA_BASE_URL    | Base URL for Ollama API endpoints           |
-| YAAI_GOOGLE_BASE_URL    | Base URL for Google Gemini API endpoints    |
+|--------------------------|---------------------------------------------|
+| YAAI_OPENAI_BASE_URL     | Base URL for OpenAI API endpoints           |
+| YAAI_OLLAMA_BASE_URL     | Base URL for Ollama API endpoints           |
+| YAAI_GOOGLE_BASE_URL     | Base URL for Google Gemini API endpoints    |
+| YAAI_ANTHROPIC_BASE_URL  | Base URL for Anthropic API endpoints        |
 
 Example entries in TVARVC:
 
-| NAME                   | VALUE                                 |
-|------------------------|----------------------------------------------|
-| YAAI_OPENAI_BASE_URL   | https://api.openai.com/                      |
-| YAAI_OLLAMA_BASE_URL   | http://localhost:11434                       |
-| YAAI_GOOGLE_BASE_URL   | https://generativelanguage.googleapis.com    |
+| NAME                     | VALUE                                       |
+|--------------------------|---------------------------------------------|
+| YAAI_OPENAI_BASE_URL     | https://api.openai.com/                     |
+| YAAI_OLLAMA_BASE_URL     | http://localhost:11434                      |
+| YAAI_GOOGLE_BASE_URL     | https://generativelanguage.googleapis.com   |
+| YAAI_ANTHROPIC_BASE_URL  | https://api.anthropic.com                   |
 
 ### Automatic Instantiation
 

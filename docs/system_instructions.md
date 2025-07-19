@@ -16,3 +16,5 @@ System instructions are typically used to:
 
 - [OpenAI System Instructions](openai/system_instructions.md)
 - [Ollama System Instructions](ollama/system_instructions.md)
+- [Google System Instructions](google/system_instructions.md)
+- [Anthropic System Instructions](anthropic/system_instructions.md)
