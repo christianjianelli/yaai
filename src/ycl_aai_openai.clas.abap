@@ -213,11 +213,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
       IF me->_system_instructions IS NOT INITIAL.
 
         READ TABLE me->_messages TRANSPORTING NO FIELDS
-          WITH KEY role = 'developer'.
+          WITH KEY role = me->_system_instructions_role.
 
         IF sy-subrc <> 0.
 
-          INSERT VALUE #( role = 'developer'
+          INSERT VALUE #( role = me->_system_instructions_role
                           content = me->_system_instructions
                           type = 'message' ) INTO me->_messages INDEX 1.
 
@@ -444,11 +444,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
       IF me->_system_instructions IS NOT INITIAL.
 
         READ TABLE me->_messages TRANSPORTING NO FIELDS
-          WITH KEY role = 'developer'.
+          WITH KEY role = me->_system_instructions_role.
 
         IF sy-subrc <> 0.
 
-          INSERT VALUE #( role = 'developer'
+          INSERT VALUE #( role = me->_system_instructions_role
                           content = me->_system_instructions
                           type = 'message' ) INTO me->_messages INDEX 1.
 
