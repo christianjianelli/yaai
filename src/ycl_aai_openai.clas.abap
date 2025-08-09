@@ -50,6 +50,8 @@ CLASS ycl_aai_openai DEFINITION
     DATA: _model                     TYPE string,
           _use_completions           TYPE abap_bool VALUE abap_false,
           _temperature               TYPE p LENGTH 2 DECIMALS 1,
+          _verbosity                 TYPE string,
+          _reasoning_effort          TYPE string,
           _system_instructions       TYPE string,
           _system_instructions_role  TYPE string,
           _openai_generate_request   TYPE yif_aai_openai~ty_openai_generate_request_s,
@@ -73,6 +75,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     me->_messages = i_t_history.
 
     me->_temperature = 1.
+
+    me->_verbosity = yif_aai_openai~mc_verbosity_medium.
+
+    me->_reasoning_effort = yif_aai_openai~mc_reasoning_effort_medium.
 
     me->_max_tools_calls = 5.
 
@@ -111,6 +117,18 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   METHOD yif_aai_openai~set_temperature.
 
     me->_temperature = i_temperature.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_openai~set_verbosity.
+
+    me->_verbosity = i_verbosity.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_openai~set_reasoning_effort.
+
+    me->_reasoning_effort = i_reasoning_effort.
 
   ENDMETHOD.
 
@@ -213,11 +231,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
       IF me->_system_instructions IS NOT INITIAL.
 
         READ TABLE me->_messages TRANSPORTING NO FIELDS
-          WITH KEY role = 'developer'.
+          WITH KEY role = me->_system_instructions_role.
 
         IF sy-subrc <> 0.
 
-          INSERT VALUE #( role = 'developer'
+          INSERT VALUE #( role = me->_system_instructions_role
                           content = me->_system_instructions
                           type = 'message' ) INTO me->_messages INDEX 1.
 
@@ -252,10 +270,22 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         FREE me->_openai_generate_response.
 
-        DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_generate_request_s( model = me->_model
-                                                                                                           stream = abap_false
-                                                                                                           input = me->get_conversation( )
-                                                                                                           tools = l_tools ) ).
+        IF me->_model CP 'gpt-5*'.
+
+          DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_generate_request_s( model = me->_model
+                                                                                                             stream = abap_false
+                                                                                                             input = me->get_conversation( )
+                                                                                                             text-verbosity = me->_verbosity
+                                                                                                             reasoning-effort = me->_reasoning_effort
+                                                                                                             tools = l_tools ) ).
+        ELSE.
+
+          l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_generate_req_wt_s( model = me->_model
+                                                                                                      stream = abap_false
+                                                                                                      temperature = me->_temperature
+                                                                                                      input = me->get_conversation( )
+                                                                                                      tools = l_tools ) ).
+        ENDIF.
 
         me->_o_connection->set_body( l_json ).
 
@@ -444,11 +474,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
       IF me->_system_instructions IS NOT INITIAL.
 
         READ TABLE me->_messages TRANSPORTING NO FIELDS
-          WITH KEY role = 'developer'.
+          WITH KEY role = me->_system_instructions_role.
 
         IF sy-subrc <> 0.
 
-          INSERT VALUE #( role = 'developer'
+          INSERT VALUE #( role = me->_system_instructions_role
                           content = me->_system_instructions
                           type = 'message' ) INTO me->_messages INDEX 1.
 

@@ -19,6 +19,14 @@ INTERFACE yif_aai_openai
            type    TYPE string,
          END OF ty_type_message_s,
 
+         BEGIN OF ty_type_text_s,
+           verbosity TYPE string,
+         END OF ty_type_text_s,
+
+         BEGIN OF ty_type_reasoning_s,
+           effort TYPE string,
+         END OF ty_type_reasoning_s,
+
          BEGIN OF ty_error_s,
            code    TYPE string,
            message TYPE string,
@@ -73,12 +81,21 @@ INTERFACE yif_aai_openai
          END OF ty_type_message_chat_comp_s.
 
   TYPES: BEGIN OF ty_openai_generate_request_s,
+           model     TYPE string,
+           stream    TYPE abap_bool,
+           input     TYPE /ui2/cl_json=>json,
+           text      TYPE ty_type_text_s,
+           reasoning TYPE ty_type_reasoning_s,
+           tools     TYPE /ui2/cl_json=>json,
+         END OF ty_openai_generate_request_s.
+
+  TYPES: BEGIN OF ty_openai_generate_req_wt_s,
            model       TYPE string,
            stream      TYPE abap_bool,
            temperature TYPE p LENGTH 2 DECIMALS 1,
            input       TYPE /ui2/cl_json=>json,
            tools       TYPE /ui2/cl_json=>json,
-         END OF ty_openai_generate_request_s.
+         END OF ty_openai_generate_req_wt_s.
 
   TYPES: BEGIN OF ty_openai_completions_req_s,
            model       TYPE string,
@@ -161,6 +178,14 @@ INTERFACE yif_aai_openai
            model  TYPE string,
          END OF ty_openai_embed_response_s.
 
+  CONSTANTS: mc_verbosity_low            TYPE string VALUE 'low',
+             mc_verbosity_medium         TYPE string VALUE 'medium',
+             mc_verbosity_high           TYPE string VALUE 'high',
+             mc_reasoning_effort_minimal TYPE string VALUE 'minimal',
+             mc_reasoning_effort_low     TYPE string VALUE 'low',
+             mc_reasoning_effort_medium  TYPE string VALUE 'medium',
+             mc_reasoning_effort_high    TYPE string VALUE 'high'.
+
   DATA: mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY.
 
   METHODS use_completions
@@ -174,6 +199,14 @@ INTERFACE yif_aai_openai
   METHODS set_temperature
     IMPORTING
       i_temperature TYPE numeric.
+
+  METHODS set_verbosity
+    IMPORTING
+      i_verbosity TYPE csequence.
+
+  METHODS set_reasoning_effort
+    IMPORTING
+      i_reasoning_effort TYPE csequence.
 
   METHODS set_system_instructions
     IMPORTING

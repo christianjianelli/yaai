@@ -340,21 +340,23 @@ CLASS ycl_aai_util IMPLEMENTATION.
   METHOD get_json_schema.
 
     TYPES: BEGIN OF ty_properties,
-             name TYPE c LENGTH 30,
-             kind TYPE c LENGTH 1,
-             json TYPE string,
+             name      TYPE c LENGTH 30,
+             fieldname TYPE c LENGTH 30,
+             kind      TYPE c LENGTH 1,
+             required  TYPE abap_bool,
+             json      TYPE string,
            END OF ty_properties.
 
-    DATA lo_tabledescr  TYPE REF TO cl_abap_tabledescr.
-    DATA lo_structdescr TYPE REF TO cl_abap_structdescr.
-    DATA lo_elemdescr   TYPE REF TO cl_abap_elemdescr.
+    DATA: lo_tabledescr  TYPE REF TO cl_abap_tabledescr,
+          lo_structdescr TYPE REF TO cl_abap_structdescr,
+          lo_elemdescr   TYPE REF TO cl_abap_elemdescr.
 
     DATA lt_json_properties TYPE STANDARD TABLE OF ty_properties.
 
-    DATA l_required TYPE string.
-
     DATA: l_json                TYPE string,
-          l_escaped_description TYPE string.
+          l_escaped_description TYPE string,
+          l_required            TYPE string,
+          l_is_required         TYPE abap_bool.
 
     CLEAR r_json_schema.
 
@@ -367,11 +369,7 @@ CLASS ycl_aai_util IMPLEMENTATION.
         e_t_importing_params = DATA(lt_importing_params)
     ).
 
-    DATA(lo_aai_util) = NEW ycl_aai_util( ).
-
     LOOP AT lt_components ASSIGNING FIELD-SYMBOL(<ls_components>).
-
-      CLEAR l_required.
 
       CASE <ls_components>-type->kind.
 
@@ -390,13 +388,18 @@ CLASS ycl_aai_util IMPLEMENTATION.
               OTHERS       = 0
           ).
 
+          READ TABLE lt_importing_params INTO DATA(ls_importing_params)
+            WITH KEY name = <ls_components>-name.
+
           APPEND INITIAL LINE TO lt_json_properties ASSIGNING FIELD-SYMBOL(<ls_json_properties>).
 
           l_json = /ui2/cl_json=>serialize( EXPORTING data = ls_flddescr-fieldtext ).
 
           <ls_json_properties>-name = <ls_components>-name.
+          <ls_json_properties>-fieldname = <ls_components>-name.
           <ls_json_properties>-kind = <ls_components>-type->kind.
-          <ls_json_properties>-json = '"' && <ls_components>-name && '":{"type":"' && lo_aai_util->get_parameter_type( lo_elemdescr ) && '", "description":' && l_json && '}'.
+          <ls_json_properties>-required = ls_importing_params-required.
+          <ls_json_properties>-json = '"' && <ls_components>-name && '":{"type":"' && me->get_parameter_type( lo_elemdescr ) && '", "description":' && l_json && '}'.
 
 
         WHEN 'S'. " Structure
@@ -404,6 +407,8 @@ CLASS ycl_aai_util IMPLEMENTATION.
           DATA(lt_ddic_object) = <ls_components>-type->get_ddic_object( ).
 
           LOOP AT lt_ddic_object ASSIGNING FIELD-SYMBOL(<ls_ddic_object>).
+
+            CLEAR l_is_required.
 
             IF <ls_ddic_object>-rollname IS NOT INITIAL.
 
@@ -426,19 +431,17 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
                 ls_flddescr-fieldtext = ls_flddescr-fieldtext+1.
 
-                IF l_required IS INITIAL.
-                  l_required = |"{ <ls_ddic_object>-fieldname }"|.
-                ELSE.
-                  l_required = |{ l_required }, "{ <ls_ddic_object>-fieldname }"|.
-                ENDIF.
+                l_is_required = abap_true.
 
               ENDIF.
 
               l_json = /ui2/cl_json=>serialize( EXPORTING data = ls_flddescr-fieldtext ).
 
               <ls_json_properties>-name = <ls_components>-name.
+              <ls_json_properties>-fieldname = <ls_ddic_object>-fieldname.
               <ls_json_properties>-kind = <ls_components>-type->kind.
-              <ls_json_properties>-json = '"' && <ls_ddic_object>-fieldname && '":{"type":"' && lo_aai_util->get_parameter_type( lo_elemdescr ) && '", "description":' && l_json && '}'.
+              <ls_json_properties>-required = l_is_required.
+              <ls_json_properties>-json = '"' && <ls_ddic_object>-fieldname && '":{"type":"' && me->get_parameter_type( lo_elemdescr ) && '", "description":' && l_json && '}'.
 
             ENDIF.
 
@@ -456,6 +459,8 @@ CLASS ycl_aai_util IMPLEMENTATION.
           lt_ddic_object = lo_structdescr->get_ddic_object( ).
 
           LOOP AT lt_ddic_object ASSIGNING <ls_ddic_object>.
+
+            CLEAR l_is_required.
 
             IF <ls_ddic_object>-rollname IS NOT INITIAL.
 
@@ -478,19 +483,17 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
                 ls_flddescr-fieldtext = ls_flddescr-fieldtext+1.
 
-                IF l_required IS INITIAL.
-                  l_required = |"{ <ls_ddic_object>-fieldname }"|.
-                ELSE.
-                  l_required = |{ l_required }, "{ <ls_ddic_object>-fieldname }"|.
-                ENDIF.
+                l_is_required = abap_true.
 
               ENDIF.
 
               l_json = /ui2/cl_json=>serialize( EXPORTING data = ls_flddescr-fieldtext ).
 
               <ls_json_properties>-name = <ls_components>-name.
+              <ls_json_properties>-fieldname = <ls_ddic_object>-fieldname.
               <ls_json_properties>-kind = <ls_components>-type->kind.
-              <ls_json_properties>-json = '"' && <ls_ddic_object>-fieldname && '":{"type":"' && lo_aai_util->get_parameter_type( lo_elemdescr ) && '", "description":' && l_json && '}'.
+              <ls_json_properties>-required = l_is_required.
+              <ls_json_properties>-json = '"' && <ls_ddic_object>-fieldname && '":{"type":"' && me->get_parameter_type( lo_elemdescr ) && '", "description":' && l_json && '}'.
 
             ENDIF.
 
@@ -506,21 +509,31 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
     LOOP AT lt_components ASSIGNING <ls_components>.
 
-      CLEAR l_json.
-      CLEAR l_index.
+      CLEAR: l_json,
+             l_index,
+             l_required.
 
       LOOP AT lt_json_properties ASSIGNING <ls_json_properties> WHERE name = <ls_components>-name.
 
         l_index = l_index + 1.
 
+        IF <ls_json_properties>-required = abap_true AND
+          ( <ls_json_properties>-kind = 'S' OR <ls_json_properties>-kind = 'T' ).
+          IF l_required IS INITIAL.
+            l_required = |"{ <ls_json_properties>-fieldname }"|.
+          ELSE.
+            l_required = |{ l_required }, "{ <ls_json_properties>-fieldname }"|.
+          ENDIF.
+        ENDIF.
+
         IF l_json IS INITIAL.
 
           IF <ls_json_properties>-kind = 'S'.
 
-            READ TABLE lt_importing_params INTO DATA(ls_importing_params)
+            READ TABLE lt_importing_params INTO ls_importing_params
               WITH KEY name = <ls_components>-name.
 
-            l_escaped_description = lo_aai_util->serialize( i_data = ls_importing_params-description ).
+            l_escaped_description = me->serialize( i_data = ls_importing_params-description ).
 
             l_json = '"' && <ls_components>-name && '": { "type": "object", "description":' && l_escaped_description && ', "properties": {'.
 
@@ -531,7 +544,7 @@ CLASS ycl_aai_util IMPLEMENTATION.
             READ TABLE lt_importing_params INTO ls_importing_params
               WITH KEY name = <ls_components>-name.
 
-            l_escaped_description = lo_aai_util->serialize( i_data = ls_importing_params-description ).
+            l_escaped_description = me->serialize( i_data = ls_importing_params-description ).
 
             l_json = '"' && <ls_components>-name && '": { "type": "array", "description":' && l_escaped_description && ', "items": { "type": "object", "properties": {'.
 
