@@ -50,8 +50,7 @@ Supported parameter types:
 REPORT yaai_r_simple_func_call_openai.
 
 PARAMETERS: p_prompt TYPE c LENGTH 200 LOWER CASE OBLIGATORY,
-            p_model  TYPE c LENGTH 30 LOWER CASE OBLIGATORY DEFAULT 'gpt-4.1',
-            p_tempe  TYPE p LENGTH 2 DECIMALS 1 DEFAULT 1.
+            p_model  TYPE c LENGTH 30 LOWER CASE OBLIGATORY DEFAULT 'gpt-5'.
 
 CLASS lcl_app DEFINITION.
 
@@ -113,7 +112,6 @@ INITIALIZATION.
   "Set text for the selection screen fields
   %_p_model_%_app_%-text = 'Model'.
   %_p_prompt_%_app_%-text = 'Prompt'.
-  %_p_tempe_%_app_%-text = 'Temperature'.
 
 START-OF-SELECTION.
 

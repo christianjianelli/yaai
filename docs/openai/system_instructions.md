@@ -21,7 +21,7 @@ System instructions are typically used to:
 
    ```abap
    "This example assumes that the API base URL and the API Key are properly configured
-    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_model = 'gpt-4.1' ).
+    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_model = 'gpt-5' ).
    ```
 
 2. **Set the System Instructions**
@@ -72,7 +72,7 @@ CLASS lcl_app IMPLEMENTATION.
     DATA l_system_instructions TYPE string.
 
     "This example assumes that the API base URL and the API Key are properly configured
-    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_model = 'gpt-4.1' ).
+    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_model = 'gpt-5' ).
 
     l_system_instructions = |# Identity\n|.
     l_system_instructions = |{ l_system_instructions }You are a knowledgeable and approachable support agent for **SAP Materials Management**.\n|.

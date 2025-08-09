@@ -99,7 +99,7 @@ START-OF-SELECTION.
   " Hardcoding API keys directly into your ABAP code is highly discouraged.
   o_aai_conn->set_api_key( i_api_key = 'REPLACE_THIS_TEXT_WITH_YOUR_OPENAI_API_KEY' ).
 
-  DATA(o_aai_openai) = NEW ycl_aai_openai( i_model = 'gpt-4.1' i_o_connection = o_aai_conn ).
+  DATA(o_aai_openai) = NEW ycl_aai_openai( i_model = 'gpt-5' i_o_connection = o_aai_conn ).
 
   o_aai_openai->chat(
     EXPORTING
@@ -132,7 +132,7 @@ REPORT yaai_r_simple_llm_chat_openai.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
 
-PARAMETERS: p_model  TYPE string DEFAULT 'gpt-4.1' LOWER CASE VISIBLE LENGTH 20,
+PARAMETERS: p_model  TYPE string DEFAULT 'gpt-5' LOWER CASE VISIBLE LENGTH 20,
             p_prompt TYPE string DEFAULT 'What is the capital of France?' LOWER CASE VISIBLE LENGTH 50.
 
 SELECTION-SCREEN: SKIP 1,

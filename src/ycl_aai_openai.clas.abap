@@ -66,7 +66,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD constructor.
 
-    me->_model = COND #( WHEN i_model IS NOT INITIAL THEN i_model ELSE 'gpt-4.1' ).
+    me->_model = COND #( WHEN i_model IS NOT INITIAL THEN i_model ELSE 'gpt-5' ).
 
     me->_system_instructions_role = 'developer'.
 
