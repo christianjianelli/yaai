@@ -346,12 +346,16 @@ CLASS ycl_aai_openai IMPLEMENTATION.
               e_data = lr_data
           ).
 
-          DATA(lo_typedescr) = cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+          IF lr_data IS NOT INITIAL.
 
-          " Make sure the deserialized object is a JSON string before assigning it
-          IF lo_typedescr->type_kind = cl_abap_typedescr=>typekind_string.
+            DATA(lo_typedescr) = cl_abap_typedescr=>describe_by_data_ref( lr_data ).
 
-            ASSIGN lr_data->* TO <l_data>.
+            " Make sure the deserialized object is a JSON string before assigning it
+            IF lo_typedescr->type_kind = cl_abap_typedescr=>typekind_string.
+
+              ASSIGN lr_data->* TO <l_data>.
+
+            ENDIF.
 
           ENDIF.
 

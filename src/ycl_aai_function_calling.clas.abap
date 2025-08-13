@@ -116,52 +116,66 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
         e_t_components       = DATA(lt_components)
     ).
 
-    TRY.
+    IF lt_components IS NOT INITIAL.
 
-        " Create a structure with the importing parameters
-        lo_struct_descr = cl_abap_structdescr=>create( lt_components ).
+      TRY.
 
-        CREATE DATA lr_data TYPE HANDLE lo_struct_descr.
+          " Create a structure with the importing parameters
+          lo_struct_descr = cl_abap_structdescr=>create( lt_components ).
 
-        ASSIGN lr_data->* TO <ls_data>.
+          CREATE DATA lr_data TYPE HANDLE lo_struct_descr.
 
-      CATCH cx_sy_create_data_error INTO DATA(lo_ex_create_data_error).
+          ASSIGN lr_data->* TO <ls_data>.
 
-        r_response = |An error occurred while calling the tool. Error description: { lo_ex_create_data_error->get_text( ) }|.
+        CATCH cx_sy_struct_attributes INTO DATA(lo_ex_struct_attributes).
 
-        RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
+          r_response = |An error occurred while calling the function/tool. Error description: { lo_ex_struct_attributes->get_text( ) }|.
 
-    ENDTRY.
+          RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
 
-    IF <ls_data> IS NOT ASSIGNED.
-      RETURN.
+          RETURN.
+
+        CATCH cx_sy_create_data_error INTO DATA(lo_ex_create_data_error).
+
+          r_response = |An error occurred while calling the function/tool. Error description: { lo_ex_create_data_error->get_text( ) }|.
+
+          RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
+
+          RETURN.
+
+      ENDTRY.
+
     ENDIF.
 
-    " Deserialize the JSON passing its data to the corresponding importing parameters of the method that is going to be called
-    lo_aai_util->deserialize(
-      EXPORTING
-        i_json = i_json
-      IMPORTING
-        e_data = <ls_data>
-    ).
+    IF <ls_data> IS ASSIGNED.
 
-    " Fill the parameters table to dynamically pass the importing parameters in the method call
-    LOOP AT lt_components INTO DATA(ls_components).
+      " Deserialize the JSON passing its data to the corresponding importing parameters of the method that is going to be called
+      lo_aai_util->deserialize(
+        EXPORTING
+          i_json = i_json
+        IMPORTING
+          e_data = <ls_data>
+      ).
 
-      ls_parameter-name = to_upper( ls_components-name ).
-      ls_parameter-kind = cl_abap_objectdescr=>exporting.
+      " Fill the parameters table to dynamically pass the importing parameters in the method call
+      LOOP AT lt_components INTO DATA(ls_components).
 
-      ASSIGN COMPONENT ls_components-name OF STRUCTURE <ls_data> TO FIELD-SYMBOL(<lr_param>).
+        ls_parameter-name = to_upper( ls_components-name ).
+        ls_parameter-kind = cl_abap_objectdescr=>exporting.
 
-      IF sy-subrc = 0.
+        ASSIGN COMPONENT ls_components-name OF STRUCTURE <ls_data> TO FIELD-SYMBOL(<lr_param>).
 
-        ls_parameter-value = REF #( <lr_param> ).          " Always pass a reference
+        IF sy-subrc = 0.
 
-        INSERT ls_parameter INTO TABLE lt_parameters.
+          ls_parameter-value = REF #( <lr_param> ).          " Always pass a reference
 
-      ENDIF.
+          INSERT ls_parameter INTO TABLE lt_parameters.
 
-    ENDLOOP.
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDIF.
 
     ls_parameter-name = 'R_RESPONSE'.
     ls_parameter-kind = cl_abap_objectdescr=>receiving.
