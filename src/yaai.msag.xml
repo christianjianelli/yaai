@@ -26,6 +26,78 @@
      <MSGNR>002</MSGNR>
      <TEXT>A communication error occurred</TEXT>
     </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>003</MSGNR>
+     <TEXT>Chat started.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>004</MSGNR>
+     <TEXT>Chat finished.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>005</MSGNR>
+     <TEXT>Message sent to API.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>006</MSGNR>
+     <TEXT>Response received from API.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>007</MSGNR>
+     <TEXT>Message failed! &amp;1 &amp;2 &amp;3 &amp;4.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>008</MSGNR>
+     <TEXT>Tool &amp;1 &amp;2 called.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>009</MSGNR>
+     <TEXT>Tool response: &amp;1.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>010</MSGNR>
+     <TEXT>Tool call failed: &amp;1.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>011</MSGNR>
+     <TEXT>HTTP request sent.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>012</MSGNR>
+     <TEXT>HTTP response received.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>014</MSGNR>
+     <TEXT>Tool &amp;1 &amp;2 error: &amp;3 &amp;4.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>015</MSGNR>
+     <TEXT>Chat &amp;1 is blocked.</TEXT>
+    </T100>
    </T100>
   </asx:values>
  </asx:abap>
