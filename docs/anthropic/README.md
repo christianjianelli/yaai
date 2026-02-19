@@ -1,7 +1,7 @@
 # yaai - ABAP AI tools - Anthropic
 
 <p>
-  <img src="../images/anthropic_logo.svg" alt="OpenAI Logo" width="200px">
+  <img src="../images/anthropic_logo.svg" alt="Anthropic Logo" width="200px">
 </p>
 
 ## Quickstart
