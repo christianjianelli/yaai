@@ -1,9 +1,11 @@
 INTERFACE yif_aai_anthropic
   PUBLIC.
 
+  TYPES: ty_response_t TYPE STANDARD TABLE OF string.
+
   TYPES: BEGIN OF ty_chat_message_s,
            role    TYPE string,
-           content TYPE /ui2/cl_json=>json,
+           content TYPE string,
          END OF ty_chat_message_s,
 
          BEGIN OF ty_chat_message_think_s,
@@ -37,11 +39,12 @@ INTERFACE yif_aai_anthropic
          END OF ty_anthropic_chat_request_s.
 
   TYPES: BEGIN OF ty_response_content_s,
-           type  TYPE string,
-           text  TYPE string,
-           id    TYPE string,
-           name  TYPE string,
-           input TYPE /ui2/cl_json=>json,
+           type    TYPE string,
+           text    TYPE string,
+           id      TYPE string,
+           name    TYPE string,
+           input   TYPE /ui2/cl_json=>json,
+           content TYPE string,
          END OF ty_response_content_s.
 
   TYPES: ty_content_t TYPE STANDARD TABLE OF ty_response_content_s WITH NON-UNIQUE KEY type.
@@ -49,7 +52,12 @@ INTERFACE yif_aai_anthropic
   TYPES: BEGIN OF ty_error_s,
            type    TYPE string,
            message TYPE string,
-         END OF ty_error_s.
+         END OF ty_error_s,
+
+         BEGIN OF ty_usage_s,
+           input_tokens  TYPE i,
+           output_tokens TYPE i,
+         END OF ty_usage_s.
 
   TYPES: BEGIN OF ty_anthropic_chat_response_s,
            id          TYPE string,
@@ -57,12 +65,15 @@ INTERFACE yif_aai_anthropic
            role        TYPE string,
            content     TYPE /ui2/cl_json=>json,
            stop_reason TYPE string,
+           usage       TYPE ty_usage_s,
            error       TYPE ty_error_s,
          END OF ty_anthropic_chat_response_s.
 
-  DATA: mo_function_calling TYPE REF TO yif_aai_func_call_anthropic READ-ONLY.
+  DATA: mo_function_calling TYPE REF TO yif_aai_func_call_anthropic READ-ONLY,
+        mo_agent            TYPE REF TO yif_aai_agent READ-ONLY.
 
-  DATA m_anthropic_version TYPE string READ-ONLY.
+  DATA: m_anthropic_version TYPE string READ-ONLY,
+        m_endpoint          TYPE string READ-ONLY.
 
   METHODS set_version
     IMPORTING
@@ -88,6 +99,14 @@ INTERFACE yif_aai_anthropic
     IMPORTING
       i_o_connection TYPE REF TO yif_aai_conn.
 
+  METHODS set_endpoint
+    IMPORTING
+      i_endpoint TYPE csequence.
+
+  METHODS set_persistence
+    IMPORTING
+      i_o_persistence TYPE REF TO yif_aai_db.
+
   METHODS bind_tools
     IMPORTING
       i_o_function_calling TYPE REF TO yif_aai_func_call_anthropic
@@ -103,13 +122,17 @@ INTERFACE yif_aai_anthropic
 
   METHODS chat
     IMPORTING
-      i_message    TYPE csequence
-      i_new        TYPE abap_bool DEFAULT abap_false
-      i_greeting   TYPE csequence OPTIONAL
+      i_message       TYPE csequence OPTIONAL
+      i_new           TYPE abap_bool DEFAULT abap_false
+      i_greeting      TYPE csequence OPTIONAL
+      i_async_task_id TYPE csequence OPTIONAL
+      i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
+      i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
+        PREFERRED PARAMETER i_message
     EXPORTING
-      e_response   TYPE string
-      e_failed     TYPE abap_bool
-      e_t_response TYPE rswsourcet.
+      e_response      TYPE string
+      e_failed        TYPE abap_bool
+      e_t_response    TYPE ty_response_t.
 
   METHODS get_conversation
     RETURNING VALUE(rt_messages) TYPE ty_chat_messages_t.
