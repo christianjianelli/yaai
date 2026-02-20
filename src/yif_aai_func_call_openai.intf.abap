@@ -34,6 +34,7 @@ INTERFACE yif_aai_func_call_openai
            proxy_class TYPE string,
            method_name TYPE string,
            description TYPE string,
+           full_schema TYPE abap_bool,
          END OF ty_method_s,
 
          ty_methods_t TYPE STANDARD TABLE OF ty_method_s WITH EMPTY KEY.
@@ -56,9 +57,17 @@ INTERFACE yif_aai_func_call_openai
 
   METHODS add_methods IMPORTING i_t_methods TYPE ty_methods_t.
 
-  METHODS get_tools EXPORTING e_tools TYPE string.
+  METHODS get_tools
+            IMPORTING
+              i_o_agent TYPE REF TO yif_aai_agent OPTIONAL
+            EXPORTING
+              e_tools TYPE string.
 
-  METHODS get_tools_chat_completions EXPORTING e_tools TYPE string.
+  METHODS get_tools_chat_completions
+            IMPORTING
+              i_o_agent TYPE REF TO yif_aai_agent OPTIONAL
+            EXPORTING
+              e_tools TYPE string.
 
   METHODS reset_methods.
 

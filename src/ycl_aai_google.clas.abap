@@ -10,17 +10,23 @@ CLASS ycl_aai_google DEFINITION
     ALIASES on_message_send FOR yif_aai_chat~on_message_send.
     ALIASES on_response_received FOR yif_aai_chat~on_response_received.
     ALIASES on_message_failed FOR yif_aai_chat~on_message_failed.
+    ALIASES on_chat_is_blocked FOR yif_aai_chat~on_chat_is_blocked.
 
     ALIASES set_model FOR yif_aai_google~set_model.
     ALIASES set_temperature FOR yif_aai_google~set_temperature.
     ALIASES set_system_instructions FOR yif_aai_google~set_system_instructions.
     ALIASES set_connection FOR yif_aai_google~set_connection.
+    ALIASES set_persistence FOR yif_aai_google~set_persistence.
     ALIASES bind_tools FOR yif_aai_google~bind_tools.
     ALIASES chat FOR yif_aai_chat~chat.
     ALIASES generate FOR yif_aai_google~generate.
     ALIASES get_conversation FOR yif_aai_google~get_conversation.
+    ALIASES set_endpoint FOR yif_aai_google~set_endpoint.
 
     ALIASES mo_function_calling FOR yif_aai_google~mo_function_calling.
+    ALIASES mo_agent FOR yif_aai_google~mo_agent.
+
+    ALIASES m_endpoint FOR yif_aai_google~m_endpoint.
 
     CLASS-METHODS get_instance
       IMPORTING
@@ -31,30 +37,89 @@ CLASS ycl_aai_google DEFINITION
 
     METHODS constructor
       IMPORTING
-        i_model        TYPE csequence OPTIONAL
-        i_o_connection TYPE REF TO yif_aai_conn OPTIONAL.
+        i_model         TYPE csequence OPTIONAL
+        i_t_history     TYPE yif_aai_google~ty_contents_t OPTIONAL
+        i_o_connection  TYPE REF TO yif_aai_conn OPTIONAL
+        i_o_persistence TYPE REF TO yif_aai_db OPTIONAL
+        i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL.
 
   PROTECTED SECTION.
 
   PRIVATE SECTION.
 
-    DATA: _o_connection TYPE REF TO yif_aai_conn.
+    DATA: _o_connection  TYPE REF TO yif_aai_conn,
+          _o_persistence TYPE REF TO yif_aai_db.
 
     DATA: _model               TYPE string,
           _temperature         TYPE p LENGTH 2 DECIMALS 1,
           _system_instructions TYPE string,
           _chat_messages       TYPE yif_aai_google~ty_contents_t,
-          _max_tools_calls     TYPE i.
+          _max_tool_calls      TYPE i.
+
+    METHODS _load_agent_settings.
 
     METHODS _append_to_history
       IMPORTING
-        i_s_response TYPE yif_aai_google~ty_contents_response_s.
+        i_s_response TYPE yif_aai_google~ty_contents_response_s
+        i_tokens     TYPE i OPTIONAL.
 
 ENDCLASS.
 
 
 
 CLASS ycl_aai_google IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    IF i_model IS NOT INITIAL.
+      me->_model = i_model.
+    ELSE.
+      SELECT model FROM yaai_model
+        WHERE id = @yif_aai_const=>c_google
+          AND default_model = @abap_true
+         INTO @me->_model
+         UP TO 1 ROWS.                                  "#EC CI_NOORDER
+      ENDSELECT.
+      IF sy-subrc <> 0.
+        me->_model = 'gemini-2.5-flash'.
+      ENDIF.
+    ENDIF.
+
+    me->_temperature = 1.
+
+    me->_max_tool_calls = 10.
+
+    IF i_o_connection IS SUPPLIED.
+      me->_o_connection = i_o_connection.
+    ENDIF.
+
+    IF i_t_history IS SUPPLIED.
+      me->_chat_messages = i_t_history.
+    ENDIF.
+
+    IF i_o_persistence IS SUPPLIED.
+
+      me->_o_persistence = i_o_persistence.
+
+      me->_o_persistence->get_chat(
+        IMPORTING
+          e_t_msg_data = me->_chat_messages
+      ).
+
+    ENDIF.
+
+    "If an Agent is passed then its settings overwrite any other previous setting
+    IF i_o_agent IS BOUND.
+
+      me->mo_agent = i_o_agent.
+
+      me->_load_agent_settings( ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD get_instance.
 
@@ -70,23 +135,65 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD constructor.
+  METHOD _load_agent_settings.
 
-    me->_model = 'gemini-2.5-flash'.
+    DATA(ls_model) = me->mo_agent->get_model(
+      EXPORTING
+        i_api = CONV #( yif_aai_const=>c_google )
+    ).
 
-    IF i_model IS SUPPLIED.
-      me->_model = i_model.
+    IF ls_model-model IS NOT INITIAL.
+      me->_model = ls_model-model.
     ENDIF.
 
-    me->_temperature = 1.
+    IF ls_model-temperature IS NOT INITIAL.
+      me->_temperature = ls_model-temperature.
+    ENDIF.
 
-    me->_max_tools_calls = 5.
+    IF ls_model-max_tool_calls IS NOT INITIAL.
+      me->_max_tool_calls = ls_model-max_tool_calls.
+    ENDIF.
 
-    IF i_o_connection IS SUPPLIED.
-      me->_o_connection = i_o_connection.
+    DATA(l_system_instructions) = me->mo_agent->get_system_instructions( ).
+
+    IF l_system_instructions IS NOT INITIAL.
+
+      me->set_system_instructions(
+        i_system_instructions = l_system_instructions
+      ).
+
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD yif_aai_chat~chat.
+
+    me->generate(
+      EXPORTING
+        i_message       = i_message
+        i_new           = i_new
+        i_greeting      = i_greeting
+        i_async_task_id = i_async_task_id
+        i_o_prompt      = i_o_prompt
+        i_o_agent       = i_o_agent
+      IMPORTING
+        e_response   = e_response
+        e_t_response = e_t_response
+    ).
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_google~bind_tools.
+
+    me->mo_function_calling = i_o_function_calling.
+
+    IF i_max_tools_calls IS SUPPLIED.
+      me->_max_tool_calls = i_max_tools_calls.
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD yif_aai_google~generate.
 
@@ -99,13 +206,19 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     DATA: l_endpoint TYPE string,
           l_greeting TYPE string,
-          l_message  TYPE string.
+          l_message  TYPE string,
+          l_prompt   TYPE string.
 
     CLEAR: e_response,
            e_failed.
 
     FREE e_t_response.
 
+    IF me->_o_persistence IS BOUND AND
+       me->_o_persistence->is_chat_blocked( ).
+      RAISE EVENT on_chat_is_blocked.
+      EXIT.
+    ENDIF.
 
     IF me->_o_connection IS NOT BOUND.
       me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_google ).
@@ -113,8 +226,11 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     DATA(l_apikey_url_placeholder) = |{ yif_aai_const=>c_placeholder_pattern }APIKEY{ yif_aai_const=>c_placeholder_pattern }|.
 
-    "l_endpoint = |/v1beta/models/{ me->_model }:generateContent?key={ l_apikey_url_placeholder }|.
-    l_endpoint = |/v1beta/models/{ me->_model }:generateContent|.
+    IF me->m_endpoint IS NOT INITIAL.
+      l_endpoint = me->m_endpoint.
+    ELSE.
+      l_endpoint = |/v1beta/models/{ me->_model }:generateContent|.
+    ENDIF.
 
     me->_o_connection->add_http_header_param(
       EXPORTING
@@ -128,6 +244,14 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     ENDIF.
 
+    IF i_o_agent IS BOUND AND me->mo_agent IS NOT BOUND.
+
+      me->mo_agent = i_o_agent.
+
+      me->_load_agent_settings( ).
+
+    ENDIF.
+
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
     IF me->_chat_messages IS INITIAL.
@@ -136,21 +260,78 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
         l_greeting = '{"text": ' && lo_aai_util->serialize( i_greeting ) && '}'.
 
-        APPEND VALUE #( role = 'model' parts = VALUE #( ( l_greeting ) ) ) TO me->_chat_messages.
+        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
+
+        <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( l_greeting ) ) ).
+
+        IF me->_o_persistence IS BOUND.
+          me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_model = CONV #( me->_model ) ).
+        ENDIF.
 
       ENDIF.
 
     ENDIF.
 
-    l_message = '{"text": ' && lo_aai_util->serialize( i_message ) && '}'.
+    IF i_o_prompt IS BOUND.
 
-    APPEND VALUE #( role = 'user' parts = VALUE #( ( l_message ) ) ) TO me->_chat_messages.
+      l_prompt = i_o_prompt->get_prompt( ).
 
-    DO me->_max_tools_calls TIMES.
+      l_prompt = '{"text": ' && lo_aai_util->serialize( l_prompt ) && '}'.
+
+      l_message = i_o_prompt->get_user_message( ).
+
+      l_message = '{"text": ' && lo_aai_util->serialize( l_message ) && '}'.
+
+    ELSE.
+
+      l_message = i_message.
+
+      l_message = '{"text": ' && lo_aai_util->serialize( l_message ) && '}'.
+
+    ENDIF.
+
+    APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+    <ls_msg> = VALUE #( role = 'user' parts = VALUE #( ( l_message ) ) ).
+
+    IF l_prompt IS NOT INITIAL.
+      DATA(ls_prompt) = <ls_msg>.
+      ls_prompt = VALUE #( role = 'user' parts = VALUE #( ( l_prompt ) ) ).
+    ENDIF.
+
+    IF me->_o_persistence IS BOUND.
+      me->_o_persistence->persist_message( i_data = <ls_msg>
+                                           i_prompt = ls_prompt
+                                           i_async_task_id = i_async_task_id
+                                           i_model = CONV #( me->_model ) ).
+    ENDIF.
+
+    " In memory we keep the augmented prompt instead of the user message
+    IF l_prompt IS NOT INITIAL.
+      <ls_msg> = VALUE #( role = 'user' parts = VALUE #( ( l_prompt ) ) ).
+    ENDIF.
+
+    IF i_o_agent IS BOUND AND me->mo_function_calling IS NOT BOUND.
+
+      me->mo_function_calling = NEW ycl_aai_func_call_google( i_o_agent ).
+
+    ENDIF.
+
+    DO me->_max_tool_calls TIMES.
+
+      IF me->_o_persistence IS BOUND AND
+       me->_o_persistence->is_chat_blocked( ).
+        RAISE EVENT on_chat_is_blocked.
+        EXIT.
+      ENDIF.
 
       IF me->_o_connection->create_connection( i_endpoint = l_endpoint ).
 
         DATA(ls_generate_request) = VALUE yif_aai_google~ty_google_generate_request_s( contents = me->_chat_messages ).
+
+        "Do not send system messages to the API. They are being persisted just to be make them visible to the developer.
+        DELETE ls_generate_request-contents WHERE role = 'system'.
 
         ls_generate_request-tools = '[]'.
 
@@ -180,6 +361,14 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           ASSIGN ls_generate_request_sys TO <ls_generate_request>.
 
+          DATA(l_system_instructions) = '{"text": ' && lo_aai_util->serialize( me->_system_instructions ) && '}'.
+
+          DATA(ls_msg) = VALUE yif_aai_google~ty_contents_s( role = 'system' parts = VALUE #( ( l_system_instructions ) ) ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_system_instructions( i_data = ls_msg ).
+          ENDIF.
+
         ENDIF.
 
         DATA(l_json) = lo_aai_util->serialize( i_data = <ls_generate_request> ).
@@ -208,7 +397,9 @@ CLASS ycl_aai_google IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
-          RAISE EVENT on_message_failed.
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
 
           EXIT.
 
@@ -216,17 +407,31 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
         lo_aai_util->deserialize(
           EXPORTING
-            i_json = l_json
+            i_json       = l_json
+            i_camel_case = abap_true
           IMPORTING
-            e_data = ls_response
+            e_data       = ls_response
         ).
+
+        RAISE EVENT on_response_received.
+
+        IF ls_response-error IS NOT INITIAL.
+
+          e_response = |Error! code: { ls_response-error-code }, message: { ls_response-error-message }, status: { ls_response-error-status }|.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
+          EXIT.
+
+        ENDIF.
 
         LOOP AT ls_response-candidates ASSIGNING FIELD-SYMBOL(<ls_candidates>).
 
           "Add LLM response to the chat history
-          me->_append_to_history( <ls_candidates>-content ).
-
-          RAISE EVENT on_response_received.
+          me->_append_to_history( i_s_response = <ls_candidates>-content
+                                  i_tokens = ls_response-usage_metadata-total_token_count ).
 
           DATA(l_function_call) = abap_false.
 
@@ -234,7 +439,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
             IF <ls_parts>-functioncall IS INITIAL.
 
-              e_response = e_response && lo_aai_util->replace_unicode_escape_seq( <ls_parts>-text ).
+              e_response = <ls_parts>-text.
 
               CONTINUE.
 
@@ -244,7 +449,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
             ASSIGN <ls_parts>-functioncall-args TO <l_data>.
 
-            " This deserialization may be necessary depending on how the arguments are passed. We may need to parse an escaped string to a JSON string.
+            " This deserialization may be necessary depending on how the arguments are received. We may need to parse an escaped string to a JSON string.
             " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
             lo_aai_util->deserialize(
               EXPORTING
@@ -314,65 +519,6 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_google~get_history.
-
-    e_t_history = me->_chat_messages.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_google~set_connection.
-
-    me->_o_connection = i_o_connection.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_google~set_history.
-
-    me->_chat_messages = i_t_history.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_google~set_model.
-
-    me->_model = i_model.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_google~set_system_instructions.
-
-    me->_system_instructions = i_system_instructions.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_google~set_temperature.
-
-    me->_temperature = i_temperature.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_chat~chat.
-
-    me->generate(
-      EXPORTING
-        i_message    = i_message
-        i_new        = i_new
-        i_greeting   = i_greeting
-      IMPORTING
-        e_response   = e_response
-        e_t_response = e_t_response
-    ).
-
-  ENDMETHOD.
-
-  METHOD yif_aai_google~bind_tools.
-
-    me->mo_function_calling = i_o_function_calling.
-
-    IF i_max_tools_calls IS SUPPLIED.
-      me->_max_tools_calls = i_max_tools_calls.
-    ENDIF.
-
-  ENDMETHOD.
 
   METHOD yif_aai_google~get_conversation.
 
@@ -383,6 +529,56 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD yif_aai_google~get_history.
+
+    e_t_history = me->_chat_messages.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_google~set_connection.
+
+    me->_o_connection = i_o_connection.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_google~set_history.
+
+    me->_chat_messages = i_t_history.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_google~set_model.
+
+    me->_model = i_model.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_google~set_persistence.
+
+    me->_o_persistence = i_o_persistence.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_google~set_system_instructions.
+
+    me->_system_instructions = i_system_instructions.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_google~set_temperature.
+
+    me->_temperature = i_temperature.
+
+  ENDMETHOD.
+
+
   METHOD _append_to_history.
 
     FIELD-SYMBOLS <ls_data> TYPE any.
@@ -390,7 +586,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
     DATA: ls_parts_text        TYPE yif_aai_google~ty_parts_response_text_s,
           ls_function_call     TYPE yif_aai_google~ty_parts_request_func_call_s,
           ls_function_response TYPE yif_aai_google~ty_parts_response_func_resp_s,
-          ls_request           TYPE yif_aai_google~ty_contents_s.
+          ls_contents          TYPE yif_aai_google~ty_contents_s.
 
     DATA: l_json_parts TYPE /ui2/cl_json=>json.
 
@@ -440,12 +636,24 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     ENDLOOP.
 
-    APPEND l_json_parts TO ls_request-parts.
+    APPEND l_json_parts TO ls_contents-parts.
 
-    ls_request-role = i_s_response-role.
+    ls_contents-role = i_s_response-role.
 
-    APPEND ls_request TO me->_chat_messages.
+    APPEND ls_contents TO me->_chat_messages.
+
+    IF me->_o_persistence IS BOUND.
+      me->_o_persistence->persist_message( i_data = ls_contents
+                                           i_tokens = i_tokens
+                                           i_model = CONV #( me->_model ) ).
+    ENDIF.
 
   ENDMETHOD.
 
+
+  METHOD yif_aai_google~set_endpoint.
+
+    me->m_endpoint = i_endpoint.
+
+  ENDMETHOD.
 ENDCLASS.

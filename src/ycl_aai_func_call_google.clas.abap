@@ -18,15 +18,44 @@ CLASS ycl_aai_func_call_google DEFINITION
     ALIASES remove_method FOR yif_aai_func_call_google~remove_method.
     ALIASES call_tool FOR yif_aai_func_call_google~call_tool.
 
+    METHODS constructor
+      IMPORTING
+        i_o_agent TYPE REF TO yif_aai_agent OPTIONAL.
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+
+    DATA _o_agent TYPE REF TO yif_aai_agent.
 
 ENDCLASS.
 
 
 
-CLASS ycl_aai_func_call_google IMPLEMENTATION.
+CLASS YCL_aai_FUNC_CALL_GOOGLE IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    IF i_o_agent IS SUPPLIED.
+
+      me->_o_agent = i_o_agent.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_func_call_google~add_methods.
+
+    APPEND LINES OF i_t_methods TO me->mt_methods.
+
+    SORT me->mt_methods BY class_name method_name.
+
+    DELETE ADJACENT DUPLICATES FROM me->mt_methods COMPARING class_name method_name.
+
+  ENDMETHOD.
+
 
   METHOD yif_aai_func_call_google~call_tool.
 
@@ -63,7 +92,7 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
 
     IF ls_method IS INITIAL.
 
-      r_response = 'The function/tool called is not available.'.
+      r_response = |The function/tool called { i_tool_name } is not available.|.
 
       RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
 
@@ -82,7 +111,7 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
 
     IF sy-subrc <> 0.
 
-      r_response = 'The function/tool called is not available.'.
+      r_response = |The function/tool called { i_tool_name } is not available.|.
 
       RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
 
@@ -91,20 +120,20 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
     ENDIF.
 
     IF ls_method-proxy_class IS NOT INITIAL.
-      ls_method-class_name = ls_method-proxy_class.
+      ls_method-class_name = to_upper( ls_method-proxy_class ).
     ENDIF.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
     lo_aai_util->get_method_importing_params(
       EXPORTING
-        i_class_name         = ls_method-class_name
-        i_method_name        = ls_method-method_name
+        i_class_name   = ls_method-class_name
+        i_method_name  = ls_method-method_name
       IMPORTING
-        e_t_components       = DATA(lt_components)
+        e_t_components = DATA(lt_components)
     ).
 
-    IF lt_components IS NOT INITIAL.
+    IF lt_components[] IS NOT INITIAL.
 
       TRY.
 
@@ -115,27 +144,35 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
 
           ASSIGN lr_data->* TO <ls_data>.
 
-        CATCH cx_sy_struct_attributes INTO DATA(lo_ex_struct_attributes).
+        CATCH cx_sy_struct_comp_type INTO DATA(lo_ex_struct_comp_type).
 
-          r_response = |An error occurred while calling the function/tool. Error description: { lo_ex_struct_attributes->get_text( ) }|.
+          r_response = |An error occurred while calling the function/tool { i_tool_name }. Error description: { lo_ex_struct_comp_type->get_text( ) }|.
 
           RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
 
-          RETURN.
+        CATCH cx_sy_struct_attributes INTO DATA(lo_ex_struct_attributes).
+
+          r_response = |An error occurred while calling the function/tool { i_tool_name }. Error description: { lo_ex_struct_attributes->get_text( ) }|.
+
+          RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
 
         CATCH cx_sy_create_data_error INTO DATA(lo_ex_create_data_error).
 
-          r_response = |An error occurred while calling the function/tool. Error description: { lo_ex_create_data_error->get_text( ) }|.
+          r_response = |An error occurred while calling the function/tool { i_tool_name }. Error description: { lo_ex_create_data_error->get_text( ) }|.
 
           RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
 
-          RETURN.
-
       ENDTRY.
 
-    ENDIF.
+      IF <ls_data> IS NOT ASSIGNED.
 
-    IF <ls_data> IS ASSIGNED.
+        r_response = |An error occurred while calling the function/tool { i_tool_name }. Error description: missing importing parameter(s)|.
+
+        RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
+
+        RETURN.
+
+      ENDIF.
 
       " Deserialize the JSON passing its data to the corresponding importing parameters of the method that is going to be called
       /ui2/cl_json=>deserialize(
@@ -145,25 +182,25 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
           data = <ls_data>
       ).
 
-      " Fill the parameters table to dynamically pass the importing parameters in the method call
-      LOOP AT lt_components INTO DATA(ls_components).
-
-        ls_parameter-name = to_upper( ls_components-name ).
-        ls_parameter-kind = cl_abap_objectdescr=>exporting.
-
-        ASSIGN COMPONENT ls_components-name OF STRUCTURE <ls_data> TO FIELD-SYMBOL(<lr_param>).
-
-        IF sy-subrc = 0.
-
-          ls_parameter-value = REF #( <lr_param> ).          " Always pass a reference
-
-          INSERT ls_parameter INTO TABLE lt_parameters.
-
-        ENDIF.
-
-      ENDLOOP.
-
     ENDIF.
+
+    " Fill the parameters table to dynamically pass the importing parameters in the method call
+    LOOP AT lt_components INTO DATA(ls_components).
+
+      ls_parameter-name = to_upper( ls_components-name ).
+      ls_parameter-kind = cl_abap_objectdescr=>exporting.
+
+      ASSIGN COMPONENT ls_components-name OF STRUCTURE <ls_data> TO FIELD-SYMBOL(<lr_param>).
+
+      IF sy-subrc = 0.
+
+        ls_parameter-value = REF #( <lr_param> ).          " Always pass a reference
+
+        INSERT ls_parameter INTO TABLE lt_parameters.
+
+      ENDIF.
+
+    ENDLOOP.
 
     ls_parameter-name = 'R_RESPONSE'.
     ls_parameter-kind = cl_abap_objectdescr=>receiving.
@@ -173,15 +210,38 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
 
     IF lt_parameters[] IS NOT INITIAL.
 
-      RAISE EVENT on_tool_call
+      FREE lt_components.
+
+      lo_aai_util->get_method_importing_params(
         EXPORTING
-          class_name       = ls_method-class_name
-          method_name      = ls_method-method_name
-          parameters_table = lt_parameters.
+          i_class_name   = ls_method-class_name
+          i_method_name  = 'CONSTRUCTOR'
+        IMPORTING
+          e_t_components = lt_components
+      ).
 
       TRY.
 
-          CREATE OBJECT lo_class TYPE (ls_method-class_name).
+          READ TABLE lt_components TRANSPORTING NO FIELDS
+            WITH KEY name = 'I_O_AGENT'.
+
+          IF sy-subrc = 0.
+
+            CREATE OBJECT lo_class TYPE (ls_method-class_name)
+              EXPORTING
+                i_o_agent = me->_o_agent.
+
+          ELSE.
+
+            CREATE OBJECT lo_class TYPE (ls_method-class_name).
+
+          ENDIF.
+
+          RAISE EVENT on_tool_call
+            EXPORTING
+              class_name       = ls_method-class_name
+              method_name      = ls_method-method_name
+              parameters_table = lt_parameters.
 
           CALL METHOD lo_class->(ls_method-method_name)
             PARAMETER-TABLE lt_parameters.
@@ -198,7 +258,7 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
               cx_sy_dyn_call_param_not_found
               cx_sy_ref_is_initial INTO lo_ex_root.
 
-          r_response = |An error occurred while calling the function/tool. Error description: { lo_ex_root->get_text( ) }|.
+          r_response = |An error occurred while calling the function/tool { i_tool_name }. Error description: { lo_ex_root->get_text( ) }|.
 
           RAISE EVENT on_tool_call_error EXPORTING error_text = r_response.
 
@@ -208,11 +268,37 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD yif_aai_func_call_google~get_tools.
 
     DATA lt_tools TYPE STANDARD TABLE OF yif_aai_func_call_google~ty_tool_s.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+    IF i_o_agent IS SUPPLIED AND i_o_agent IS BOUND.
+
+      me->_o_agent = i_o_agent.
+
+    ENDIF.
+
+    IF me->_o_agent IS BOUND.
+
+      DATA(lt_agent_tools) = me->_o_agent->get_tools( ).
+
+      LOOP AT lt_agent_tools ASSIGNING FIELD-SYMBOL(<ls_agent_tool>).
+
+        APPEND VALUE #( class_name = <ls_agent_tool>-class_name
+                        method_name = <ls_agent_tool>-method_name
+                        proxy_class = <ls_agent_tool>-proxy_class
+                        description = <ls_agent_tool>-description ) TO me->mt_methods.
+
+      ENDLOOP.
+
+      SORT me->mt_methods BY class_name method_name.
+
+      DELETE ADJACENT DUPLICATES FROM me->mt_methods COMPARING class_name method_name.
+
+    ENDIF.
 
     LOOP AT me->mt_methods ASSIGNING FIELD-SYMBOL(<ls_method>).
 
@@ -259,15 +345,6 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_func_call_google~add_methods.
-
-    APPEND LINES OF i_t_methods TO me->mt_methods.
-
-    SORT me->mt_methods BY class_name method_name.
-
-    DELETE ADJACENT DUPLICATES FROM me->mt_methods COMPARING class_name method_name.
-
-  ENDMETHOD.
 
   METHOD yif_aai_func_call_google~remove_method.
 
@@ -275,10 +352,10 @@ CLASS ycl_aai_func_call_google IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD yif_aai_func_call_google~reset_methods.
 
     FREE me->mt_methods.
 
   ENDMETHOD.
-
 ENDCLASS.

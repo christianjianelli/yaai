@@ -1,6 +1,8 @@
 INTERFACE yif_aai_google
   PUBLIC.
 
+  TYPES: ty_response_t TYPE STANDARD TABLE OF string.
+
   TYPES: BEGIN OF ty_function_call_s,
            name TYPE string,
            args TYPE /ui2/cl_json=>json,
@@ -79,11 +81,26 @@ INTERFACE yif_aai_google
            tools              TYPE /ui2/cl_json=>json,
          END OF ty_google_generate_req_sys_s,
 
+         BEGIN OF ty_error_s,
+           code    TYPE i,
+           message TYPE string,
+           status  TYPE string,
+         END OF ty_error_s,
+
+         BEGIN OF ty_usage_metadata_s,
+           total_token_count TYPE i,
+         END OF ty_usage_metadata_s,
+
          BEGIN OF ty_google_generate_response_s,
-           candidates TYPE ty_candidates_t,
+           candidates     TYPE ty_candidates_t,
+           error          TYPE ty_error_s,
+           usage_metadata TYPE ty_usage_metadata_s,
          END OF ty_google_generate_response_s.
 
-  DATA: mo_function_calling TYPE REF TO yif_aai_func_call_google READ-ONLY.
+  DATA: mo_function_calling TYPE REF TO yif_aai_func_call_google READ-ONLY,
+        mo_agent            TYPE REF TO yif_aai_agent READ-ONLY.
+
+  DATA: m_endpoint TYPE string READ-ONLY.
 
   METHODS set_model
     IMPORTING
@@ -101,6 +118,10 @@ INTERFACE yif_aai_google
     IMPORTING
       i_o_connection TYPE REF TO yif_aai_conn.
 
+  METHODS set_endpoint
+    IMPORTING
+      i_endpoint TYPE csequence.
+
   METHODS bind_tools
     IMPORTING
       i_o_function_calling TYPE REF TO yif_aai_func_call_google
@@ -109,6 +130,10 @@ INTERFACE yif_aai_google
   METHODS set_history
     IMPORTING
       i_t_history TYPE ty_contents_t.
+
+  METHODS set_persistence
+    IMPORTING
+      i_o_persistence TYPE REF TO yif_aai_db.
 
   METHODS get_history
     EXPORTING
@@ -120,13 +145,16 @@ INTERFACE yif_aai_google
 
   METHODS generate
     IMPORTING
-      i_message    TYPE csequence OPTIONAL
-      i_new        TYPE abap_bool DEFAULT abap_false
-      i_greeting   TYPE csequence OPTIONAL
-      i_o_template TYPE REF TO yif_aai_prompt_template OPTIONAL
+      i_message       TYPE csequence OPTIONAL
+      i_new           TYPE abap_bool DEFAULT abap_false
+      i_greeting      TYPE csequence OPTIONAL
+      i_async_task_id TYPE csequence OPTIONAL
+      i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
+      i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
+        PREFERRED PARAMETER i_message
     EXPORTING
-      e_response   TYPE string
-      e_failed     TYPE abap_bool
-      e_t_response TYPE rswsourcet.
+      e_response      TYPE string
+      e_failed        TYPE abap_bool
+      e_t_response    TYPE ty_response_t.
 
 ENDINTERFACE.

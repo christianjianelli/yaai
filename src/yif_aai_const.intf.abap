@@ -28,4 +28,9 @@ INTERFACE yif_aai_const
              c_anthropic_base_url_param    TYPE string VALUE 'YAAI_ANTHROPIC_BASE_URL',
              c_anthropic_messages_endpoint TYPE string VALUE '/v1/messages'.
 
+  "Mistral
+  CONSTANTS: c_mistral                   TYPE string VALUE 'mistral',
+             c_mistral_base_url_param    TYPE string VALUE 'YAAI_MISTRAL_BASE_URL',
+             c_mistral_messages_endpoint TYPE string VALUE '/v1/chat/completions'.
+
 ENDINTERFACE.

@@ -1,6 +1,8 @@
 INTERFACE yif_aai_openai
   PUBLIC.
 
+  TYPES: ty_response_t TYPE STANDARD TABLE OF string.
+
   TYPES: BEGIN OF ty_generate_message_s,
            role      TYPE string,
            content   TYPE string,
@@ -81,20 +83,25 @@ INTERFACE yif_aai_openai
          END OF ty_type_message_chat_comp_s.
 
   TYPES: BEGIN OF ty_openai_generate_request_s,
-           model     TYPE string,
-           stream    TYPE abap_bool,
-           input     TYPE /ui2/cl_json=>json,
-           text      TYPE ty_type_text_s,
-           reasoning TYPE ty_type_reasoning_s,
-           tools     TYPE /ui2/cl_json=>json,
+           model               TYPE string,
+           stream              TYPE abap_bool,
+           text                TYPE ty_type_text_s,
+           reasoning           TYPE ty_type_reasoning_s,
+           parallel_tool_calls TYPE abap_bool,
+           safety_identifier   TYPE string,
+           input               TYPE /ui2/cl_json=>json,
+           tools               TYPE /ui2/cl_json=>json,
          END OF ty_openai_generate_request_s.
 
+  " Generate request with temperature parameter (non gpt5 models only)
   TYPES: BEGIN OF ty_openai_generate_req_wt_s,
-           model       TYPE string,
-           stream      TYPE abap_bool,
-           temperature TYPE p LENGTH 2 DECIMALS 1,
-           input       TYPE /ui2/cl_json=>json,
-           tools       TYPE /ui2/cl_json=>json,
+           model               TYPE string,
+           stream              TYPE abap_bool,
+           temperature         TYPE p LENGTH 2 DECIMALS 1,
+           parallel_tool_calls TYPE abap_bool,
+           safety_identifier   TYPE string,
+           input               TYPE /ui2/cl_json=>json,
+           tools               TYPE /ui2/cl_json=>json,
          END OF ty_openai_generate_req_wt_s.
 
   TYPES: BEGIN OF ty_openai_completions_req_s,
@@ -136,7 +143,11 @@ INTERFACE yif_aai_openai
   TYPES: BEGIN OF ty_choices_s,
            index   TYPE i,
            message TYPE ty_type_message_chat_comp_s,
-         END OF ty_choices_s.
+         END OF ty_choices_s,
+
+         BEGIN OF ty_usage_s,
+           total_tokens TYPE i,
+         END OF ty_usage_s.
 
   TYPES: ty_choices_t TYPE STANDARD TABLE OF ty_choices_s WITH NON-UNIQUE KEY index.
 
@@ -147,6 +158,7 @@ INTERFACE yif_aai_openai
            temperature TYPE string,
            error       TYPE ty_error_s,
            output      TYPE ty_output_t,
+           usage       TYPE ty_usage_s,
          END OF ty_openai_generate_response_s.
 
   TYPES: BEGIN OF ty_openai_chat_comp_resp_s,
@@ -154,7 +166,12 @@ INTERFACE yif_aai_openai
            object  TYPE string,
            model   TYPE string,
            error   TYPE ty_error_s,
+           message TYPE string,
+           type    TYPE string,
+           code    TYPE string,
+           detail  TYPE string,
            choices TYPE ty_choices_t,
+           usage   TYPE ty_usage_s,
          END OF ty_openai_chat_comp_resp_s.
 
   TYPES: BEGIN OF ty_openai_embed_request_s,
@@ -186,7 +203,10 @@ INTERFACE yif_aai_openai
              mc_reasoning_effort_medium  TYPE string VALUE 'medium',
              mc_reasoning_effort_high    TYPE string VALUE 'high'.
 
-  DATA: mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY.
+  DATA: mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY,
+        mo_agent            TYPE REF TO yif_aai_agent READ-ONLY.
+
+  DATA: m_endpoint TYPE string READ-ONLY.
 
   METHODS use_completions
     IMPORTING
@@ -217,6 +237,14 @@ INTERFACE yif_aai_openai
     IMPORTING
       i_o_connection TYPE REF TO yif_aai_conn.
 
+  METHODS set_endpoint
+    IMPORTING
+      i_endpoint TYPE csequence.
+
+  METHODS set_persistence
+    IMPORTING
+      i_o_persistence TYPE REF TO yif_aai_db.
+
   METHODS bind_tools
     IMPORTING
       i_o_function_calling TYPE REF TO yif_aai_func_call_openai
@@ -240,23 +268,31 @@ INTERFACE yif_aai_openai
 
   METHODS generate
     IMPORTING
-      i_message    TYPE csequence
-      i_new        TYPE abap_bool DEFAULT abap_false
-      i_greeting   TYPE csequence OPTIONAL
+      i_message       TYPE csequence OPTIONAL
+      i_new           TYPE abap_bool DEFAULT abap_false
+      i_greeting      TYPE csequence OPTIONAL
+      i_async_task_id TYPE csequence OPTIONAL
+      i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
+      i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
+        PREFERRED PARAMETER i_message
     EXPORTING
-      e_response   TYPE string
-      e_failed     TYPE abap_bool
-      e_t_response TYPE rswsourcet.
+      e_response      TYPE string
+      e_failed        TYPE abap_bool
+      e_t_response    TYPE ty_response_t.
 
   METHODS chat_completions
     IMPORTING
-      i_message    TYPE csequence
-      i_new        TYPE abap_bool DEFAULT abap_false
-      i_greeting   TYPE csequence OPTIONAL
+      i_message       TYPE csequence OPTIONAL
+      i_new           TYPE abap_bool DEFAULT abap_false
+      i_greeting      TYPE csequence OPTIONAL
+      i_async_task_id TYPE csequence OPTIONAL
+      i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
+      i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
+        PREFERRED PARAMETER i_message
     EXPORTING
-      e_response   TYPE string
-      e_failed     TYPE abap_bool
-      e_t_response TYPE rswsourcet.
+      e_response      TYPE string
+      e_failed        TYPE abap_bool
+      e_t_response    TYPE ty_response_t.
 
   METHODS embed
     IMPORTING
