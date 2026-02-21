@@ -95,7 +95,7 @@ CLASS ycl_aai_rest_async_task IMPLEMENTATION.
 
       SELECT id, chat_id, name, status, username,
              startdate AS start_date, starttime AS start_time, enddate AS end_date,
-             endtime AS end_time, response, cancelled, monitor
+             endtime AS end_time, response, cancelled
       FROM yaai_async
         WHERE startdate IN @lt_rng_date
           AND username IN @lt_rng_username
@@ -103,13 +103,6 @@ CLASS ycl_aai_rest_async_task IMPLEMENTATION.
           UP TO 100 ROWS.
 
       LOOP AT lt_async ASSIGNING FIELD-SYMBOL(<ls_async>).
-
-        IF <ls_async>-monitor IS INITIAL OR
-           to_upper( <ls_async>-status ) = 'CANCELLED' OR
-           to_upper( <ls_async>-status ) = 'FINISHED' OR
-           to_upper( <ls_async>-status ) = 'ERRONEOUS'.
-          CONTINUE.
-        ENDIF.
 
 *        TRY.
 *

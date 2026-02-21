@@ -880,6 +880,8 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         ENDIF.
 
+        "l_json = lo_aai_util->replace_unicode_escape_seq( i_content = l_json ).
+
         lo_aai_util->deserialize(
           EXPORTING
             i_json = l_json
@@ -990,6 +992,8 @@ CLASS ycl_aai_openai IMPLEMENTATION.
             ENDIF.
 
             APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+            <ls_content>-text = lo_aai_util->replace_unicode_escape_seq( <ls_content>-text ).
 
             <ls_msg> = VALUE #( role = <ls_output>-role
                                 content = <ls_content>-text

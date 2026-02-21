@@ -19,7 +19,7 @@ CLASS ycl_aai_log DEFINITION
 
     METHODS constructor
       IMPORTING
-        i_chat_id TYPE yaai_log-id OPTIONAL.
+        i_chat_id TYPE yde_aai_chat_id OPTIONAL.
 
   PROTECTED SECTION.
 

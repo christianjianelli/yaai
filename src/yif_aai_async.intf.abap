@@ -17,7 +17,6 @@ INTERFACE yif_aai_async
              mc_task_running   TYPE yaai_async-status VALUE 'Running'   ##NO_TEXT,
              mc_task_finished  TYPE yaai_async-status VALUE 'Finished'  ##NO_TEXT,
              mc_task_failed    TYPE yaai_async-status VALUE 'Failed'    ##NO_TEXT,
-             mc_task_unknown   TYPE yaai_async-status VALUE 'Unknown'   ##NO_TEXT,
              mc_task_cancelled TYPE yaai_async-status VALUE 'Cancelled' ##NO_TEXT.
 
   METHODS create
@@ -44,8 +43,16 @@ INTERFACE yif_aai_async
 
   METHODS run
     IMPORTING
-              i_task_id        TYPE ty_task_s-id
-              i_o_task         TYPE REF TO object "if_bgmc_op_single_tx_uncontr
+              i_api            TYPE yde_aai_api
+              i_task_id        TYPE yde_aai_async_task_id
+              i_chat_id        TYPE yde_aai_chat_id
+              i_api_key        TYPE csequence
+              i_message        TYPE csequence
+              i_context        TYPE csequence OPTIONAL
+              i_agent_id       TYPE yde_aai_agent_id OPTIONAL
+              i_model          TYPE csequence OPTIONAL
+              i_log            TYPE abap_bool DEFAULT abap_true
+              i_debug          TYPE abap_bool DEFAULT abap_false
     RETURNING VALUE(r_started) TYPE abap_bool.
 
   METHODS get_status
@@ -53,32 +60,10 @@ INTERFACE yif_aai_async
               i_task_id       TYPE ty_task_s-id
     RETURNING VALUE(r_status) TYPE ty_task_s-status.
 
-  METHODS set_monitor
-    IMPORTING
-              i_task_id    TYPE ty_task_s-id
-              i_monitor    TYPE string
-    RETURNING VALUE(r_set) TYPE abap_bool.
-
-  METHODS get_monitor
-    IMPORTING
-              i_task_id        TYPE ty_task_s-id
-    RETURNING VALUE(r_monitor) TYPE string.
-
-  METHODS get_process_monitor
-    IMPORTING
-              i_task_id                 TYPE ty_task_s-id
-    RETURNING VALUE(ro_process_monitor) TYPE REF TO object. "if_bgmc_process_monitor.
-
-  METHODS get_process_state
-    IMPORTING
-              i_task_id      TYPE ty_task_s-id
-    RETURNING VALUE(r_state) TYPE string. "if_bgmc_process_monitor=>ty_state.
-
   METHODS update_status
     IMPORTING
               i_task_id        TYPE ty_task_s-id
-              i_status         TYPE ty_task_s-status OPTIONAL
-              i_process_state  TYPE string "if_bgmc_process_monitor=>ty_state OPTIONAL
+              i_status         TYPE ty_task_s-status
     RETURNING VALUE(r_updated) TYPE abap_bool.
 
   METHODS get_tasks_by_chat_id
@@ -96,5 +81,9 @@ INTERFACE yif_aai_async
               i_task_id        TYPE ty_task_s-id
               i_response       TYPE csequence
     RETURNING VALUE(r_updated) TYPE abap_bool.
+
+  METHODS on_end_of_task
+    IMPORTING
+      p_task TYPE clike.
 
 ENDINTERFACE.
