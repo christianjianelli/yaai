@@ -24,12 +24,10 @@ CLASS ycl_aai_rest_async_chat DEFINITION
            END OF ty_response_create_s,
 
            BEGIN OF ty_request_read_s,
-             chat_id TYPE string,
              task_id TYPE string,
            END OF ty_request_read_s,
 
            BEGIN OF ty_response_read_s,
-             chat_id TYPE string,
              task_id TYPE string,
              status  TYPE string,
            END OF ty_response_read_s.
@@ -83,9 +81,21 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
 
           lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_openai ).
 
+        WHEN yif_aai_const=>c_anthropic.
+
+          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_anthropic ).
+
+        WHEN yif_aai_const=>c_google.
+
+          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_google ).
+
         WHEN yif_aai_const=>c_mistral.
 
           lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_mistral ).
+
+        WHEN yif_aai_const=>c_ollama.
+
+          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_ollama ).
 
         WHEN OTHERS.
 
@@ -119,7 +129,7 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
 
     l_task_id = lo_aai_async->create(
       EXPORTING
-        i_chat_id   = CONV #( ls_request-chat_id )
+        i_chat_id   = CONV #( ls_response-chat_id )
         i_task_name = 'OPENAI_ASYNC_CHAT'
     ).
 
@@ -132,7 +142,7 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
       EXPORTING
         i_api      = CONV #( ls_request-api )
         i_task_id  = l_task_id
-        i_chat_id  = CONV #( ls_request-chat_id )
+        i_chat_id  = CONV #( ls_response-chat_id )
         i_api_key  = ls_request-api_key
         i_message  = ls_request-message
         i_context  = ls_request-context

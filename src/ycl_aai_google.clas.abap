@@ -439,6 +439,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
             IF <ls_parts>-functioncall IS INITIAL.
 
+              <ls_parts>-text = lo_aai_util->replace_unicode_escape_seq( <ls_parts>-text ).
+
               e_response = <ls_parts>-text.
 
               CONTINUE.
@@ -605,6 +607,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
         CASE sy-index.
 
           WHEN 1.
+
+            ls_parts_text-text = lo_aai_util->replace_unicode_escape_seq( ls_parts_text-text ).
 
             ASSIGN ls_parts_text TO <ls_data>.
 

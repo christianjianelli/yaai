@@ -458,6 +458,8 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
                   APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
 
+                  <ls_content_aux>-text = lo_aai_util->replace_unicode_escape_seq( <ls_content_aux>-text ).
+
                   <ls_msg> = VALUE #( role = ls_anthropic_chat_response-role
                                       content = <ls_content_aux>-text ).
 
@@ -541,6 +543,8 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
           CASE <ls_content>-type.
 
             WHEN 'text'.
+
+              <ls_content>-text = lo_aai_util->replace_unicode_escape_seq( <ls_content>-text ).
 
               e_response = |{ e_response }{ cl_abap_char_utilities=>newline }{ <ls_content>-text }|.
 
