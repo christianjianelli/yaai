@@ -47,7 +47,7 @@ INTERFACE yif_aai_ollama
          BEGIN OF ty_ollama_chat_response_s,
            model   TYPE string,
            message TYPE ty_chat_message_s,
-           error    TYPE string,
+           error   TYPE string,
          END OF ty_ollama_chat_response_s.
 
   TYPES: BEGIN OF ty_ollama_embed_request_s,
@@ -66,7 +66,8 @@ INTERFACE yif_aai_ollama
            error             TYPE string,
          END OF ty_ollama_embed_response_s.
 
-  DATA: mo_function_calling TYPE REF TO yif_aai_function_calling READ-ONLY.
+  DATA: mo_function_calling TYPE REF TO yif_aai_func_call_ollama READ-ONLY,
+        mo_agent            TYPE REF TO yif_aai_agent READ-ONLY.
 
   METHODS set_model
     IMPORTING
@@ -86,8 +87,8 @@ INTERFACE yif_aai_ollama
 
   METHODS bind_tools
     IMPORTING
-      i_o_function_calling TYPE REF TO yif_aai_function_calling
-      i_max_tools_calls    TYPE i DEFAULT 5.
+      i_o_function_calling TYPE REF TO yif_aai_func_call_ollama
+      i_max_tool_calls     TYPE i DEFAULT 5.
 
   METHODS set_history
     IMPORTING
@@ -99,13 +100,17 @@ INTERFACE yif_aai_ollama
 
   METHODS chat
     IMPORTING
-      i_message    TYPE csequence
-      i_new        TYPE abap_bool DEFAULT abap_false
-      i_greeting   TYPE csequence OPTIONAL
+      i_message       TYPE csequence OPTIONAL
+      i_new           TYPE abap_bool DEFAULT abap_false
+      i_greeting      TYPE csequence OPTIONAL
+      i_async_task_id TYPE csequence OPTIONAL
+      i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
+      i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
+        PREFERRED PARAMETER i_message
     EXPORTING
-      e_response   TYPE string
-      e_failed     TYPE abap_bool
-      e_t_response TYPE rswsourcet.
+      e_response      TYPE string
+      e_failed        TYPE abap_bool
+      e_t_response    TYPE rswsourcet.
 
   METHODS generate
     IMPORTING

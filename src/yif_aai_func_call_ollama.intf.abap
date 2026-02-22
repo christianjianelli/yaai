@@ -1,4 +1,4 @@
-INTERFACE yif_aai_function_calling
+INTERFACE yif_aai_func_call_ollama
   PUBLIC.
 
   TYPES: BEGIN OF ty_parameters_s,
@@ -45,7 +45,11 @@ INTERFACE yif_aai_function_calling
 
   METHODS add_methods IMPORTING i_t_methods TYPE ty_methods_t.
 
-  METHODS get_tools EXPORTING e_tools TYPE string.
+  METHODS get_tools
+    IMPORTING
+      i_o_agent TYPE REF TO yif_aai_agent OPTIONAL
+    EXPORTING
+      e_tools   TYPE string.
 
   METHODS reset_methods.
 

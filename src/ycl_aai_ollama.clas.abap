@@ -10,6 +10,7 @@ CLASS ycl_aai_ollama DEFINITION
     ALIASES on_message_send FOR yif_aai_chat~on_message_send.
     ALIASES on_response_received FOR yif_aai_chat~on_response_received.
     ALIASES on_message_failed FOR yif_aai_chat~on_message_failed.
+    ALIASES on_chat_is_blocked FOR yif_aai_chat~on_chat_is_blocked.
 
     ALIASES set_model FOR yif_aai_ollama~set_model.
     ALIASES set_temperature FOR yif_aai_ollama~set_temperature.
@@ -22,6 +23,7 @@ CLASS ycl_aai_ollama DEFINITION
     ALIASES get_chat_messages FOR yif_aai_ollama~get_chat_messages.
 
     ALIASES mo_function_calling FOR yif_aai_ollama~mo_function_calling.
+    ALIASES mo_agent FOR yif_aai_ollama~mo_agent.
 
     CLASS-DATA m_ref TYPE REF TO ycl_aai_ollama READ-ONLY.
 
@@ -32,14 +34,18 @@ CLASS ycl_aai_ollama DEFINITION
 
     METHODS constructor
       IMPORTING
-        i_model        TYPE csequence OPTIONAL
-        i_o_connection TYPE REF TO yif_aai_conn OPTIONAL.
+        i_model         TYPE csequence OPTIONAL
+        i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
+        i_o_connection  TYPE REF TO yif_aai_conn OPTIONAL
+        i_o_persistence TYPE REF TO yif_aai_db OPTIONAL
+        i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL.
 
   PROTECTED SECTION.
 
   PRIVATE SECTION.
 
-    DATA: _o_connection TYPE REF TO yif_aai_conn.
+    DATA: _o_connection  TYPE REF TO yif_aai_conn,
+          _o_persistence TYPE REF TO yif_aai_db.
 
     DATA: _model                    TYPE string,
           _temperature              TYPE p LENGTH 2 DECIMALS 1,
@@ -47,7 +53,9 @@ CLASS ycl_aai_ollama DEFINITION
           _ollama_chat_response     TYPE yif_aai_ollama~ty_ollama_chat_response_s,
           _ollama_generate_response TYPE yif_aai_ollama~ty_ollama_generate_response_s,
           _chat_messages            TYPE yif_aai_ollama~ty_chat_messages_t,
-          _max_tools_calls          TYPE i.
+          _max_tool_calls           TYPE i.
+
+    METHODS _load_agent_settings.
 
 ENDCLASS.
 
@@ -71,14 +79,40 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   METHOD constructor.
 
-    me->_model = i_model.
+    IF i_model IS NOT INITIAL.
+      me->_model = i_model.
+    ELSE.
+
+      SELECT model FROM yaai_model
+        WHERE id = @yif_aai_const=>c_ollama
+          AND default_model = @abap_true
+         INTO @me->_model
+         UP TO 1 ROWS.                                  "#EC CI_NOORDER
+      ENDSELECT.
+
+    ENDIF.
 
     me->_temperature = 1.
 
-    me->_max_tools_calls = 5.
+    me->_max_tool_calls = 10.
 
     IF i_o_connection IS SUPPLIED.
       me->_o_connection = i_o_connection.
+    ENDIF.
+
+    IF i_o_persistence IS SUPPLIED.
+
+      me->_o_persistence = i_o_persistence.
+
+    ENDIF.
+
+    "If an Agent is passed then its settings overwrite any other previous setting
+    IF i_o_agent IS BOUND.
+
+      me->mo_agent = i_o_agent.
+
+      me->_load_agent_settings( ).
+
     ENDIF.
 
   ENDMETHOD.
@@ -123,8 +157,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     me->mo_function_calling = i_o_function_calling.
 
-    IF i_max_tools_calls IS SUPPLIED.
-      me->_max_tools_calls = i_max_tools_calls.
+    IF i_max_tool_calls IS SUPPLIED.
+      me->_max_tool_calls = i_max_tool_calls.
     ENDIF.
 
   ENDMETHOD.
@@ -150,7 +184,9 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     DATA lr_data TYPE REF TO data.
 
-    DATA l_tools TYPE string VALUE '[]'.
+    DATA: l_tools   TYPE string VALUE '[]',
+          l_message TYPE string,
+          l_prompt  TYPE string.
 
     CLEAR: e_response,
            e_failed.
@@ -159,6 +195,12 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     IF me->_model IS INITIAL.
       RETURN.
+    ENDIF.
+
+    IF me->_o_persistence IS BOUND AND
+       me->_o_persistence->is_chat_blocked( ).
+      RAISE EVENT on_chat_is_blocked.
+      EXIT.
     ENDIF.
 
     IF i_new = abap_true.
@@ -171,13 +213,25 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       IF me->_system_instructions IS NOT INITIAL.
 
-        APPEND VALUE #( role = 'system' content = me->_system_instructions ) TO me->_chat_messages.
+        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
+
+        <ls_msg> = VALUE #( role = 'system' content = me->_system_instructions ).
+
+        IF me->_o_persistence IS BOUND.
+          me->_o_persistence->persist_system_instructions( i_data = <ls_msg> ).
+        ENDIF.
 
       ENDIF.
 
       IF i_greeting IS NOT INITIAL.
 
-        APPEND VALUE #( role = 'assistant' content = i_greeting ) TO me->_chat_messages.
+        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+        <ls_msg> = VALUE #( role = 'assistant' content = i_greeting ).
+
+        IF me->_o_persistence IS BOUND.
+          me->_o_persistence->persist_message( i_data = <ls_msg> ).
+        ENDIF.
 
       ENDIF.
 
@@ -192,34 +246,73 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
           INSERT VALUE #( role = 'system' content = me->_system_instructions ) INTO me->_chat_messages INDEX 1.
 
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_system_instructions( i_data = me->_chat_messages[ 1 ] ).
+          ENDIF.
+
         ENDIF.
 
       ENDIF.
 
     ENDIF.
 
-    APPEND VALUE #( role = 'user' content = i_message ) TO me->_chat_messages.
+    IF i_o_prompt IS BOUND.
 
-    DATA(lo_aai_util) = NEW ycl_aai_util( ).
+      l_prompt = i_o_prompt->get_prompt( ).
 
-    IF me->mo_function_calling IS BOUND.
+      l_message = i_o_prompt->get_user_message( ).
 
-      me->mo_function_calling->get_tools(
-        IMPORTING
-          e_tools = l_tools
-      ).
+    ELSE.
+
+      l_message = i_message.
 
     ENDIF.
 
-    DO me->_max_tools_calls TIMES.
+    APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
 
-      IF me->_o_connection IS NOT BOUND.
-        me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
-      ENDIF.
+    <ls_msg> = VALUE #( role = 'user' content = i_message ).
+
+    IF l_prompt IS NOT INITIAL.
+
+      DATA(ls_prompt) = <ls_msg>.
+
+      ls_prompt-content = l_prompt.
+
+    ENDIF.
+
+    IF me->_o_persistence IS BOUND.
+      " persist the user message and the augmented prompt
+      me->_o_persistence->persist_message( i_data = <ls_msg>
+                                           i_prompt = ls_prompt
+                                           i_async_task_id = i_async_task_id
+                                           i_model = CONV #( me->_model ) ).
+    ENDIF.
+
+    " In memory we keep the augmented prompt instead of the user message
+    IF l_prompt IS NOT INITIAL.
+      <ls_msg>-content = l_prompt.
+    ENDIF.
+
+    DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+    IF me->_o_connection IS NOT BOUND.
+      me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+    ENDIF.
+
+    DO me->_max_tool_calls TIMES.
 
       IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_ollama_chat_endpoint ).
 
         FREE me->_ollama_chat_response.
+
+        IF me->mo_function_calling IS BOUND.
+
+          me->mo_function_calling->get_tools(
+            IMPORTING
+              e_tools = l_tools
+          ).
+
+        ENDIF.
 
         DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_chat_request_s( model = me->_model
                                                                                                        options = VALUE #( temperature = me->_temperature )
@@ -305,6 +398,19 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
         me->_ollama_chat_response-message-content = lo_aai_util->replace_unicode_escape_seq( me->_ollama_chat_response-message-content ).
 
         APPEND me->_ollama_chat_response-message TO me->_chat_messages.
+
+        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+        <ls_msg> = VALUE #( role =  me->_ollama_chat_response-message-role
+                            content = me->_ollama_chat_response-message-content ).
+
+        IF me->_o_persistence IS BOUND.
+          " persist the user message and the augmented prompt
+          me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_prompt = ls_prompt
+                                               i_async_task_id = i_async_task_id
+                                               i_model = CONV #( me->_model ) ).
+        ENDIF.
 
         e_response = me->_ollama_chat_response-message-content.
 
@@ -470,6 +576,37 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
   METHOD get_chat_messages.
 
     rt_messages = me->_chat_messages.
+
+  ENDMETHOD.
+
+  METHOD _load_agent_settings.
+
+    DATA(ls_model) = me->mo_agent->get_model(
+      EXPORTING
+        i_api = CONV #( me->_o_connection->m_api )
+    ).
+
+    IF ls_model-model IS NOT INITIAL.
+      me->_model = ls_model-model.
+    ENDIF.
+
+    IF ls_model-temperature IS NOT INITIAL.
+      me->_temperature = ls_model-temperature.
+    ENDIF.
+
+    IF ls_model-max_tool_calls IS NOT INITIAL.
+      me->_max_tool_calls = ls_model-max_tool_calls.
+    ENDIF.
+
+    DATA(l_system_instructions) = me->mo_agent->get_system_instructions( ).
+
+    IF l_system_instructions IS NOT INITIAL.
+
+      me->set_system_instructions(
+        i_system_instructions = l_system_instructions
+      ).
+
+    ENDIF.
 
   ENDMETHOD.
 

@@ -21,14 +21,16 @@ CLASS ycl_aai_basic_setup IMPLEMENTATION.
     INSERT yaai_api FROM TABLE @( VALUE #( ( id = 'OPENAI' base_url = 'https://api.openai.com' )
                                            ( id = 'ANTHROPIC' base_url = 'https://api.anthropic.com' )
                                            ( id = 'GOOGLE' base_url = 'https://generativelanguage.googleapis.com' )
-                                           ( id = 'MISTRAL' base_url = 'https://api.mistral.ai' ) ) ) ACCEPTING DUPLICATE KEYS.
+                                           ( id = 'MISTRAL' base_url = 'https://api.mistral.ai' )
+                                           ( id = 'OLLAMA' base_url = 'http://192.168.1.173:11434' ) ) ) ACCEPTING DUPLICATE KEYS.
 
     INSERT yaai_model FROM TABLE @( VALUE #( ( id = 'OPENAI' model = 'gpt-5-nano' default_model = abap_true )
                                              ( id = 'OPENAI' model = 'gpt-5' default_model = abap_false )
                                              ( id = 'ANTHROPIC' model = 'claude-sonnet-4-20250514' default_model = abap_true )
                                              ( id = 'GOOGLE' model = 'gemini-2.5-flash' default_model = abap_true )
                                              ( id = 'MISTRAL' model = 'mistral-medium-latest' default_model = abap_true )
-                                             ( id = 'MISTRAL' model = 'mistral-large-latest' default_model = abap_false ) ) ) ACCEPTING DUPLICATE KEYS.
+                                             ( id = 'MISTRAL' model = 'mistral-large-latest' default_model = abap_false )
+                                             ( id = 'OLLAMA' model = 'gemma3:1b' default_model = abap_true ) ) ) ACCEPTING DUPLICATE KEYS.
 
     INSERT yaai_tool FROM TABLE @( VALUE #( ( class_name = 'YCL_AAI_FUNC_CALL_TOOLS'
                                               method_name = 'GET_AVAILABLE_TOOLS'

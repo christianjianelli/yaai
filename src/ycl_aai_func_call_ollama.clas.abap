@@ -1,34 +1,50 @@
-CLASS ycl_aai_function_calling DEFINITION
+CLASS ycl_aai_func_call_ollama DEFINITION
   PUBLIC
   CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    INTERFACES yif_aai_function_calling.
+    INTERFACES yif_aai_func_call_ollama.
 
-    ALIASES on_tool_call          FOR yif_aai_function_calling~on_tool_call.
-    ALIASES on_tool_call_response FOR yif_aai_function_calling~on_tool_call_response.
-    ALIASES on_tool_call_error    FOR yif_aai_function_calling~on_tool_call_error.
+    ALIASES on_tool_call          FOR yif_aai_func_call_ollama~on_tool_call.
+    ALIASES on_tool_call_response FOR yif_aai_func_call_ollama~on_tool_call_response.
+    ALIASES on_tool_call_error    FOR yif_aai_func_call_ollama~on_tool_call_error.
 
-    ALIASES mt_methods FOR yif_aai_function_calling~mt_methods.
+    ALIASES mt_methods FOR yif_aai_func_call_ollama~mt_methods.
 
-    ALIASES add_methods   FOR yif_aai_function_calling~add_methods.
-    ALIASES get_tools     FOR yif_aai_function_calling~get_tools.
-    ALIASES reset_methods FOR yif_aai_function_calling~reset_methods.
-    ALIASES remove_method FOR yif_aai_function_calling~remove_method.
-    ALIASES call_tool     FOR yif_aai_function_calling~call_tool.
+    ALIASES add_methods   FOR yif_aai_func_call_ollama~add_methods.
+    ALIASES get_tools     FOR yif_aai_func_call_ollama~get_tools.
+    ALIASES reset_methods FOR yif_aai_func_call_ollama~reset_methods.
+    ALIASES remove_method FOR yif_aai_func_call_ollama~remove_method.
+    ALIASES call_tool     FOR yif_aai_func_call_ollama~call_tool.
+
+    METHODS constructor
+      IMPORTING
+        i_o_agent TYPE REF TO yif_aai_agent OPTIONAL.
 
   PROTECTED SECTION.
 
   PRIVATE SECTION.
 
+    DATA _o_agent TYPE REF TO yif_aai_agent.
+
 ENDCLASS.
 
 
 
-CLASS ycl_aai_function_calling IMPLEMENTATION.
+CLASS ycl_aai_func_call_ollama IMPLEMENTATION.
 
-  METHOD yif_aai_function_calling~add_methods.
+  METHOD constructor.
+
+    IF i_o_agent IS SUPPLIED.
+
+      me->_o_agent = i_o_agent.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_func_call_ollama~add_methods.
 
     APPEND LINES OF i_t_methods TO me->mt_methods.
 
@@ -39,7 +55,7 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD yif_aai_function_calling~call_tool.
+  METHOD yif_aai_func_call_ollama~call_tool.
 
     FIELD-SYMBOLS: <ls_data> TYPE any.
 
@@ -191,9 +207,32 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
           method_name      = ls_method-method_name
           parameters_table = lt_parameters.
 
+      FREE lt_components.
+
+      lo_aai_util->get_method_importing_params(
+        EXPORTING
+          i_class_name   = ls_method-class_name
+          i_method_name  = 'CONSTRUCTOR'
+        IMPORTING
+          e_t_components = lt_components
+      ).
+
       TRY.
 
-          CREATE OBJECT lo_class TYPE (ls_method-class_name).
+          READ TABLE lt_components TRANSPORTING NO FIELDS
+            WITH KEY name = 'I_O_AGENT'.
+
+          IF sy-subrc = 0.
+
+            CREATE OBJECT lo_class TYPE (ls_method-class_name)
+              EXPORTING
+                i_o_agent = me->_o_agent.
+
+          ELSE.
+
+            CREATE OBJECT lo_class TYPE (ls_method-class_name).
+
+          ENDIF.
 
           CALL METHOD lo_class->(ls_method-method_name)
             PARAMETER-TABLE lt_parameters.
@@ -220,11 +259,36 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_function_calling~get_tools.
+  METHOD yif_aai_func_call_ollama~get_tools.
 
-    DATA lt_tools TYPE STANDARD TABLE OF yif_aai_function_calling~ty_tool_s.
+    DATA lt_tools TYPE STANDARD TABLE OF yif_aai_func_call_ollama~ty_tool_s.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+    IF i_o_agent IS SUPPLIED AND i_o_agent IS BOUND.
+
+      me->_o_agent = i_o_agent.
+
+    ENDIF.
+
+    IF me->_o_agent IS BOUND.
+
+      DATA(lt_agent_tools) = me->_o_agent->get_tools( ).
+
+      LOOP AT lt_agent_tools ASSIGNING FIELD-SYMBOL(<ls_agent_tool>).
+
+        APPEND VALUE #( class_name = <ls_agent_tool>-class_name
+                        method_name = <ls_agent_tool>-method_name
+                        proxy_class = <ls_agent_tool>-proxy_class
+                        description = <ls_agent_tool>-description ) TO me->mt_methods.
+
+      ENDLOOP.
+
+      SORT me->mt_methods BY class_name method_name.
+
+      DELETE ADJACENT DUPLICATES FROM me->mt_methods COMPARING class_name method_name.
+
+    ENDIF.
 
     LOOP AT me->mt_methods ASSIGNING FIELD-SYMBOL(<ls_method>).
 
@@ -270,13 +334,13 @@ CLASS ycl_aai_function_calling IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_function_calling~remove_method.
+  METHOD yif_aai_func_call_ollama~remove_method.
 
     DELETE me->mt_methods WHERE class_name = i_s_method-class_name AND method_name = i_s_method-method_name.
 
   ENDMETHOD.
 
-  METHOD yif_aai_function_calling~reset_methods.
+  METHOD yif_aai_func_call_ollama~reset_methods.
 
     FREE me->mt_methods.
 
