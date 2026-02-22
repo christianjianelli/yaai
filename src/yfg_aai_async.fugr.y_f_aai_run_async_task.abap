@@ -34,6 +34,18 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
 
     WHEN yif_aai_const=>c_mistral.
 
+      NEW ycl_aai_async_chat_mistral( )->run(
+        EXPORTING
+          i_task_id  = i_task_id
+          i_chat_id  = i_chat_id
+          i_api_key  = i_api_key
+          i_message  = i_message
+          i_context  = i_context
+          i_agent_id = i_agent_id
+          i_model    = i_model
+          i_log      = abap_true
+      ).
+
     WHEN yif_aai_const=>c_ollama.
 
     WHEN OTHERS.

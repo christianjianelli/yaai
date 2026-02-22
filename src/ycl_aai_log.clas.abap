@@ -77,16 +77,8 @@ CLASS ycl_aai_log IMPLEMENTATION.
 
   METHOD yif_aai_log~save_log.
 
-    IF i_chat_id IS NOT SUPPLIED AND me->m_chat_id IS INITIAL.
-      RETURN.
-    ENDIF.
-
     IF i_chat_id IS SUPPLIED.
       me->m_chat_id = i_chat_id.
-    ENDIF.
-
-    IF me->m_chat_id IS INITIAL.
-      RETURN.
     ENDIF.
 
     SELECT MAX( seqno ) FROM yaai_log

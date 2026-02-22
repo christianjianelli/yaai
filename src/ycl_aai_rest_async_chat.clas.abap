@@ -73,6 +73,8 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
 
     ls_request-agent_id = condense( to_upper( ls_request-agent_id ) ).
 
+    ls_response-chat_id = ls_request-chat_id.
+
     IF ls_request-chat_id IS INITIAL.
 
       CASE ls_request-api.
@@ -81,7 +83,27 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
 
           lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_openai ).
 
+        WHEN yif_aai_const=>c_mistral.
+
+          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_mistral ).
+
         WHEN OTHERS.
+
+          ls_response-error = |LLM API { ls_request-api } is not supported.|.
+
+          l_json = /ui2/cl_json=>serialize(
+            EXPORTING
+              data = ls_response
+              compress = abap_false
+              pretty_name = /ui2/cl_json=>pretty_mode-camel_case
+          ).
+
+          i_o_response->set_content_type( content_type = 'application/json' ).
+
+          i_o_response->set_cdata(
+            EXPORTING
+              data = l_json
+          ).
 
           RETURN.
 
@@ -90,8 +112,6 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
       ls_response-chat_id = lo_aai_db->m_id.
 
     ENDIF.
-
-    ls_request-api = to_upper( ls_request-api ).
 
     " Create Async Task
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -102,6 +122,8 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
         i_chat_id   = CONV #( ls_request-chat_id )
         i_task_name = 'OPENAI_ASYNC_CHAT'
     ).
+
+    ls_response-task_id = l_task_id.
 
     " Run Async Task
     " Change the value of l_debug to run the task synchronously
@@ -120,11 +142,8 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
         i_debug    = l_debug
     ).
 
-    ls_response-chat_id = ls_request-chat_id.
-    ls_response-task_id = l_task_id.
-
     IF l_started = abap_false.
-      ls_response-error = 'Error while creating the OpenAI Async Chat'.
+      ls_response-error = 'Error while creating Async Chat'.
     ELSE.
       ls_response-created = abap_true.
     ENDIF.
@@ -155,11 +174,6 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
     ls_request-task_id = to_upper( i_o_request->get_form_field( name = 'task_id' ) ).
 
     DATA(lo_async_task) = NEW ycl_aai_async( ).
-
-*    lo_async_task->update_status(
-*      EXPORTING
-*        i_task_id       = CONV #( ls_request-task_id )
-*    ).
 
     ls_response-status = lo_async_task->get_status(
       EXPORTING

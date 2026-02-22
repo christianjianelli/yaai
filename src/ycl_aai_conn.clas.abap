@@ -68,6 +68,15 @@ CLASS ycl_aai_conn IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    SELECT SINGLE base_url
+      FROM yaai_api
+      WHERE id = @i_api
+      INTO @me->m_base_url.
+
+    IF me->m_base_url IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
     CASE me->m_api.
 
       WHEN yif_aai_const=>c_ollama.

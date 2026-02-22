@@ -110,15 +110,31 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
 
     DATA: l_chat_date_from TYPE yaai_log-log_date,
           l_chat_date_to   TYPE yaai_log-log_date,
-          l_json           TYPE string.
+          l_json           TYPE string,
+          l_chat_id        TYPE yaai_chat-id.
 
-    DATA(l_id) = to_upper( i_o_request->get_form_field( name = 'id' ) ).
+    DATA(l_id) = condense( to_upper( i_o_request->get_form_field( name = 'id' ) ) ).
 
-    IF l_id IS NOT INITIAL. " Read
+    IF l_id = 'UNDEFINED'.
 
-      SELECT SINGLE id ,api ,username ,chat_date ,chat_time, blocked
+      "Not Found
+      i_o_response->set_status(
+        EXPORTING
+          code = 404
+          reason = 'Not Found'
+      ).
+
+      RETURN.
+
+    ENDIF.
+
+    l_chat_id = l_id.
+
+    IF l_chat_id IS NOT INITIAL. " Read
+
+      SELECT SINGLE id, api, username, chat_date, chat_time, blocked
         FROM yaai_chat
-        WHERE id = @l_id
+        WHERE id = @l_chat_id
         INTO @DATA(ls_chat).
 
       IF sy-subrc <> 0.
@@ -136,7 +152,7 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
 
       SELECT id, chat_id, rag_id
         FROM yaai_agent_plan
-        WHERE chat_id = @l_id
+        WHERE chat_id = @l_chat_id
         INTO @DATA(ls_agent_plan)
         UP TO 1 ROWS.
       ENDSELECT.
@@ -145,9 +161,9 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
         ls_response_read-chat-plan_rag_id = ls_agent_plan-rag_id.
       ENDIF.
 
-      SELECT id , seqno, msg, msg_date, msg_time, tokens AS total_tokens, model
+      SELECT id, seqno, msg, msg_date, msg_time, tokens AS total_tokens, model
         FROM yaai_msg
-        WHERE id = @l_id
+        WHERE id = @l_chat_id
         ORDER BY id, seqno
         INTO TABLE @DATA(lt_msg).
 
@@ -170,7 +186,7 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
 
       SELECT id, seqno, message, username, log_date, log_time, msgid, msgno, msgty
         FROM yaai_log
-       WHERE id = @l_id
+       WHERE id = @l_chat_id
         INTO TABLE @DATA(lt_log).
 
       IF sy-subrc = 0.
@@ -179,7 +195,7 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
 
       SELECT class_name, method_name, proxy_class, description
         FROM yaai_tools
-          WHERE id = @l_id
+          WHERE id = @l_chat_id
             INTO TABLE @DATA(lt_tools).
 
       IF sy-subrc = 0.

@@ -225,6 +225,10 @@ CLASS ycl_aai_async IMPLEMENTATION.
 
     "TODO
 
+    IF 1 = 2.
+
+    ENDIF.
+
   ENDMETHOD.
 
 ENDCLASS.

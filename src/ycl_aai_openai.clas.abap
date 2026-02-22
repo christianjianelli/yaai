@@ -409,205 +409,211 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         EXIT.
       ENDIF.
 
-*      IF me->_o_connection->create( i_endpoint = me->m_endpoint ).
-*
-*        FREE me->_openai_chat_comp_response.
-*
-*        IF me->mo_function_calling IS BOUND.
-*
-*          me->mo_function_calling->get_tools_chat_completions(
-*            IMPORTING
-*              e_tools = l_tools
-*          ).
-*
-*        ENDIF.
-*
-*        IF l_tools = '[]'.
-*
-*          l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_completions_req_s( model = me->_model
-*                                                                                                        stream = abap_false
-*                                                                                                        messages = me->get_conversation_chat_comp( ) ) ).
-*
-*        ELSE.
-*
-*          l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_comp_tools_req_s( model = me->_model
-*                                                                                                       stream = abap_false
-*                                                                                                       messages = me->get_conversation_chat_comp( )
-*                                                                                                       tools = l_tools ) ).
-*
-*        ENDIF.
-*
-*        me->_o_connection->set_body( l_json ).
-*
-*        FREE l_json.
-*
-*        RAISE EVENT on_message_send.
-*
-*        me->_o_connection->execute(
-*          IMPORTING
-*            e_response = l_json
-*            e_failed   = e_failed
-*        ).
-*
-*        IF e_failed = abap_true.
-*
-*          me->_o_connection->get_error_text(
-*            IMPORTING
-*              e_error_text = e_response
-*          ).
-*
-*          IF e_t_response IS REQUESTED.
-*            APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
-*            <l_response> = e_response.
-*          ENDIF.
-*
-*          RAISE EVENT on_message_failed
-*            EXPORTING
-*              error_text = e_response.
-*
-*          EXIT.
-*
-*        ENDIF.
-*
-*        lo_aai_util->deserialize(
-*          EXPORTING
-*            i_json = l_json
-*          IMPORTING
-*            e_data = me->_openai_chat_comp_response
-*        ).
-*
-*        IF me->_openai_chat_comp_response-object = 'error'.
-*
-*          e_response = |{ me->_openai_chat_comp_response-code }: { me->_openai_chat_comp_response-message }|.
-*
-*          RAISE EVENT on_message_failed
-*            EXPORTING
-*              error_text = e_response.
-*
-*          EXIT.
-*        ENDIF.
-*
-*        RAISE EVENT on_response_received.
-*
-*        DATA(l_function_call) = abap_false.
-*
-*        LOOP AT me->_openai_chat_comp_response-choices ASSIGNING FIELD-SYMBOL(<ls_choices>).
-*
-*          IF <ls_choices>-message-tool_calls IS INITIAL.
-*            CONTINUE.
-*          ENDIF.
-*
-*          l_function_call = abap_true.
-*
-*          LOOP AT <ls_choices>-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool_calls>).
-*
-*            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
-*
-*            <ls_msg> = VALUE #( role = <ls_choices>-message-role
-*                                type = 'function_call'
-*                                arguments = <ls_tool_calls>-function-arguments
-*                                call_id = <ls_tool_calls>-id
-*                                name = <ls_tool_calls>-function-name ).
-*
-*            IF me->_o_persistence IS BOUND.
-*
-*              me->_o_persistence->persist_message( i_data = <ls_msg>
-*                                                   i_tokens = _openai_chat_comp_response-usage-total_tokens
-*                                                   i_model = CONV #( me->_model ) ).
-*
-*              CLEAR _openai_chat_comp_response-usage-total_tokens.
-*
-*            ENDIF.
-*
-*            ASSIGN <ls_tool_calls>-function-arguments TO <l_data>.
-*
-*            " This deserialization may be necessary depending on how the arguments are received. We may need to parse an escaped string to a JSON string.
-*            " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
-*            lo_aai_util->deserialize(
-*              EXPORTING
-*                i_json = <ls_tool_calls>-function-arguments
-*              IMPORTING
-*                e_data = lr_data
-*            ).
-*
-*            IF lr_data IS NOT INITIAL.
-*
-*              DATA(lo_typedescr) = cl_abap_typedescr=>describe_by_data_ref( lr_data ).
-*
-*              " Make sure the deserialized object is a JSON string before assigning it
-*              IF lo_typedescr->type_kind = cl_abap_typedescr=>typekind_string.
-*
-*                ASSIGN lr_data->* TO <l_data>.
-*
-*              ENDIF.
-*
-*            ENDIF.
-*
-*            me->mo_function_calling->call_tool(
-*              EXPORTING
-*                i_tool_name   = to_upper( <ls_tool_calls>-function-name )
-*                i_json        = <l_data>
-*              RECEIVING
-*                r_response    = DATA(l_tool_response)
-*            ).
-*
-*            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
-*
-*            <ls_msg> = VALUE #( role = 'tool'
-*                                type = 'function_call_output'
-*                                call_id = <ls_tool_calls>-id
-*                                output = l_tool_response ).
-*
-*            IF me->_o_persistence IS BOUND.
-*              me->_o_persistence->persist_message( i_data = <ls_msg>
-*                                                   i_model = CONV #( me->_model ) ).
-*            ENDIF.
-*
-*          ENDLOOP.
-*
-*        ENDLOOP.
-*
-*        IF l_function_call = abap_true.
-*          CONTINUE.
-*        ENDIF.
-*
-*        LOOP AT me->_openai_chat_comp_response-choices ASSIGNING <ls_choices>.
-*
-*          IF <ls_choices>-message-role <> 'assistant'.
-*            CONTINUE.
-*          ENDIF.
-*
-*          e_response = <ls_choices>-message-content.
-*
-*          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
-*
-*          <ls_msg> = VALUE #( role = <ls_choices>-message-role
-*                              type = 'message'
-*                              content = e_response ).
-*
-*          IF me->_o_persistence IS BOUND.
-*            me->_o_persistence->persist_message( i_data = <ls_msg>
-*                                                 i_tokens = _openai_chat_comp_response-usage-total_tokens
-*                                                 i_model = CONV #( me->_model ) ).
-*          ENDIF.
-*
-*        ENDLOOP.
-*
-*        EXIT.
-*
-*      ELSE.
-*
-*        me->_o_connection->get_error_text(
-*          IMPORTING
-*            e_error_text = e_response
-*        ).
-*
-*        IF e_t_response IS REQUESTED.
-*          APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
-*          <l_response> = e_response.
-*        ENDIF.
-*
-*      ENDIF.
+      IF me->_o_connection->create_connection( i_endpoint = me->m_endpoint ).
+
+        FREE me->_openai_chat_comp_response.
+
+        IF me->mo_function_calling IS BOUND.
+
+          me->mo_function_calling->get_tools_chat_completions(
+            IMPORTING
+              e_tools = l_tools
+          ).
+
+        ENDIF.
+
+        IF l_tools = '[]'.
+
+          l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_completions_req_s( model = me->_model
+                                                                                                      stream = abap_false
+                                                                                                      messages = me->get_conversation_chat_comp( ) ) ).
+
+        ELSE.
+
+          l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_comp_tools_req_s( model = me->_model
+                                                                                                     stream = abap_false
+                                                                                                     messages = me->get_conversation_chat_comp( )
+                                                                                                     tools = l_tools ) ).
+
+        ENDIF.
+
+        me->_o_connection->set_body( l_json ).
+
+        FREE l_json.
+
+        RAISE EVENT on_message_send.
+
+        me->_o_connection->do_receive(
+          IMPORTING
+            e_response = l_json
+            e_failed   = e_failed
+        ).
+
+        IF e_failed = abap_true.
+
+          me->_o_connection->get_error_text(
+            IMPORTING
+              e_error_text = e_response
+          ).
+
+          IF e_t_response IS REQUESTED.
+            APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
+            <l_response> = e_response.
+          ENDIF.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
+          EXIT.
+
+        ENDIF.
+
+        lo_aai_util->deserialize(
+          EXPORTING
+            i_json = l_json
+          IMPORTING
+            e_data = me->_openai_chat_comp_response
+        ).
+
+        IF me->_openai_chat_comp_response-object = 'error'.
+
+          e_response = |{ me->_openai_chat_comp_response-code }: { me->_openai_chat_comp_response-message }|.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
+          EXIT.
+        ENDIF.
+
+        RAISE EVENT on_response_received.
+
+        DATA(l_function_call) = abap_false.
+
+        LOOP AT me->_openai_chat_comp_response-choices ASSIGNING FIELD-SYMBOL(<ls_choices>).
+
+          IF <ls_choices>-message-tool_calls IS INITIAL.
+            CONTINUE.
+          ENDIF.
+
+          l_function_call = abap_true.
+
+          LOOP AT <ls_choices>-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool_calls>).
+
+            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = <ls_choices>-message-role
+                                type = 'function_call'
+                                arguments = <ls_tool_calls>-function-arguments
+                                call_id = <ls_tool_calls>-id
+                                name = <ls_tool_calls>-function-name ).
+
+            IF me->_o_persistence IS BOUND.
+
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_tokens = _openai_chat_comp_response-usage-total_tokens
+                                                   i_model = CONV #( me->_model ) ).
+
+              CLEAR _openai_chat_comp_response-usage-total_tokens.
+
+            ENDIF.
+
+            ASSIGN <ls_tool_calls>-function-arguments TO <l_data>.
+
+            " This deserialization may be necessary depending on how the arguments are received. We may need to parse an escaped string to a JSON string.
+            " Example: parse this "{\"latitude\":48.8566,\"longitude\":2.3522}" to a JSON like {"latitude": 48.8566, "longitude": 2.3522}
+            lo_aai_util->deserialize(
+              EXPORTING
+                i_json = <ls_tool_calls>-function-arguments
+              IMPORTING
+                e_data = lr_data
+            ).
+
+            IF lr_data IS NOT INITIAL.
+
+              DATA(lo_typedescr) = cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+
+              " Make sure the deserialized object is a JSON string before assigning it
+              IF lo_typedescr->type_kind = cl_abap_typedescr=>typekind_string.
+
+                ASSIGN lr_data->* TO <l_data>.
+
+              ENDIF.
+
+            ENDIF.
+
+            me->mo_function_calling->call_tool(
+              EXPORTING
+                i_tool_name   = to_upper( <ls_tool_calls>-function-name )
+                i_json        = <l_data>
+              RECEIVING
+                r_response    = DATA(l_tool_response)
+            ).
+
+            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = 'tool'
+                                type = 'function_call_output'
+                                call_id = <ls_tool_calls>-id
+                                output = l_tool_response ).
+
+            IF me->_o_persistence IS BOUND.
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_model = CONV #( me->_model ) ).
+            ENDIF.
+
+          ENDLOOP.
+
+        ENDLOOP.
+
+        IF l_function_call = abap_true.
+          CONTINUE.
+        ENDIF.
+
+        LOOP AT me->_openai_chat_comp_response-choices ASSIGNING <ls_choices>.
+
+          IF <ls_choices>-message-role <> 'assistant'.
+            CONTINUE.
+          ENDIF.
+
+          e_response = lo_aai_util->replace_unicode_escape_seq( <ls_choices>-message-content ).
+
+          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = <ls_choices>-message-role
+                              type = 'message'
+                              content = e_response ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_tokens = _openai_chat_comp_response-usage-total_tokens
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
+        ENDLOOP.
+
+        EXIT.
+
+      ELSE.
+
+        me->_o_connection->get_error_text(
+          IMPORTING
+            e_error_text = e_response
+        ).
+
+        RAISE EVENT on_message_failed
+          EXPORTING
+            error_text = e_response.
+
+        IF e_t_response IS REQUESTED.
+          APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
+          <l_response> = e_response.
+        ENDIF.
+
+        EXIT.
+
+      ENDIF.
 
     ENDDO.
 
@@ -1020,10 +1026,16 @@ CLASS ycl_aai_openai IMPLEMENTATION.
             e_error_text = e_response
         ).
 
+        RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
         IF e_t_response IS REQUESTED.
           APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
           <l_response> = e_response.
         ENDIF.
+
+        EXIT.
 
       ENDIF.
 
