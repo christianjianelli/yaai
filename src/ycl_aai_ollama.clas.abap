@@ -299,6 +299,10 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
       me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
     ENDIF.
 
+    IF me->mo_agent IS BOUND AND me->mo_function_calling IS NOT BOUND.
+      me->mo_function_calling = NEW ycl_aai_func_call_ollama( me->mo_agent ).
+    ENDIF.
+
     DO me->_max_tool_calls TIMES.
 
       IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_ollama_chat_endpoint ).
@@ -354,7 +358,16 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         IF me->_ollama_chat_response-message-tool_calls[] IS NOT INITIAL AND me->mo_function_calling IS BOUND.
 
-          APPEND me->_ollama_chat_response-message TO me->_chat_messages.
+          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = me->_ollama_chat_response-message.
+
+          IF me->_o_persistence IS BOUND.
+
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_model = CONV #( me->_model ) ).
+
+          ENDIF.
 
           LOOP AT me->_ollama_chat_response-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool>).
 
@@ -374,7 +387,16 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
                 r_response    = DATA(l_tool_response)
             ).
 
-            APPEND VALUE #( role = 'tool' content = l_tool_response ) TO me->_chat_messages.
+            APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = 'tool' content = l_tool_response ).
+
+            IF me->_o_persistence IS BOUND.
+
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_model = CONV #( me->_model ) ).
+
+            ENDIF.
 
           ENDLOOP.
 

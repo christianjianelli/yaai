@@ -45,9 +45,11 @@ INTERFACE yif_aai_ollama
          END OF ty_ollama_generate_response_s,
 
          BEGIN OF ty_ollama_chat_response_s,
-           model   TYPE string,
-           message TYPE ty_chat_message_s,
-           error   TYPE string,
+           model             TYPE string,
+           message           TYPE ty_chat_message_s,
+           error             TYPE string,
+           prompt_eval_count TYPE i,
+           eval_count        TYPE i,
          END OF ty_ollama_chat_response_s.
 
   TYPES: BEGIN OF ty_ollama_embed_request_s,
