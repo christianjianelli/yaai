@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS ycl_aai_openai IMPLEMENTATION.
+CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -161,44 +161,6 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD _load_agent_settings.
-
-    DATA(ls_model) = me->mo_agent->get_model(
-      EXPORTING
-        i_api = CONV #( me->_o_connection->m_api )
-    ).
-
-    IF ls_model-model IS NOT INITIAL.
-      me->_model = ls_model-model.
-    ENDIF.
-
-    IF ls_model-temperature IS NOT INITIAL.
-      me->_temperature = ls_model-temperature.
-    ENDIF.
-
-    IF ls_model-verbosity IS NOT INITIAL.
-      me->_verbosity = ls_model-verbosity.
-    ENDIF.
-
-    IF ls_model-reasoning IS NOT INITIAL.
-      me->_reasoning_effort = ls_model-reasoning.
-    ENDIF.
-
-    IF ls_model-max_tool_calls IS NOT INITIAL.
-      me->_max_tool_calls = ls_model-max_tool_calls.
-    ENDIF.
-
-    DATA(l_system_instructions) = me->mo_agent->get_system_instructions( ).
-
-    IF l_system_instructions IS NOT INITIAL.
-
-      me->set_system_instructions(
-        i_system_instructions = l_system_instructions
-      ).
-
-    ENDIF.
-
-  ENDMETHOD.
 
   METHOD yif_aai_chat~chat.
 
@@ -396,8 +358,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     IF me->mo_agent IS BOUND AND me->mo_function_calling IS NOT BOUND.
 
-      "TODO
-      "me->mo_function_calling = NEW ycl_aai_func_call_openai( me->mo_agent ).
+      me->mo_function_calling = NEW ycl_aai_func_call_openai( me->mo_agent ).
 
     ENDIF.
 
@@ -1172,6 +1133,13 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD yif_aai_openai~set_endpoint.
+
+    me->m_endpoint = i_endpoint.
+
+  ENDMETHOD.
+
+
   METHOD yif_aai_openai~set_history.
 
     me->_messages = i_t_history.
@@ -1229,9 +1197,42 @@ CLASS ycl_aai_openai IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD yif_aai_openai~set_endpoint.
+  METHOD _load_agent_settings.
 
-    me->m_endpoint = i_endpoint.
+    DATA(ls_model) = me->mo_agent->get_model(
+      EXPORTING
+        i_api = CONV #( me->_o_connection->m_api )
+    ).
+
+    IF ls_model-model IS NOT INITIAL.
+      me->_model = ls_model-model.
+    ENDIF.
+
+    IF ls_model-temperature IS NOT INITIAL.
+      me->_temperature = ls_model-temperature.
+    ENDIF.
+
+    IF ls_model-verbosity IS NOT INITIAL.
+      me->_verbosity = ls_model-verbosity.
+    ENDIF.
+
+    IF ls_model-reasoning IS NOT INITIAL.
+      me->_reasoning_effort = ls_model-reasoning.
+    ENDIF.
+
+    IF ls_model-max_tool_calls IS NOT INITIAL.
+      me->_max_tool_calls = ls_model-max_tool_calls.
+    ENDIF.
+
+    DATA(l_system_instructions) = me->mo_agent->get_system_instructions( ).
+
+    IF l_system_instructions IS NOT INITIAL.
+
+      me->set_system_instructions(
+        i_system_instructions = l_system_instructions
+      ).
+
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
