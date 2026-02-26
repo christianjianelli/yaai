@@ -233,6 +233,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_async_task_id = i_async_task_id
                                                i_model = CONV #( me->_model ) ).
         ENDIF.
 
@@ -442,6 +443,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
                 IF me->_o_persistence IS BOUND.
                   me->_o_persistence->persist_message( i_data = <ls_msg>
                                                        i_tokens = l_tokens
+                                                       i_async_task_id = i_async_task_id
                                                        i_model = CONV #( me->_model ) ).
                   CLEAR l_tokens.
                 ENDIF.
@@ -466,6 +468,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
                   IF me->_o_persistence IS BOUND.
                     me->_o_persistence->persist_message( i_data = <ls_msg>
                                                          i_tokens = l_tokens
+                                                         i_async_task_id = i_async_task_id
                                                          i_model = CONV #( me->_model ) ).
                     CLEAR l_tokens.
                   ENDIF.
@@ -507,6 +510,17 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
               CONTINUE.
             ENDIF.
 
+            APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = ls_anthropic_chat_response-role
+                                content = lo_aai_util->serialize( i_data = <ls_content> ) ).
+
+            IF me->_o_persistence IS BOUND.
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_async_task_id = i_async_task_id
+                                                   i_model = CONV #( me->_model ) ).
+            ENDIF.
+
             me->mo_function_calling->call_tool(
               EXPORTING
                 i_tool_name   = to_upper( <ls_content>-name )
@@ -528,7 +542,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
             IF me->_o_persistence IS BOUND.
               me->_o_persistence->persist_message( i_data = <ls_msg>
-                                                   i_tokens = l_tokens
+                                                   i_async_task_id = i_async_task_id
                                                    i_model = CONV #( me->_model ) ).
             ENDIF.
 

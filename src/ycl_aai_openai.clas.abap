@@ -275,6 +275,7 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_async_task_id = i_async_task_id
                                                i_model = CONV #( me->_model ) ).
         ENDIF.
 
@@ -474,6 +475,7 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
               me->_o_persistence->persist_message( i_data = <ls_msg>
                                                    i_tokens = _openai_chat_comp_response-usage-total_tokens
+                                                   i_async_task_id = i_async_task_id
                                                    i_model = CONV #( me->_model ) ).
 
               CLEAR _openai_chat_comp_response-usage-total_tokens.
@@ -521,6 +523,7 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
             IF me->_o_persistence IS BOUND.
               me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_async_task_id = i_async_task_id
                                                    i_model = CONV #( me->_model ) ).
             ENDIF.
 
@@ -549,6 +552,7 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_message( i_data = <ls_msg>
                                                  i_tokens = _openai_chat_comp_response-usage-total_tokens
+                                                 i_async_task_id = i_async_task_id
                                                  i_model = CONV #( me->_model ) ).
           ENDIF.
 
@@ -673,6 +677,7 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_async_task_id = i_async_task_id
                                                i_model = CONV #( me->_model ) ).
         ENDIF.
 
@@ -688,6 +693,7 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_async_task_id = i_async_task_id
                                                i_model = CONV #( me->_model ) ).
         ENDIF.
 
@@ -879,6 +885,7 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
             me->_o_persistence->persist_message( i_data = <ls_msg>
                                                  i_tokens = _openai_generate_response-usage-total_tokens
+                                                 i_async_task_id = i_async_task_id
                                                  i_model = CONV #( me->_model ) ).
 
             CLEAR _openai_generate_response-usage-total_tokens.
@@ -925,6 +932,7 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
                                                  i_model = CONV #( me->_model ) ).
           ENDIF.
 
@@ -969,6 +977,7 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
             IF me->_o_persistence IS BOUND.
               me->_o_persistence->persist_message( i_data = <ls_msg>
                                                    i_tokens = _openai_generate_response-usage-total_tokens
+                                                   i_async_task_id = i_async_task_id
                                                    i_model = CONV #( me->_model ) ).
             ENDIF.
 

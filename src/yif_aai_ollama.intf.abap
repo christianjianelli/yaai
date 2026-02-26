@@ -2,6 +2,7 @@ INTERFACE yif_aai_ollama
   PUBLIC.
 
   TYPES: BEGIN OF ty_function_s,
+           index     TYPE i,
            name      TYPE string,
            arguments TYPE /ui2/cl_json=>json,
          END OF ty_function_s,
@@ -14,6 +15,7 @@ INTERFACE yif_aai_ollama
            role       TYPE string,
            content    TYPE string,
            tool_calls TYPE STANDARD TABLE OF ty_tool_calls_s WITH DEFAULT KEY,
+           tool_name  TYPE string,
          END OF ty_chat_message_s.
 
   TYPES: ty_chat_messages_t TYPE STANDARD TABLE OF ty_chat_message_s WITH NON-UNIQUE KEY role.

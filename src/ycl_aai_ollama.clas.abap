@@ -230,7 +230,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
         <ls_msg> = VALUE #( role = 'assistant' content = i_greeting ).
 
         IF me->_o_persistence IS BOUND.
-          me->_o_persistence->persist_message( i_data = <ls_msg> ).
+          me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_async_task_id = i_async_task_id ).
         ENDIF.
 
       ENDIF.
@@ -365,6 +366,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           IF me->_o_persistence IS BOUND.
 
             me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
                                                  i_model = CONV #( me->_model ) ).
 
           ENDIF.
@@ -389,11 +391,14 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
             APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
 
-            <ls_msg> = VALUE #( role = 'tool' content = l_tool_response ).
+            <ls_msg> = VALUE #( role = 'tool'
+                                tool_name = <ls_tool>-function-name
+                                content = l_tool_response ).
 
             IF me->_o_persistence IS BOUND.
 
               me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_async_task_id = i_async_task_id
                                                    i_model = CONV #( me->_model ) ).
 
             ENDIF.
