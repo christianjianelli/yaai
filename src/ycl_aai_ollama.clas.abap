@@ -610,7 +610,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     DATA(ls_model) = me->mo_agent->get_model(
       EXPORTING
-        i_api = CONV #( me->_o_connection->m_api )
+        i_api = CONV #( yif_aai_const=>c_ollama )
     ).
 
     IF ls_model-model IS NOT INITIAL.
