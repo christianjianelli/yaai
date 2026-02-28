@@ -3,20 +3,30 @@ This repository provides a set of tools designed to facilitate Artificial Intell
 
 ## Key Features
 - **Multi-Provider LLM API Support**: ABAP AI tools support seamless integration with multiple large language model APIs, giving you flexibility in choosing your provider and deployment model. The list of supported APIs will continue to grow as the project evolves. Currently supported APIs include:
-  - **[OpenAI](docs/openai/README.md)** (cloud-based)
-  - **[Ollama](docs/ollama/README.md)** (local/self-hosted)
-  - **[Google Gemini](docs/google/README.md)** (cloud-based)
-  - **[Anthropic](docs/anthropic/README.md)** (cloud-based)
-  - APIs from other providers, such as Nvidia and Mistral, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.
-    - **[Nvidia](docs/openai_compatible/nvidia.md)** (cloud-based)
-    - **[Mistral](docs/openai_compatible/mistral.md)** (cloud-based)
+  - **[OpenAI](openai/README.md)**
+  - **[Anthropic](anthropic/README.md)**
+  - **[Google Gemini](google/README.md)**
+  - **[Mistral](openai_compatible/mistral.md)**
+  - **[Ollama](ollama/README.md)**
+  - APIs from other providers, such as Nvidia, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.
+      
+      - **[Nvidia](openai_compatible/nvidia.md)**
+      
 - **Conversation Management**: Maintain and manage multi-turn conversations, with full access to conversation history for advanced chat scenarios.
 - **Tool/Function Calling**: Integrate ABAP business logic with LLMs using function/tool calling, allowing AI models to trigger ABAP methods.
 - **Retrieval-Augmented Generation (RAG)**: Enhance LLM outputs by incorporating enterprise data, enabling more accurate and relevant answers through retrieval-augmented generation workflows.
+- **AI Agents Development**: The ABAP AI tools now have the same features as the cloud version, with a primary focus on AI Agent development. All tooling is specifically designed to support ABAP developers in building and testing AI Agents.
 
 These features empower you to build intelligent, enterprise-ready ABAP applications that leverage the latest advancements in AI.
 
-This repository focuses on backend AI integration for ABAP. For a ready-to-use user interface—including chat and code assistance apps—check out our companion project: 
+[**ABAP AI tools Cockpit**](https://github.com/christianjianelli/yaai_cockpit)
+Configuring AI agents in ABAP AI tools involves maintaining a bunch of database tables. To make this whole process easier, the ABAP AI tools Cockpit was built. It’s a frontend application designed to streamline the development of AI agents created with ABAP AI tools Cloud.
+
+<p>
+  <img src="./docs/images/screenshot-cockpit-home.jpg" alt="ABAP AI UI Chat" width="500px">
+</p>
+
+For a ready-to-use user interface—including chat and code assistance apps—check out our companion project: 
 
   [**yaai ui - ABAP AI User Interface**](https://github.com/christianjianelli/yaai_ui)
   The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
