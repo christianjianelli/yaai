@@ -3,14 +3,14 @@ This repository provides a set of tools designed to facilitate Artificial Intell
 
 ## Key Features
 - **Multi-Provider LLM API Support**: ABAP AI tools support seamless integration with multiple large language model APIs, giving you flexibility in choosing your provider and deployment model. The list of supported APIs will continue to grow as the project evolves. Currently supported APIs include:
-  - **[OpenAI](openai/README.md)**
-  - **[Anthropic](anthropic/README.md)**
-  - **[Google Gemini](google/README.md)**
-  - **[Mistral](openai_compatible/mistral.md)**
-  - **[Ollama](ollama/README.md)**
+  - **[OpenAI](./docs/openai/README.md)**
+  - **[Anthropic](./docs/anthropic/README.md)**
+  - **[Google Gemini](./docs/google/README.md)**
+  - **[Mistral](./docs/openai_compatible/mistral.md)**
+  - **[Ollama](./docs/ollama/README.md)**
   - APIs from other providers, such as Nvidia, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.
       
-      - **[Nvidia](openai_compatible/nvidia.md)**
+      - **[Nvidia](./docs/openai_compatible/nvidia.md)**
       
 - **Conversation Management**: Maintain and manage multi-turn conversations, with full access to conversation history for advanced chat scenarios.
 - **Tool/Function Calling**: Integrate ABAP business logic with LLMs using function/tool calling, allowing AI models to trigger ABAP methods.
