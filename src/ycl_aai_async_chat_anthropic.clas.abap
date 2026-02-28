@@ -66,7 +66,7 @@ CLASS ycl_aai_async_chat_anthropic IMPLEMENTATION.
     lo_aai_conn->set_api_key( i_api_key = i_api_key ).
 
     DATA(lo_aai_db) = NEW ycl_aai_db( i_api = yif_aai_const=>c_anthropic
-                                        i_id = i_chat_id ).
+                                      i_id = i_chat_id ).
 
     DATA(lo_log) = NEW ycl_aai_log( i_chat_id = i_chat_id ).
 
@@ -95,9 +95,9 @@ CLASS ycl_aai_async_chat_anthropic IMPLEMENTATION.
     SET HANDLER me->on_tool_call_error FOR ALL INSTANCES.
 
     DATA(lo_aai_anthropic) = NEW ycl_aai_anthropic( i_model = i_model
-                                              i_o_connection = lo_aai_conn
-                                              i_o_persistence = lo_aai_db
-                                              i_o_agent = lo_agent ).
+                                                    i_o_connection = lo_aai_conn
+                                                    i_o_persistence = lo_aai_db
+                                                    i_o_agent = lo_agent ).
 
     IF i_context IS INITIAL.
 
@@ -132,7 +132,7 @@ CLASS ycl_aai_async_chat_anthropic IMPLEMENTATION.
       DATA(lo_aai_prompt) = NEW ycl_aai_prompt(
         i_o_prompt_template = lo_aai_prompt_template
         i_s_params = VALUE yif_aai_prompt=>ty_params_basic_s( user_message = i_message
-                                                               context = i_context )
+                                                              context = i_context )
       ).
 
       lo_log->add( VALUE #( number = '003' type = 'S' ) ).

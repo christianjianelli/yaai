@@ -51,9 +51,10 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
     DATA: ls_request  TYPE ty_request_create_s,
           ls_response TYPE ty_response_create_s.
 
-    DATA: l_json    TYPE string,
-          l_task_id TYPE yaai_async-id,
-          l_debug   TYPE abap_bool.
+    DATA: l_json      TYPE string,
+          l_task_id   TYPE yaai_async-id,
+          l_task_name TYPE yaai_async-name VALUE '_ASYNC_CHAT',
+          l_debug     TYPE abap_bool.
 
     DATA(l_request_body) = i_o_request->get_cdata( ).
 
@@ -72,6 +73,8 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
     ls_request-agent_id = condense( to_upper( ls_request-agent_id ) ).
 
     ls_response-chat_id = ls_request-chat_id.
+
+    l_task_name = ls_request-api && l_task_name.
 
     IF ls_request-chat_id IS INITIAL.
 
@@ -130,7 +133,7 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
     l_task_id = lo_aai_async->create(
       EXPORTING
         i_chat_id   = CONV #( ls_response-chat_id )
-        i_task_name = 'OPENAI_ASYNC_CHAT'
+        i_task_name = l_task_name
     ).
 
     ls_response-task_id = l_task_id.
