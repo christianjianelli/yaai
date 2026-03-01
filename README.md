@@ -216,10 +216,11 @@ The following screenshots show the output you can expect after running the examp
 
   To get started with your preferred API, check out the dedicated guides:
 
-  - [OpenAI Guide](docs/openai/README.md): Learn how to use ABAP AI with OpenAI models.
-  - [Ollama Guide](docs/ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
-  - [Google Gemini Guide](docs/google/README.md): Learn how to use ABAP AI with Google Gemini models.
-  - [Anthropic Guide](docs/anthropic/README.md): Learn how to use ABAP AI with Anthropic models.
+  - [OpenAI](docs/openai/README.md): Learn how to use ABAP AI with OpenAI models.
+  - [Anthropic](docs/anthropic/README.md): Learn how to use ABAP AI with Anthropic models.
+  - [Google Gemini](docs/google/README.md): Learn how to use ABAP AI with Google Gemini models.
+  - [Mistral](docs/mistral/README.md): Learn how to use ABAP AI with Mistral models.
+  - [Ollama](docs/ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
 
   ### Read the documentation
 

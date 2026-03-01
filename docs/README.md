@@ -48,10 +48,12 @@ The ABAP AI UI repository provides interfaces to interact with LLMs directly fro
 
 ## APIs
 
-  - [OpenAI Guide](openai/README.md): Learn how to use ABAP AI with OpenAI models.
-  - [Ollama Guide](ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
-  - [Google Gemini Guide](google/README.md): Learn how to use ABAP AI with Google Gemini models.
-  - [Anthropic Guide](anthropic/README.md): Learn how to use ABAP AI with Anthropic models.
+  - [OpenAI](openai/README.md): Learn how to use ABAP AI with OpenAI models.
+  - [Anthropic](anthropic/README.md): Learn how to use ABAP AI with Anthropic models.
+  - [Google Gemini](google/README.md): Learn how to use ABAP AI with Google Gemini models.
+  - [Mistral](mistral/README.md): Learn how to use ABAP AI with Mistral models.
+  - [Ollama](ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
+  
 
 ## Features
 - [System Instructions](system_instructions.md): Learn how to pass System Instructions to a LLM.

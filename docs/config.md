@@ -1,15 +1,19 @@
-# yaai - ABAP AI tools Configuration Parameters
+# yaai - ABAP AI tools Configuration
 
-The ABAP AI tools require specific configuration parameters to be maintained in the SAP table `TVARVC` (accessible via transaction STVARV). These parameters define the base URLs for external AI services and are used to construct the full API endpoints for service calls.
+Open the class `ycl_aai_basic_setup` in Eclipse and run it (press F9). This will populate the `YAAI_API`, `YAAI_MODEL`, and `YAAI_TOOL` tables.
 
-## Required Parameters
+The `TVARVC` table (accessible via transaction STVARV) is also supported for configuring API endpoints, but using the YAAI tables is strongly recommended. These parameters define the base URLs for external AI services and are used to construct the full API endpoints for service calls.
 
-| Parameter Name           | Description                                 |
-|--------------------------|---------------------------------------------|
-| YAAI_OPENAI_BASE_URL     | Base URL for OpenAI API endpoints           |
-| YAAI_OLLAMA_BASE_URL     | Base URL for Ollama API endpoints           |
-| YAAI_GOOGLE_BASE_URL     | Base URL for Google Gemini API endpoints    |
-| YAAI_ANTHROPIC_BASE_URL  | Base URL for Anthropic API endpoints        |
+## STVARV Parameters
+
+| Parameter Name           | Description                                |
+|--------------------------|--------------------------------------------|
+| YAAI_OPENAI_BASE_URL     | Base URL for OpenAI API endpoint           |
+| YAAI_ANTHROPIC_BASE_URL  | Base URL for Anthropic API endpoint        |
+| YAAI_GOOGLE_BASE_URL     | Base URL for Google Gemini API endpoint    |
+| YAAI_OLLAMA_BASE_URL     | Base URL for Ollama API endpoint           |
+| YAAI_MISTRAL_BASE_URL    | Base URL for Mistral API endpoint          |
+
 
 ### Example Entries in TVARVC
 

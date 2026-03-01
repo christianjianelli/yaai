@@ -18,18 +18,18 @@ Supported parameter types:
 
 2. **Register the Class/Method**  
     Use the ABAP AI framework to register the class and method for function calling.  
-    The method `add_methods` of the class `ycl_aai_function_calling` must be used to register the methods you want to expose for function calling.  
+    The method `add_methods` of the class `ycl_aai_func_call_ollama` must be used to register the methods you want to expose for function calling.  
     The framework will generate a function schema compatible with Ollama.
 
     ```abap
-    DATA(lo_function_calling) = NEW ycl_aai_function_calling( ).
+    DATA(lo_function_calling) = NEW ycl_aai_func_call_ollama( ).
 
     lo_function_calling->add_methods( VALUE #( ( class_name = 'ycl_aai_bp_tools' method_name = 'create_person' description = 'Use this method to create a Business Partner for a Person' )
                                                ( class_name = 'ycl_aai_bp_tools' method_name = 'create_organization' description = 'Use this method to create a Business Partner for an Organization' ) ) ).
     ```
 
 3. **Bind Tools to Ollama**  
-    The ABAP AI OpenAI `bind_tools` method expects an object (instance) of the class `ycl_aai_function_calling` as its argument. This object manages the registration and invocation of ABAP methods as callable tools for Ollama function calling.
+    The ABAP AI OpenAI `bind_tools` method expects an object (instance) of the class `ycl_aai_func_call_ollama` as its argument. This object manages the registration and invocation of ABAP methods as callable tools for Ollama function calling.
 
     ```abap
     lo_aai_ollama->bind_tools( lo_function_calling ).
@@ -89,7 +89,7 @@ CLASS lcl_app IMPLEMENTATION.
 
     lo_aai_ollama->set_system_instructions( l_system_instructions ).
 
-    DATA(lo_function_calling) = NEW ycl_aai_function_calling( ).
+    DATA(lo_function_calling) = NEW ycl_aai_func_call_ollama( ).
 
     lo_function_calling->add_methods( VALUE #( ( class_name = 'ycl_aai_bp_tools' method_name = 'create_person' description = 'Use this method to create a Business Partner for a Person' )
                                                ( class_name = 'ycl_aai_bp_tools' method_name = 'create_organization' description = 'Use this method to create a Business Partner for an Organization' ) ) ).
@@ -256,7 +256,7 @@ To use a proxy class for function calling, simply specify its name in the `proxy
 **Example**:
 
 ```abap
-DATA(lo_function_calling) = NEW ycl_aai_function_calling( ).
+DATA(lo_function_calling) = NEW ycl_aai_func_call_ollama( ).
 
 lo_function_calling->add_methods( VALUE #( ( proxy_class = 'zcl_calculator_proxy' class_name = 'zcl_calculator' method_name = 'calculate_total' description = 'Calculate total' ) ) ).
 
