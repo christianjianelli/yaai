@@ -15,9 +15,11 @@ This repository provides a set of tools designed to facilitate Artificial Intell
 - **Conversation Management**: Maintain and manage multi-turn conversations, with full access to conversation history for advanced chat scenarios.
 - **Tool/Function Calling**: Integrate ABAP business logic with LLMs using function/tool calling, allowing AI models to trigger ABAP methods.
 - **Retrieval-Augmented Generation (RAG)**: Enhance LLM outputs by incorporating enterprise data, enabling more accurate and relevant answers through retrieval-augmented generation workflows.
-- **AI Agents Development**: The ABAP AI tools now have the same features as the cloud version, with a primary focus on AI Agent development. All tooling is specifically designed to support ABAP developers in building and testing AI Agents.
+- **AI Agents Development**: The ABAP AI tools now have the same features as the [ABAP AI tools Cloud](https://github.com/christianjianelli/yaai_cloud) version, with a primary focus on AI Agent development. All tooling is specifically designed to support ABAP developers in building and testing AI Agents.
 
 These features empower you to build intelligent, enterprise-ready ABAP applications that leverage the latest advancements in AI.
+
+## Companion Projects
 
 [**ABAP AI tools Cockpit**](https://github.com/christianjianelli/yaai_cockpit)
 Configuring AI agents in ABAP AI tools involves maintaining a bunch of database tables. To make this whole process easier, the ABAP AI tools Cockpit was built. It’s a frontend application designed to streamline the development of AI agents created with ABAP AI tools Cloud.
@@ -26,19 +28,17 @@ Configuring AI agents in ABAP AI tools involves maintaining a bunch of database 
   <img src="./docs/images/screenshot-cockpit-home.jpg" alt="ABAP AI UI Chat" width="500px">
 </p>
 
-For a ready-to-use user interface—including chat and code assistance apps—check out our companion project: 
-
-  [**yaai ui - ABAP AI User Interface**](https://github.com/christianjianelli/yaai_ui)
-  The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
+[**ABAP AI tools User Interface**](https://github.com/christianjianelli/yaai_ui)
+The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
   
-  <p>
-    <img src="docs/images/abap_ai_ui_chat.png" alt="ABAP AI UI Chat" width="500px">
-    <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Chat</a>
-    <br>
-    <br>
-    <img src="docs/images/yaai_ui_code_assist.png" alt="ABAP AI UI Code Assistant" width="500px">
-    <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Code Assistant</a>
-  </p>
+<p>
+  <img src="docs/images/abap_ai_ui_chat.png" alt="ABAP AI UI Chat" width="500px">
+  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Chat</a>
+  <br>
+  <br>
+  <img src="docs/images/yaai_ui_code_assist.png" alt="ABAP AI UI Code Assistant" width="500px">
+  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Code Assistant</a>
+</p>
 
 ## Installation
 You can install the ABAP AI tools into your SAP system using abapGit. 
