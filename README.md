@@ -22,7 +22,7 @@ These features empower you to build intelligent, enterprise-ready ABAP applicati
 ## Companion Projects
 
 [**ABAP AI tools Cockpit**](https://github.com/christianjianelli/yaai_cockpit)
-Configuring AI agents in ABAP AI tools involves maintaining a bunch of database tables. To make this whole process easier, the ABAP AI tools Cockpit was built. It’s a frontend application designed to streamline the development of AI agents created with ABAP AI tools Cloud.
+Configuring AI agents in ABAP AI tools involves maintaining a bunch of database tables. To make this whole process easier, the ABAP AI tools Cockpit was built. It’s a frontend application designed to streamline the development of AI agents created with ABAP AI tools.
 
 <p>
   <img src="./docs/images/screenshot-cockpit-home.jpg" alt="ABAP AI UI Chat" width="500px">
