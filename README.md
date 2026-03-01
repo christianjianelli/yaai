@@ -72,6 +72,9 @@ You can install the ABAP AI tools into your SAP system using abapGit.
 6 - **Verify Installation**:
   - After activation, all the `ABAP AI tools` objects (interfaces, classes, etc.) will be available in your specified package. You can verify this by checking transaction `SE80` for the package you used.
 
+7 - **Basic Setup**:
+  - Open the class `ycl_aai_basic_setup` in Eclipse and run it (press F9). This will populate the `YAAI_API`, `YAAI_MODEL`, and `YAAI_TOOL` tables.
+
 You have now successfully installed the `ABAP AI tools!`
 
 ## Quickstart
