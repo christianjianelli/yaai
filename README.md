@@ -43,7 +43,7 @@ The ABAP AI UI repository provides interfaces to interact with LLMs directly fro
 ## Installation
 You can install the ABAP AI tools into your SAP system using abapGit. 
 
-  **Disclaimer:** ABAP AI tools is experimental and released under the MIT License. It is provided "as is", without warranty of any kind, express or implied. This means you use these tools at your own risk, and the authors are not liable for any damages or issues arising from their use.
+  **Disclaimer:** ABAP AI tools is released under the MIT License. It is provided "as is", without warranty of any kind, express or implied. This means you use these tools at your own risk, and the authors are not liable for any damages or issues arising from their use.
 
 ## Prerequisites
  - **ABAP 7.52+**: You need an SAP system running ABAP version 7.52 or higher.
