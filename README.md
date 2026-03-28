@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/github/license/christianjianelli/yaai?label=License&color=success)](https://github.com/christianjianelli/yaai/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/christianjianelli/yaai?label=License&color=success)](https://github.com/christianjianelli/yaai/blob/main/LICENSE) [![GitHub stars](https://img.shields.io/github/stars/christianjianelli/yaai)](https://github.com/christianjianelli/yaai/stargazers) [![GitHub top language](https://img.shields.io/github/languages/top/christianjianelli/yaai)](https://github.com/christianjianelli/yaai)
 
 # yaai - ABAP AI tools
 This repository provides a set of tools designed to facilitate Artificial Intelligence capabilities within ABAP environments.
