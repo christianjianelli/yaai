@@ -227,3 +227,7 @@ The following screenshots show the output you can expect after running the examp
   ### Read the documentation
 
   - [ABAP AI tools Documentation](docs/README.md)
+
+
+## Star History
+![Star History Chart](https://api.star-history.com/svg?repos=christianjianelli/yaai&type=Date)
