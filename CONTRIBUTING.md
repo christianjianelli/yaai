@@ -32,7 +32,7 @@ You can contribute in several ways:
 
 ### Installation
 
-* [ABAP AI tools Installation](./installation.md)
+* [ABAP AI tools Installation](./docs/installation.md)
 
 ---
 
