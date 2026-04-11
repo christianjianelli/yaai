@@ -28,6 +28,9 @@ Configuring AI agents in ABAP AI tools involves maintaining a bunch of database 
   <img src="./images/screenshot-cockpit-home.jpg" alt="ABAP AI UI Chat" width="500px">
 </p>
 
+[**ABAP AI tools - Function Calling Library**](https://github.com/christianjianelli/yaai_fc)
+A comprehensive function calling library designed specifically for AI agents to interact with ABAP Dictionary (DDIC) objects and related development artifacts in SAP ABAP environments. This library bridges the gap between natural language instructions and ABAP development operations, allowing AI agents to create, modify, and manage ABAP Dictionary objects and other ABAP development artifacts like message classes and translations, on the user's behalf.
+
 [**ABAP AI tools User Interface**](https://github.com/christianjianelli/yaai_ui)
 The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
   

@@ -30,7 +30,10 @@ Configuring AI agents in ABAP AI tools involves maintaining a bunch of database 
   <img src="./docs/images/screenshot-cockpit-home.jpg" alt="ABAP AI UI Chat" width="500px">
 </p>
 
-[**ABAP AI tools User Interface**](https://github.com/christianjianelli/yaai_ui)
+[**ABAP AI tools - Function Calling Library**](https://github.com/christianjianelli/yaai_fc)
+A comprehensive function calling library designed specifically for AI agents to interact with ABAP Dictionary (DDIC) objects and related development artifacts in SAP ABAP environments. This library bridges the gap between natural language instructions and ABAP development operations, allowing AI agents to create, modify, and manage ABAP Dictionary objects and other ABAP development artifacts like message classes and translations, on the user's behalf.
+
+[**ABAP AI tools - User Interface**](https://github.com/christianjianelli/yaai_ui)
 The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
   
 <p>
@@ -72,7 +75,7 @@ You can install the ABAP AI tools into your SAP system using abapGit.
   - Activate any inactive objects if prompted.
 
 6 - **Verify Installation**:
-  - After activation, all the `ABAP AI tools` objects (interfaces, classes, etc.) will be available in your specified package. You can verify this by checking transaction `SE80` for the package you used.
+  - After the installation, all the `ABAP AI tools` objects (interfaces, classes, etc.) will be available in your specified package. You can verify this by checking transaction `SE80` for the package you used.
 
 7 - **Basic Setup**:
   - Open the class `ycl_aai_basic_setup` in Eclipse and run it (press F9). This will populate the `YAAI_API`, `YAAI_MODEL`, and `YAAI_TOOL` tables.
