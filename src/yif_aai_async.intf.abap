@@ -64,6 +64,7 @@ INTERFACE yif_aai_async
     IMPORTING
               i_task_id        TYPE ty_task_s-id
               i_status         TYPE ty_task_s-status
+              i_commit         TYPE abap_bool DEFAULT abap_false
     RETURNING VALUE(r_updated) TYPE abap_bool.
 
   METHODS get_tasks_by_chat_id

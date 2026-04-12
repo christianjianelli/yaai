@@ -61,6 +61,14 @@ CLASS ycl_aai_async_chat_mistral IMPLEMENTATION.
 
     me->_log = i_log.
 
+    DATA(lo_async) = NEW ycl_aai_async( ).
+
+    lo_async->update_status(
+      EXPORTING
+        i_task_id = i_task_id
+        i_status  = yif_aai_async=>mc_task_running
+    ).
+
     DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_mistral ).
 
     lo_aai_conn->set_api_key( i_api_key = i_api_key ).
@@ -151,8 +159,6 @@ CLASS ycl_aai_async_chat_mistral IMPLEMENTATION.
       lo_log->add( VALUE #( number = '004' type = 'S' ) ).
 
     ENDIF.
-
-    DATA(lo_async) = NEW ycl_aai_async( ).
 
     lo_async->update_status(
       EXPORTING

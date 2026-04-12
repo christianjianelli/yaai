@@ -104,6 +104,12 @@
      <MSGNR>016</MSGNR>
      <TEXT>API &amp;1 is not supported</TEXT>
     </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>YAAI</ARBGB>
+     <MSGNR>017</MSGNR>
+     <TEXT>System: the maximum number of tool calls allowed has been reached.</TEXT>
+    </T100>
    </T100>
   </asx:values>
  </asx:abap>

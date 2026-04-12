@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS YCL_AAI_OPENAI IMPLEMENTATION.
+CLASS ycl_aai_openai IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -363,7 +363,9 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
     ENDIF.
 
-    DO me->_max_tool_calls TIMES.
+    DO ( me->_max_tool_calls + 1 ) TIMES.
+
+      DATA(l_tool_calls) = sy-index.
 
       IF me->_o_persistence IS BOUND AND
          me->_o_persistence->is_chat_blocked( ).
@@ -532,6 +534,25 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
         ENDLOOP.
 
         IF l_function_call = abap_true.
+
+          IF l_tool_calls = me->_max_tool_calls.
+
+            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = 'user'
+                                type = 'message' ).
+
+            "The maximum number of tool calls allowed has been reached.
+            MESSAGE ID 'YAAI' TYPE 'S' NUMBER '017' INTO <ls_msg>-content.
+
+            IF me->_o_persistence IS BOUND.
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_async_task_id = i_async_task_id
+                                                   i_model = CONV #( me->_model ) ).
+            ENDIF.
+
+          ENDIF.
+
           CONTINUE.
         ENDIF.
 
@@ -779,7 +800,9 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
 
     ENDIF.
 
-    DO me->_max_tool_calls TIMES.
+    DO ( me->_max_tool_calls + 1 ) TIMES.
+
+      DATA(l_tool_calls) = sy-index.
 
       IF me->_o_persistence IS BOUND AND
          me->_o_persistence->is_chat_blocked( ).
@@ -939,7 +962,27 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
         ENDLOOP.
 
         IF l_function_call = abap_true.
+
+          IF l_tool_calls = me->_max_tool_calls.
+
+            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = 'user'
+                                type = 'message' ).
+
+            "The maximum number of tool calls allowed has been reached.
+            MESSAGE ID 'YAAI' TYPE 'S' NUMBER '017' INTO <ls_msg>-content.
+
+            IF me->_o_persistence IS BOUND.
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_async_task_id = i_async_task_id
+                                                   i_model = CONV #( me->_model ) ).
+            ENDIF.
+
+          ENDIF.
+
           CONTINUE.
+
         ENDIF.
 
         IF _openai_generate_response-error IS NOT INITIAL.
@@ -1230,7 +1273,14 @@ CLASS YCL_AAI_OPENAI IMPLEMENTATION.
     ENDIF.
 
     IF ls_model-max_tool_calls IS NOT INITIAL.
+
       me->_max_tool_calls = ls_model-max_tool_calls.
+
+      IF me->_max_tool_calls = 0.
+        " Like 'unlimited' tool calls but preventing infinite loops
+        me->_max_tool_calls = 10000.
+      ENDIF.
+
     ENDIF.
 
     DATA(l_system_instructions) = me->mo_agent->get_system_instructions( ).

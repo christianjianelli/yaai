@@ -104,6 +104,11 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       me->_o_persistence = i_o_persistence.
 
+      me->_o_persistence->get_chat(
+        IMPORTING
+          e_t_msg_data = me->_chat_messages
+      ).
+
     ENDIF.
 
     "If an Agent is passed then its settings overwrite any other previous setting
@@ -304,7 +309,9 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
       me->mo_function_calling = NEW ycl_aai_func_call_ollama( me->mo_agent ).
     ENDIF.
 
-    DO me->_max_tool_calls TIMES.
+    DO ( me->_max_tool_calls + 1 ) TIMES.
+
+      DATA(l_tool_calls) = sy-index.
 
       IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_ollama_chat_endpoint ).
 
@@ -404,6 +411,25 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
             ENDIF.
 
           ENDLOOP.
+
+          IF l_tool_calls = me->_max_tool_calls.
+
+            APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = 'user' ).
+
+            "The maximum number of tool calls allowed has been reached.
+            MESSAGE ID 'YAAI' TYPE 'S' NUMBER '017' INTO <ls_msg>-content.
+
+            IF me->_o_persistence IS BOUND.
+
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_async_task_id = i_async_task_id
+                                                   i_model = CONV #( me->_model ) ).
+
+            ENDIF.
+
+          ENDIF.
 
           CONTINUE.
 
@@ -622,7 +648,14 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
     ENDIF.
 
     IF ls_model-max_tool_calls IS NOT INITIAL.
+
       me->_max_tool_calls = ls_model-max_tool_calls.
+
+      IF me->_max_tool_calls = 0.
+        " Like 'unlimited' tool calls but preventing infinite loops
+        me->_max_tool_calls = 10000.
+      ENDIF.
+
     ENDIF.
 
     DATA(l_system_instructions) = me->mo_agent->get_system_instructions( ).

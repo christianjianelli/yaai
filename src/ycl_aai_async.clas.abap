@@ -166,6 +166,10 @@ CLASS ycl_aai_async IMPLEMENTATION.
 
       r_updated = abap_true.
 
+      IF i_commit = abap_true.
+        COMMIT WORK.
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.
