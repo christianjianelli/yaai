@@ -1,4 +1,4 @@
-ABAP AI tools Cockpit changelog
+ABAP AI tools changelog
 =================
 
 Legend
