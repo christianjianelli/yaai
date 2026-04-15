@@ -26,7 +26,8 @@ INTERFACE yif_aai_google
          END OF ty_parts_response_func_call_s,
 
          BEGIN OF ty_parts_request_func_call_s,
-           function_call TYPE ty_function_call_s,
+           function_call     TYPE ty_function_call_s,
+           thought_signature TYPE string,
          END OF ty_parts_request_func_call_s,
 
          BEGIN OF ty_parts_response_func_resp_s,
@@ -37,6 +38,7 @@ INTERFACE yif_aai_google
            text              TYPE string,
            functioncall      TYPE ty_function_call_s,
            function_response TYPE ty_function_response_s,
+           thought_signature TYPE string,
          END OF ty_parts_response_s,
 
          ty_parts_request_t  TYPE STANDARD TABLE OF /ui2/cl_json=>json WITH DEFAULT KEY,

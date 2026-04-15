@@ -627,6 +627,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
       ls_parts_text = CORRESPONDING #( <ls_parts> ).
       ls_function_call-function_call = <ls_parts>-functioncall.
+      ls_function_call-thought_signature = <ls_parts>-thought_signature.
       ls_function_response = CORRESPONDING #( <ls_parts> ).
 
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN ls_function_call-function_call-args WITH space.
@@ -642,6 +643,17 @@ CLASS ycl_aai_google IMPLEMENTATION.
             ASSIGN ls_parts_text TO <ls_data>.
 
           WHEN 2.
+
+            " The Thought Signatures recently implemented by Google may return an
+            " empty function call item in the response parts.
+            " Interestingly, this item cannot be sent back to the API as part of the conversation history,
+            " as it results in an INVALID_ARGUMENT error.
+            " As a workaround, we ignore this empty function call and do not persist it.
+            "-------------------------------------------------------
+            IF ls_function_call-function_call-name IS INITIAL.
+              CLEAR ls_function_call.
+            ENDIF.
+            "-------------------------------------------------------
 
             ASSIGN ls_function_call TO <ls_data>.
 
