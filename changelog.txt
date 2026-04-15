@@ -7,3 +7,9 @@ Legend
 ! : changed
 + : added
 - : removed
+
+
+2026-04-15
+-------------------
+
+* Google Gemini thought signatures bugfix
