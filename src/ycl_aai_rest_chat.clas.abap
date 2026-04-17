@@ -67,7 +67,8 @@ CLASS ycl_aai_rest_chat DEFINITION
            END OF ty_chat_s,
 
            BEGIN OF ty_response_read_s,
-             chat TYPE ty_chat_s,
+             chat  TYPE ty_chat_s,
+             chats TYPE ty_chat_t,
            END OF ty_response_read_s,
 
            BEGIN OF ty_response_query_s,
@@ -201,6 +202,14 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
       IF sy-subrc = 0.
         ls_response_read-chat-tools = CORRESPONDING #( lt_tools ).
       ENDIF.
+
+      ls_response_read-chats = VALUE #( ( id = ls_response_read-chat-id
+                                          api = ls_response_read-chat-api
+                                          username = ls_response_read-chat-username
+                                          chat_date = ls_response_read-chat-chat_date
+                                          chat_time = ls_response_read-chat-chat_time
+                                          max_seq_no = ls_response_read-chat-max_seq_no
+                                          blocked = ls_response_read-chat-blocked ) ).
 
       l_json = /ui2/cl_json=>serialize(
         EXPORTING
