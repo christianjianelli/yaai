@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2026-04-17
+-------------------
+
++ Search chat by Chat Id
++ Plan description parameter added to create and update plan tools
+
 
 2026-04-15
 -------------------
