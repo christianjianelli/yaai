@@ -63,6 +63,8 @@ CLASS ycl_aai_planning_tools IMPLEMENTATION.
           EXPORTING
             i_filename    = |{ cl_system_uuid=>create_uuid_x16_static( ) }.md|
             i_content     = i_plan
+            i_description = i_description
+            i_keywords    = CONV string( me->_o_agent->m_chat_id )
           IMPORTING
             e_id          = DATA(l_id)
             e_error       = DATA(l_error)
@@ -150,6 +152,7 @@ CLASS ycl_aai_planning_tools IMPLEMENTATION.
       EXPORTING
         i_id          = ls_agent_plan-rag_id
         i_content     = i_plan
+        i_description = i_description
         i_append      = i_append
       IMPORTING
         e_updated     = DATA(l_updated)

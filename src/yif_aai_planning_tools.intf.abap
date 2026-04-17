@@ -4,6 +4,7 @@ INTERFACE yif_aai_planning_tools
   METHODS create_plan
     IMPORTING
               i_plan            TYPE string
+              i_description     TYPE string OPTIONAL
     RETURNING VALUE(r_response) TYPE string.
 
   METHODS get_plan
@@ -12,6 +13,7 @@ INTERFACE yif_aai_planning_tools
   METHODS update_plan
     IMPORTING
               i_plan            TYPE string
+              i_description     TYPE string OPTIONAL
               i_append          TYPE abap_bool DEFAULT abap_true
     RETURNING VALUE(r_response) TYPE string.
 
