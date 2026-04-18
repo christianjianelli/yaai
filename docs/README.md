@@ -44,13 +44,11 @@ The ABAP AI UI repository provides interfaces to interact with LLMs directly fro
 </p>
 
 ## Get Started
-
   - [Installation](installation.md): See how to install ABAP AI.
   - [Quickstart](quickstart.md): Run your first ABAP AI applications.
   - [Configuration](config.md): See how to configure Connections.
 
 ## APIs
-
   - [OpenAI](openai/README.md): Learn how to use ABAP AI with OpenAI models.
   - [Anthropic](anthropic/README.md): Learn how to use ABAP AI with Anthropic models.
   - [Google Gemini](google/README.md): Learn how to use ABAP AI with Google Gemini models.
@@ -63,3 +61,11 @@ The ABAP AI UI repository provides interfaces to interact with LLMs directly fro
 - [Prompt Templates](prompt_templates.md): Learn how to use Prompt Templates.
 - [Function Calling](function_calling.md): Learn how to use Function Calling.
 - [Retrieval-Augmented Generation (RAG)](rag.md): Enhance your LLM applications by incorporating external knowledge sources and retrieval mechanisms.
+
+## How to Obtain Support
+
+  Feel free to raise issues, ask questions, suggest improvements or report bugs.
+
+## Contributing
+
+  This project aims to bring AI capabilities into ABAP, and contributions from the community are highly welcome. Everyone is welcome to contribute. More details are found in [Contributing](CONTRIBUTING.md).
