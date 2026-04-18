@@ -55,12 +55,14 @@ The ABAP AI UI repository provides interfaces to interact with LLMs directly fro
   - [Mistral](mistral/README.md): Learn how to use ABAP AI with Mistral models.
   - [Ollama](ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
   
-
 ## Features
 - [System Instructions](system_instructions.md): Learn how to pass System Instructions to a LLM.
 - [Prompt Templates](prompt_templates.md): Learn how to use Prompt Templates.
 - [Function Calling](function_calling.md): Learn how to use Function Calling.
 - [Retrieval-Augmented Generation (RAG)](rag.md): Enhance your LLM applications by incorporating external knowledge sources and retrieval mechanisms.
+
+## Create AI Agents 
+  - [How to Create and Test AI Agents in the ABAP AI tools Cockpit](https://github.com/christianjianelli/yaai_cockpit/blob/main/docs/guides/create-and-test-ai-agents.md)
 
 ## How to Obtain Support
 

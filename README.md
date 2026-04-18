@@ -231,6 +231,10 @@ The following screenshots show the output you can expect after running the examp
 
   - [ABAP AI tools Documentation](docs/README.md)
 
+  ### Create AI Agents 
+
+  - [How to Create and Test AI Agents in the ABAP AI tools Cockpit](https://github.com/christianjianelli/yaai_cockpit/blob/main/docs/guides/create-and-test-ai-agents.md)
+
 ## How to Obtain Support
 
   Feel free to raise issues, ask questions, suggest improvements or report bugs.
