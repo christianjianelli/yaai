@@ -25,6 +25,8 @@ CLASS ycl_aai_conn DEFINITION
     ALIASES set_base_url FOR yif_aai_conn~set_base_url.
     ALIASES set_ssl_id FOR yif_aai_conn~set_ssl_id.
     ALIASES get_error_text FOR yif_aai_conn~get_error_text.
+    ALIASES get_http_client FOR yif_aai_conn~get_http_client.
+
 
     METHODS
       constructor
@@ -241,9 +243,10 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     IF i_body_json IS NOT INITIAL.
 
-      CALL METHOD me->_o_http_client->request->set_cdata
+      me->_o_http_client->request->set_cdata(
         EXPORTING
-          data = i_body_json.
+          data = i_body_json
+      ).
 
     ENDIF.
 
@@ -253,9 +256,25 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
   METHOD yif_aai_conn~set_body.
 
-    CALL METHOD me->_o_http_client->request->set_cdata
-      EXPORTING
-        data = i_json.
+    IF i_json IS SUPPLIED.
+
+      me->_o_http_client->request->set_cdata(
+        EXPORTING
+          data = i_json
+      ).
+
+      RETURN.
+
+    ENDIF.
+
+    IF i_binary IS SUPPLIED.
+
+      me->_o_http_client->request->set_data(
+        EXPORTING
+          data = i_binary
+      ).
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -437,6 +456,12 @@ CLASS ycl_aai_conn IMPLEMENTATION.
   METHOD yif_aai_conn~remove_http_header_param.
 
     DELETE me->yif_aai_conn~mt_http_header WHERE name = i_name.
+
+  ENDMETHOD.
+
+  METHOD get_http_client.
+
+    e_http_client = me->_o_http_client.
 
   ENDMETHOD.
 

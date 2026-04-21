@@ -67,7 +67,9 @@ INTERFACE yif_aai_conn
   METHODS
     set_body
       IMPORTING
-        i_json TYPE string.
+        i_json   TYPE string OPTIONAL
+        i_binary TYPE xstring OPTIONAL
+          PREFERRED PARAMETER i_json.
 
   METHODS
     do_receive
@@ -92,6 +94,10 @@ INTERFACE yif_aai_conn
 
   METHODS remove_http_header_param
     IMPORTING
-      i_name  TYPE csequence.
+      i_name TYPE csequence.
+
+  METHODS get_http_client
+    EXPORTING
+      e_http_client TYPE REF TO if_http_client.
 
 ENDINTERFACE.

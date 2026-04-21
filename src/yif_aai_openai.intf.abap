@@ -174,6 +174,11 @@ INTERFACE yif_aai_openai
            usage   TYPE ty_usage_s,
          END OF ty_openai_chat_comp_resp_s.
 
+  TYPES: BEGIN OF ty_openai_transcription_resp_s,
+           text  TYPE string,
+           usage TYPE ty_usage_s,
+         END OF ty_openai_transcription_resp_s.
+
   TYPES: BEGIN OF ty_openai_embed_request_s,
            model TYPE string,
            input TYPE string,
@@ -299,5 +304,11 @@ INTERFACE yif_aai_openai
       i_input      TYPE csequence
     EXPORTING
       e_s_response TYPE ty_openai_embed_response_s.
+
+  METHODS audio_transcription
+    IMPORTING
+      i_input    TYPE xstring
+    EXPORTING
+      e_response TYPE string.
 
 ENDINTERFACE.

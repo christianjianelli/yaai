@@ -17,11 +17,12 @@ INTERFACE yif_aai_const
              c_openai_base_url_param       TYPE string VALUE 'YAAI_OPENAI_BASE_URL',
              c_openai_generate_endpoint    TYPE string VALUE '/v1/responses',
              c_openai_completions_endpoint TYPE string VALUE '/v1/chat/completions',
-             c_openai_embed_endpoint       TYPE string VALUE '/v1/embeddings'.
+             c_openai_embed_endpoint       TYPE string VALUE '/v1/embeddings',
+             c_openai_audio_trans_endpoint TYPE string VALUE '/v1/audio/transcriptions'.
 
   "Google
-  CONSTANTS: c_google                      TYPE string VALUE 'GOOGLE',
-             c_google_base_url_param       TYPE string VALUE 'YAAI_GOOGLE_BASE_URL'.
+  CONSTANTS: c_google                TYPE string VALUE 'GOOGLE',
+             c_google_base_url_param TYPE string VALUE 'YAAI_GOOGLE_BASE_URL'.
 
   "Anthropic
   CONSTANTS: c_anthropic                   TYPE string VALUE 'ANTHROPIC',

@@ -29,6 +29,7 @@ CLASS ycl_aai_openai DEFINITION
     ALIASES set_history FOR yif_aai_openai~set_history.
     ALIASES get_conversation FOR yif_aai_openai~get_conversation.
     ALIASES get_conversation_chat_comp FOR yif_aai_openai~get_conversation_chat_comp.
+    ALIASES audio_transcription FOR yif_aai_openai~audio_transcription.
 
     ALIASES mo_function_calling FOR yif_aai_openai~mo_function_calling.
     ALIASES mo_agent FOR yif_aai_openai~mo_agent.
@@ -61,20 +62,21 @@ CLASS ycl_aai_openai DEFINITION
     DATA: _o_connection  TYPE REF TO yif_aai_conn,
           _o_persistence TYPE REF TO yif_aai_db.
 
-    DATA: _model                     TYPE string,
-          _use_completions           TYPE abap_bool VALUE abap_false,
-          _temperature               TYPE p LENGTH 2 DECIMALS 1,
-          _parallel_tool_calls       TYPE abap_bool VALUE abap_false,
-          _safety_identifier         TYPE string,
-          _verbosity                 TYPE string,
-          _reasoning_effort          TYPE string,
-          _system_instructions       TYPE string,
-          _system_instructions_role  TYPE string,
-          _openai_generate_request   TYPE yif_aai_openai~ty_openai_generate_request_s,
-          _openai_generate_response  TYPE yif_aai_openai~ty_openai_generate_response_s,
-          _openai_chat_comp_response TYPE yif_aai_openai~ty_openai_chat_comp_resp_s,
-          _messages                  TYPE yif_aai_openai~ty_generate_messages_t,
-          _max_tool_calls            TYPE i.
+    DATA: _model                         TYPE string,
+          _use_completions               TYPE abap_bool VALUE abap_false,
+          _temperature                   TYPE p LENGTH 2 DECIMALS 1,
+          _parallel_tool_calls           TYPE abap_bool VALUE abap_false,
+          _safety_identifier             TYPE string,
+          _verbosity                     TYPE string,
+          _reasoning_effort              TYPE string,
+          _system_instructions           TYPE string,
+          _system_instructions_role      TYPE string,
+          _openai_generate_request       TYPE yif_aai_openai~ty_openai_generate_request_s,
+          _openai_generate_response      TYPE yif_aai_openai~ty_openai_generate_response_s,
+          _openai_chat_comp_response     TYPE yif_aai_openai~ty_openai_chat_comp_resp_s,
+          _openai_transcription_response TYPE yif_aai_openai~ty_openai_transcription_resp_s,
+          _messages                      TYPE yif_aai_openai~ty_generate_messages_t,
+          _max_tool_calls                TYPE i.
 
     METHODS _load_agent_settings.
 
@@ -611,44 +613,84 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD yif_aai_openai~audio_transcription.
 
-  METHOD yif_aai_openai~embed.
+    DATA: l_json     TYPE string,
+          l_boundary TYPE string,
+          l_head     TYPE string,
+          l_tail     TYPE string,
+          l_head_x   TYPE xstring,
+          l_tail_x   TYPE xstring,
+          l_body     TYPE xstring.
 
     IF me->_o_connection IS NOT BOUND.
       me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
     ENDIF.
 
     IF me->m_endpoint IS INITIAL.
-      me->m_endpoint = yif_aai_const=>c_openai_embed_endpoint.
+      me->m_endpoint = yif_aai_const=>c_openai_audio_trans_endpoint.
     ENDIF.
 
-*    IF me->_o_connection->create( i_endpoint = me->m_endpoint ).
-*
-*      DATA(lo_aai_util) = NEW ycl_aai_util( ).
-*
-*      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_embed_request_s( model = me->_model
-*                                                                                                        input = i_input ) ).
-*
-*      me->_o_connection->set_body( l_json ).
-*
-*      FREE l_json.
-*
-*      me->_o_connection->execute(
-*        IMPORTING
-*          e_response = l_json
-*      ).
-*
-*      lo_aai_util->deserialize(
-*        EXPORTING
-*          i_json = l_json
-*        IMPORTING
-*          e_data = e_s_response
-*      ).
-*
-*    ENDIF.
+    IF me->_o_connection->create_connection( i_endpoint = me->m_endpoint ).
+
+      me->_o_connection->get_http_client(
+        IMPORTING
+          e_http_client = DATA(lo_http_client)
+      ).
+
+      TRY.
+
+          l_boundary = |----OpenAIFormBoundary{ cl_system_uuid=>create_uuid_x16_static( ) }|.
+
+        CATCH cx_uuid_error ##NO_HANDLER.
+          l_boundary = '----OpenAIFormBoundary7MA4YWxkTrZu0gW'.
+      ENDTRY.
+
+      " Build multipart body
+      l_head =
+         |--{ l_boundary }{ cl_abap_char_utilities=>cr_lf }| &&
+         |Content-Disposition: form-data; name="model"{ cl_abap_char_utilities=>cr_lf }{ cl_abap_char_utilities=>cr_lf }| &&
+         |gpt-4o-transcribe{ cl_abap_char_utilities=>cr_lf }| &&
+         |--{ l_boundary }{ cl_abap_char_utilities=>cr_lf }| &&
+         |Content-Disposition: form-data; name="response_format"{ cl_abap_char_utilities=>cr_lf }{ cl_abap_char_utilities=>cr_lf }| &&
+         |json{ cl_abap_char_utilities=>cr_lf }| &&
+         |--{ l_boundary }{ cl_abap_char_utilities=>cr_lf }| &&
+         |Content-Disposition: form-data; name="file"; filename="Recording.m4a"{ cl_abap_char_utilities=>cr_lf }| &&
+         |Content-Type: audio/mpeg{ cl_abap_char_utilities=>cr_lf }{ cl_abap_char_utilities=>cr_lf }|.
+
+      l_tail = |{ cl_abap_char_utilities=>cr_lf }--{ l_boundary }--{ cl_abap_char_utilities=>cr_lf }|.
+
+      l_head_x = cl_abap_codepage=>convert_to( source = l_head ).
+      l_tail_x = cl_abap_codepage=>convert_to( source = l_tail ).
+
+      CONCATENATE l_head_x i_input l_tail_x INTO l_body IN BYTE MODE.
+
+      lo_http_client->request->set_header_field( name = 'Content-Type' value = |multipart/form-data; boundary={ l_boundary }| ).
+
+      lo_http_client->request->set_data( l_body ).
+
+      me->_o_connection->do_receive(
+        IMPORTING
+          e_response = l_json
+          e_failed   = DATA(l_failed)
+      ).
+
+      NEW ycl_aai_util( )->deserialize(
+        EXPORTING
+          i_json = l_json
+        IMPORTING
+          e_data = me->_openai_transcription_response
+      ).
+
+      e_response = me->_openai_transcription_response-text.
+
+    ENDIF.
 
   ENDMETHOD.
 
+  METHOD yif_aai_openai~embed.
+    "TODO
+  ENDMETHOD.
 
   METHOD yif_aai_openai~generate.
 
