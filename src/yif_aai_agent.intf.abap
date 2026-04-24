@@ -58,4 +58,6 @@ INTERFACE yif_aai_agent
               i_api            TYPE yaai_agent_mdl-api
     RETURNING VALUE(r_s_model) TYPE yaai_agent_mdl.
 
+  METHODS initialize_tasks.
+
 ENDINTERFACE.

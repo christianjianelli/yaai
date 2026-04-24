@@ -46,15 +46,17 @@ CLASS ycl_aai_agent_task_tools IMPLEMENTATION.
 
     CLEAR r_response.
 
-    IF me->_o_agent IS BOUND.
-      DATA(l_agent_id) = me->_o_agent->m_agent_id.
+    IF me->_o_agent IS NOT BOUND.
+      RETURN.
     ENDIF.
 
     SELECT a~id, a~task_id, a~previous_task_id, a~status, b~name, b~description
       FROM yaai_agent_task AS a
       INNER JOIN yaai_task AS b
       ON a~task_id = b~id
-      WHERE a~id = @l_agent_id
+      WHERE a~id = @me->_o_agent->m_agent_id
+        AND a~chat_id = @me->_o_agent->m_chat_id
+        AND a~blocked = @abap_false
       INTO TABLE @DATA(lt_tasks).
 
     r_response = |Task Id, Name, Status, Previous Task Id, Description|.
@@ -72,13 +74,14 @@ CLASS ycl_aai_agent_task_tools IMPLEMENTATION.
 
     CLEAR r_response.
 
-    IF me->_o_agent IS BOUND.
-      DATA(l_agent_id) = me->_o_agent->m_agent_id.
+    IF me->_o_agent IS NOT BOUND.
+      RETURN.
     ENDIF.
 
     UPDATE yaai_agent_task
       SET status = @i_task_status
-      WHERE id = @l_agent_id
+      WHERE id = @me->_o_agent->m_agent_id
+        AND chat_id = @me->_o_agent->m_chat_id
         AND task_id = @i_task_id.
 
     IF sy-subrc = 0.
@@ -95,26 +98,11 @@ CLASS ycl_aai_agent_task_tools IMPLEMENTATION.
 
     me->_o_agent = NEW ycl_aai_agent(
       i_agent_id = '000C2956EF8E1FD18E837D19BD4E6C78'
+      i_chat_id  = '00000000000000000000000000000001'
     ).
 
-*    TRY.
-*
-*        DO 3 TIMES.
-*
-*          DATA(l_uuid) = cl_system_uuid=>create_uuid_x16_static( ).
-*
-*          INSERT yaai_task FROM @( VALUE yaai_task( id = l_uuid name = |Task { sy-index }| description = |This is the task { sy-index }| ) ).
-*          INSERT yaai_agent_task FROM @( VALUE #( id = '000C2956EF8E1FD18E837D19BD4E6C78' task_id = '000C2956EF8E1FE18FC9738D08658D36' ) ).
-*
-*        ENDDO.
-*
-*      CATCH cx_uuid_error.
-*    ENDTRY.
-*
-*    RETURN.
-
-    DATA(l_get_tasks) = abap_false.
-    DATA(l_update_task_status) = abap_true.
+    DATA(l_get_tasks) = abap_true.
+    DATA(l_update_task_status) = abap_false.
 
     CASE abap_true.
 

@@ -33,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS YCL_aai_FUNC_CALL_OPENAI IMPLEMENTATION.
+CLASS ycl_aai_func_call_openai IMPLEMENTATION.
 
 
   METHOD constructor.

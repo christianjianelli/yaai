@@ -12,6 +12,8 @@ CLASS ycl_aai_agent DEFINITION
     ALIASES get_docs FOR yif_aai_agent~get_docs.
     ALIASES get_model FOR yif_aai_agent~get_model.
     ALIASES get_prompt_template FOR yif_aai_agent~get_prompt_template.
+    ALIASES initialize_tasks FOR yif_aai_agent~initialize_tasks.
+
     ALIASES m_agent_id FOR yif_aai_agent~m_agent_id.
     ALIASES m_chat_id FOR yif_aai_agent~m_chat_id.
 
@@ -35,6 +37,8 @@ CLASS ycl_aai_agent IMPLEMENTATION.
 
     me->m_agent_id = i_agent_id.
     me->m_chat_id = i_chat_id.
+
+    me->initialize_tasks( ).
 
   ENDMETHOD.
 
@@ -223,6 +227,58 @@ CLASS ycl_aai_agent IMPLEMENTATION.
     ENDIF.
 
     r_t_agent_docs = CORRESPONDING #( lt_docs ).
+
+  ENDMETHOD.
+
+  METHOD yif_aai_agent~initialize_tasks.
+
+    DATA lt_agent_task TYPE STANDARD TABLE OF yaai_agent_task.
+
+    IF me->m_agent_id IS INITIAL OR me->m_chat_id IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE task_flow_id
+      FROM yaai_agent
+      WHERE id = @me->m_agent_id
+      INTO @DATA(l_task_flow_id).
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SELECT id, task_id, previous_task_id
+      FROM yaai_task_flow
+      WHERE id = @l_task_flow_id
+      INTO TABLE @DATA(lt_task_flow).
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SELECT @abap_true
+      FROM yaai_agent_task
+      WHERE id = @me->m_agent_id
+        AND chat_id = @me->m_chat_id
+        INTO @DATA(l_exists)
+        UP TO 1 ROWS.
+    ENDSELECT.
+
+    IF sy-subrc = 0.
+      " Already initialized
+      RETURN.
+    ENDIF.
+
+    LOOP AT lt_task_flow ASSIGNING FIELD-SYMBOL(<ls_task_flow>).
+
+      APPEND INITIAL LINE TO lt_agent_task ASSIGNING FIELD-SYMBOL(<ls_agent_task>).
+
+      <ls_agent_task>-id = me->m_agent_id.
+      <ls_agent_task>-chat_id = me->m_chat_id.
+      <ls_agent_task>-task_id = <ls_task_flow>-task_id.
+      <ls_agent_task>-previous_task_id = <ls_task_flow>-previous_task_id.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
