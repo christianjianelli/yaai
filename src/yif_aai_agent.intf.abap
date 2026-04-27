@@ -21,6 +21,11 @@ INTERFACE yif_aai_agent
   DATA: m_agent_id TYPE yaai_agent-id READ-ONLY,
         m_chat_id  TYPE yaai_agent-id READ-ONLY.
 
+  CLASS-METHODS run_autonomously
+    IMPORTING
+      i_agent_id TYPE yaai_agent-id
+      i_api      TYPE yaai_api-id.
+
   METHODS get_system_instructions
     IMPORTING
               i_agent_id                   TYPE yaai_agent-id OPTIONAL

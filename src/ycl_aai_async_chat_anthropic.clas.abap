@@ -55,7 +55,7 @@ CLASS ycl_aai_async_chat_anthropic IMPLEMENTATION.
 
     DATA lo_agent TYPE REF TO yif_aai_agent.
 
-    DATA l_response TYPE string.
+    CLEAR r_response.
 
     me->_chat_id = i_chat_id.
 
@@ -71,7 +71,9 @@ CLASS ycl_aai_async_chat_anthropic IMPLEMENTATION.
 
     DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_anthropic ).
 
-    lo_aai_conn->set_api_key( i_api_key = i_api_key ).
+    IF i_api_key IS NOT INITIAL.
+      lo_aai_conn->set_api_key( i_api_key = i_api_key ).
+    ENDIF.
 
     DATA(lo_aai_db) = NEW ycl_aai_db( i_api = yif_aai_const=>c_anthropic
                                       i_id = i_chat_id ).
@@ -117,7 +119,7 @@ CLASS ycl_aai_async_chat_anthropic IMPLEMENTATION.
           i_async_task_id = CONV string( i_task_id )
           i_o_agent       = lo_agent
         IMPORTING
-          e_response      = l_response
+          e_response      = r_response
       ).
 
       lo_log->add( VALUE #( number = '004' type = 'S' ) ).
@@ -150,7 +152,7 @@ CLASS ycl_aai_async_chat_anthropic IMPLEMENTATION.
           i_o_prompt = lo_aai_prompt
           i_o_agent  = lo_agent
         IMPORTING
-          e_response = l_response
+          e_response = r_response
       ).
 
       lo_log->add( VALUE #( number = '004' type = 'S' ) ).
