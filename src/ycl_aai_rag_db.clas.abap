@@ -65,7 +65,12 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
       CATCH cx_uuid_error ##NO_HANDLER.
     ENDTRY.
 
-    ls_aai_rag-filename = i_filename.
+    IF i_filename IS NOT INITIAL.
+      ls_aai_rag-filename = i_filename.
+    ELSE.
+      ls_aai_rag-filename = |{ ls_aai_rag-id }.md|.
+    ENDIF.
+
     ls_aai_rag-description = i_description.
     ls_aai_rag-keywords = i_keywords.
 
@@ -101,17 +106,32 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
            e_content,
            e_error.
 
+    IF i_id IS NOT INITIAL.
 
-    SELECT FROM yaai_rag FIELDS id, filename, description, keywords
-      WHERE id = @i_id
-         OR filename = @i_filename
-      INTO @DATA(ls_rag)
-      UP TO 1 ROWS.                                     "#EC CI_NOORDER
-    ENDSELECT.
+      SELECT FROM yaai_rag FIELDS id, filename, description, keywords
+        WHERE id = @i_id
+        INTO @DATA(ls_rag)
+        UP TO 1 ROWS.                                   "#EC CI_NOORDER
+      ENDSELECT.
 
-    IF sy-subrc <> 0.
-      e_error = |File { i_filename } not found in the database|.
-      RETURN.
+      IF sy-subrc <> 0.
+        e_error = |Document { i_id } not found in the database|.
+        RETURN.
+      ENDIF.
+
+    ELSEIF i_filename IS NOT INITIAL.
+
+      SELECT FROM yaai_rag FIELDS id, filename, description, keywords
+        WHERE filename = @i_filename
+        INTO @ls_rag
+        UP TO 1 ROWS.                                   "#EC CI_NOORDER
+      ENDSELECT.
+
+      IF sy-subrc <> 0.
+        e_error = |File { i_filename } not found in the database|.
+        RETURN.
+      ENDIF.
+
     ENDIF.
 
     SELECT FROM yaai_rag_data FIELDS id, line_no, bin_data
@@ -179,13 +199,23 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
 
     CLEAR e_error.
 
-    SELECT id, filename
-      FROM yaai_rag
-      WHERE id = @i_id
-         OR filename = @i_filename
-      INTO @DATA(ls_rag)
-      UP TO 1 ROWS.                                     "#EC CI_NOORDER
-    ENDSELECT.
+    IF i_id IS NOT INITIAL.
+
+      SELECT SINGLE id, filename
+        FROM yaai_rag
+        WHERE id = @i_id
+        INTO @DATA(ls_rag).
+
+    ELSEIF i_filename IS NOT INITIAL.
+
+      SELECT id, filename
+        FROM yaai_rag
+        WHERE filename = @i_filename
+        INTO @ls_rag
+        UP TO 1 ROWS.                                   "#EC CI_NOORDER
+      ENDSELECT.
+
+    ENDIF.
 
     IF sy-subrc = 0.
 
@@ -278,14 +308,24 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
 
     CLEAR e_error.
 
-    SELECT FROM yaai_rag FIELDS id
-      WHERE id = @i_id
-         OR filename = @i_filename
-      INTO @DATA(l_id)
-      UP TO 1 ROWS.                                     "#EC CI_NOORDER
-    ENDSELECT.
+    IF i_id IS NOT INITIAL.
 
-    IF sy-subrc = 0.
+      SELECT SINGLE id
+        FROM yaai_rag
+        WHERE id = @i_id
+        INTO @DATA(l_id).
+
+    ELSEIF i_filename IS NOT INITIAL.
+
+      SELECT FROM yaai_rag FIELDS id
+        WHERE filename = @i_filename
+        INTO @l_id
+        UP TO 1 ROWS.                                   "#EC CI_NOORDER
+      ENDSELECT.
+
+    ENDIF.
+
+    IF l_id IS NOT INITIAL.
 
       DELETE FROM yaai_rag_data
         WHERE id = @l_id.
@@ -297,7 +337,11 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
         e_deleted = abap_true.
       ELSE.
 
-        e_error = |Document { i_id } { i_filename } not found in the database|.
+        IF i_id IS NOT INITIAL.
+          e_error = |Document { i_id } not found in the database|.
+        ELSE.
+          e_error = |Document { i_filename } not found in the database|.
+        ENDIF.
 
         RETURN.
 
@@ -305,7 +349,11 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
 
     ELSE.
 
-      e_error = |Document { i_id } { i_filename } not found in the database|.
+      IF i_id IS NOT INITIAL.
+        e_error = |Document { i_id } not found in the database|.
+      ELSE.
+        e_error = |Document { i_filename } not found in the database|.
+      ENDIF.
 
     ENDIF.
 
