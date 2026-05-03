@@ -8,6 +8,38 @@ Legend
 + : added
 - : removed
 
+
+2026-05-03
+-------------------
+
+! Autonomous Agents task tools 
+* RAG DB selection by id or filename fixed in all DB operations
+
+
+2026-04-27
+-------------------
+
++ Autonomous Agents integrated to all supported APIs
+
+
+2026-04-24
+-------------------
+
+! Autonomous Agents task tools 
+
+
+2026-04-22
+-------------------
+
++ Autonomous Agents task tools
+
+
+2026-04-21
+-------------------
+
++ OpenAI audio transcription
+
+
 2026-04-17
 -------------------
 
