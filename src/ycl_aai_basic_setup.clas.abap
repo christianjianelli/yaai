@@ -24,9 +24,12 @@ CLASS ycl_aai_basic_setup IMPLEMENTATION.
                                            ( id = 'MISTRAL' base_url = 'https://api.mistral.ai' )
                                            ( id = 'OLLAMA' base_url = 'http://192.168.1.173:11434' ) ) ) ACCEPTING DUPLICATE KEYS.
 
-    INSERT yaai_model FROM TABLE @( VALUE #( ( id = 'OPENAI' model = 'gpt-5-nano' default_model = abap_true )
-                                             ( id = 'OPENAI' model = 'gpt-5' default_model = abap_false )
-                                             ( id = 'ANTHROPIC' model = 'claude-sonnet-4-20250514' default_model = abap_true )
+    INSERT yaai_model FROM TABLE @( VALUE #( ( id = 'OPENAI' model = 'gpt-5.4-mini' default_model = abap_true )
+                                             ( id = 'OPENAI' model = 'gpt-5.4' default_model = abap_false )
+                                             ( id = 'OPENAI' model = 'gpt-5.5' default_model = abap_false )
+                                             ( id = 'ANTHROPIC' model = 'claude-sonnet-4-6' default_model = abap_true )
+                                             ( id = 'ANTHROPIC' model = 'claude-opus-4-7' default_model = abap_false )
+                                             ( id = 'ANTHROPIC' model = 'claude-haiku-4-5' default_model = abap_false )
                                              ( id = 'GOOGLE' model = 'gemini-2.5-flash' default_model = abap_true )
                                              ( id = 'MISTRAL' model = 'mistral-medium-latest' default_model = abap_true )
                                              ( id = 'MISTRAL' model = 'mistral-large-latest' default_model = abap_false )

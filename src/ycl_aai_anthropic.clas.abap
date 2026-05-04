@@ -449,6 +449,12 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
                 <ls_msg> = VALUE #( role = ls_anthropic_chat_response-role
                                     content = <ls_content>-text ).
 
+                IF e_response IS INITIAL.
+                  e_response = <ls_content>-text.
+                ELSE.
+                  e_response = |{ e_response }{ cl_abap_char_utilities=>newline }{ <ls_content>-text }|.
+                ENDIF.
+
                 IF me->_o_persistence IS BOUND.
                   me->_o_persistence->persist_message( i_data = <ls_msg>
                                                        i_tokens = l_tokens
@@ -473,6 +479,12 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
                   <ls_msg> = VALUE #( role = ls_anthropic_chat_response-role
                                       content = <ls_content_aux>-text ).
+
+                  IF e_response IS INITIAL.
+                    e_response = <ls_content_aux>-text.
+                  ELSE.
+                    e_response = |{ e_response }{ cl_abap_char_utilities=>newline }{ <ls_content_aux>-text }|.
+                  ENDIF.
 
                   IF me->_o_persistence IS BOUND.
                     me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -577,20 +589,6 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
           CONTINUE.
 
         ENDIF.
-
-        LOOP AT lt_response_content ASSIGNING <ls_content>.
-
-          CASE <ls_content>-type.
-
-            WHEN 'text'.
-
-              <ls_content>-text = lo_aai_util->replace_unicode_escape_seq( <ls_content>-text ).
-
-              e_response = |{ e_response }{ cl_abap_char_utilities=>newline }{ <ls_content>-text }|.
-
-          ENDCASE.
-
-        ENDLOOP.
 
         EXIT.
 
