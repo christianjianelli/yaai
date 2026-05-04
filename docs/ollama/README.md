@@ -125,7 +125,12 @@ The following screenshots show the output you can expect after running the examp
 ![Output of the ABAP AI Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_4.png)
 
 
-Now that you've run your first Ollama ABAP AI applications, consider exploring additional features.😊
+Now that you've run your first Ollama ABAP AI applications, consider exploring more examples and additional features.😊
+
+## More Examples
+
+[**ABAP AI tools - Usage Examples**](https://github.com/christianjianelli/yaai_examples)
+This repository contains examples that demonstrate the basic usage of the ABAP AI tools with multiple providers, including Anthropic, Google, OpenAI, Ollama, Mistral, and Nvidia.
 
 ## Explore ABAP AI Features
   - **Prompt Templates:** Learn how to define and use [prompt templates](../prompt_templates.md) for more dynamic and reusable prompts.

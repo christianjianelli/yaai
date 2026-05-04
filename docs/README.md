@@ -47,6 +47,7 @@ The ABAP AI UI repository provides interfaces to interact with LLMs directly fro
   - [Installation](installation.md): See how to install ABAP AI.
   - [Quickstart](quickstart.md): Run your first ABAP AI applications.
   - [Configuration](config.md): See how to configure Connections.
+  - [Usage Examples](https://github.com/christianjianelli/yaai_examples): This repository contains examples that demonstrate the basic usage of the ABAP AI tools with multiple providers, including Anthropic, Google, OpenAI, Ollama, Mistral, and Nvidia.
 
 ## APIs
   - [OpenAI](openai/README.md): Learn how to use ABAP AI with OpenAI models.

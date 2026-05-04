@@ -127,3 +127,8 @@ The following screenshots show the output you can expect after running the examp
 ![Output of the ABAP AI Chat quickstart application](images/QuickstartReportRunOpenAIChat_3.png)
 
 ![Output of the ABAP AI Chat quickstart application](images/QuickstartReportRunOpenAIChat_4.png)
+
+## More Examples
+
+[**ABAP AI tools - Usage Examples**](https://github.com/christianjianelli/yaai_examples)
+This repository contains examples that demonstrate the basic usage of the ABAP AI tools with multiple providers, including Anthropic, Google, OpenAI, Ollama, Mistral, and Nvidia.
