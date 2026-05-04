@@ -9,6 +9,13 @@ Legend
 - : removed
 
 
+2026-05-04
+-------------------
+
+! Basic setup updated 
+* Anthropic stateless chat minor bugfix
+
+
 2026-05-03
 -------------------
 
