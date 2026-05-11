@@ -21,6 +21,8 @@ CLASS ycl_aai_rest_stats IMPLEMENTATION.
              tools        TYPE i,
              documents    TYPE i,
              agents       TYPE i,
+             tasks        TYPE i,
+             taskflows    TYPE i,
              chats        TYPE i,
              log_messages TYPE i,
              async_tasks  TYPE i,
@@ -33,6 +35,8 @@ CLASS ycl_aai_rest_stats IMPLEMENTATION.
     SELECT COUNT( * ) FROM yaai_tool INTO @ls_response-tools.
     SELECT COUNT( * ) FROM yaai_rag INTO @ls_response-documents.
     SELECT COUNT( * ) FROM yaai_agent INTO @ls_response-agents.
+    SELECT COUNT( * ) FROM yaai_task INTO @ls_response-tasks.
+    SELECT COUNT( * ) FROM yaai_task INTO @ls_response-taskflows WHERE task_flow = @abap_true.
     SELECT COUNT( * ) FROM yaai_chat INTO @ls_response-chats.
     SELECT COUNT( * ) FROM yaai_log INTO @ls_response-log_messages.
     SELECT COUNT( * ) FROM yaai_async INTO @ls_response-async_tasks.

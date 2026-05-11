@@ -6,24 +6,24 @@ CLASS ycl_aai_rest_task_flow DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES: BEGIN OF ty_step_s,
+    TYPES: BEGIN OF ty_task_s,
              id                 TYPE string,
              task_id            TYPE string,
              task_name          TYPE string,
              previous_task_id   TYPE string,
              previous_task_name TYPE string,
-           END OF ty_step_s,
+           END OF ty_task_s,
 
-           ty_steps_t TYPE STANDARD TABLE OF ty_step_s WITH EMPTY KEY,
+           ty_tasks_t TYPE STANDARD TABLE OF ty_task_s WITH EMPTY KEY,
 
-           BEGIN OF ty_task_s,
+           BEGIN OF ty_taskflow_s,
              id          TYPE string,
              name        TYPE string,
              description TYPE string,
-             task_flow   TYPE ty_steps_t,
-           END OF ty_task_s,
+             tasks       TYPE ty_tasks_t,
+           END OF ty_taskflow_s,
 
-           ty_request_create_s TYPE ty_task_s,
+           ty_request_create_update_s TYPE ty_taskflow_s,
 
            BEGIN OF ty_response_create_s,
              created TYPE abap_bool,
@@ -41,10 +41,10 @@ CLASS ycl_aai_rest_task_flow DEFINITION
              error   TYPE string,
            END OF ty_response_delete_s,
 
-           ty_tasks_t TYPE STANDARD TABLE OF ty_task_s WITH EMPTY KEY,
+           ty_taskflow_t TYPE STANDARD TABLE OF ty_taskflow_s WITH EMPTY KEY,
 
            BEGIN OF ty_response_read_s,
-             tasks TYPE ty_tasks_t,
+             taskflows TYPE ty_taskflow_t,
            END OF ty_response_read_s.
 
     METHODS yif_aai_rest_resource~create REDEFINITION.
@@ -67,7 +67,7 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
 
   METHOD yif_aai_rest_resource~create.
 
-    DATA: ls_request  TYPE ty_request_create_s,
+    DATA: ls_request  TYPE ty_request_create_update_s,
           ls_response TYPE ty_response_create_s.
 
     DATA: l_json TYPE string,
@@ -136,11 +136,11 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
 
     ENDIF.
 
-    LOOP AT ls_request-task_flow ASSIGNING FIELD-SYMBOL(<ls_step>).
+    LOOP AT ls_request-tasks ASSIGNING FIELD-SYMBOL(<ls_task>).
 
       INSERT yaai_task_flow FROM @( VALUE #( id = l_id
-                                             task_id = <ls_step>-task_id
-                                             previous_task_id = <ls_step>-previous_task_id ) ).
+                                             task_id = <ls_task>-task_id
+                                             previous_task_id = <ls_task>-previous_task_id ) ).
 
       IF sy-subrc <> 0.
         DATA(l_rollback) = abap_true.
@@ -212,30 +212,32 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
         FROM yaai_task
         WHERE id = @l_id
           AND task_flow = @abap_true
-        INTO @DATA(ls_task).
+        INTO @DATA(ls_taskflow).
 
       IF sy-subrc = 0.
 
-        APPEND INITIAL LINE TO ls_response-tasks ASSIGNING FIELD-SYMBOL(<ls_task>).
+        APPEND INITIAL LINE TO ls_response-taskflows ASSIGNING FIELD-SYMBOL(<ls_taskflow>).
 
-        <ls_task> = CORRESPONDING #( ls_task ).
+        <ls_taskflow> = CORRESPONDING #( ls_taskflow ).
 
         SELECT a~id, a~task_id, b~name AS task_name, a~previous_task_id, c~name AS previous_task_name
           FROM yaai_task_flow AS a
           INNER JOIN yaai_task AS b
           ON a~task_id = b~id
-          INNER JOIN yaai_task AS c
+          LEFT OUTER JOIN yaai_task AS c
           ON a~previous_task_id = c~id
           WHERE a~id = @l_id
-          INTO TABLE @DATA(lt_task_flow).
+          INTO TABLE @DATA(lt_task_flow_tasks).
 
-        LOOP AT lt_task_flow ASSIGNING FIELD-SYMBOL(<ls_step>).
+        LOOP AT lt_task_flow_tasks ASSIGNING FIELD-SYMBOL(<ls_task_flow_task>).
 
-          APPEND VALUE #( id = <ls_step>-id
-                          task_id = <ls_step>-task_id
-                          task_name = <ls_step>-task_name
-                          previous_task_id = <ls_step>-previous_task_id
-                          previous_task_name = <ls_step>-previous_task_name ) TO <ls_task>-task_flow.
+          APPEND VALUE #( id = <ls_task_flow_task>-id
+                          task_id = <ls_task_flow_task>-task_id
+                          task_name = <ls_task_flow_task>-task_name
+                          previous_task_id = cond #( WHEN <ls_task_flow_task>-previous_task_id IS NOT INITIAL
+                                                     THEN <ls_task_flow_task>-previous_task_id
+                                                     ELSE space )
+                          previous_task_name = <ls_task_flow_task>-previous_task_name ) TO <ls_taskflow>-tasks.
 
         ENDLOOP.
 
@@ -251,13 +253,13 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
         FROM yaai_task
         WHERE name IN @lt_rng_name
           AND task_flow = @abap_true
-        INTO TABLE @DATA(lt_task).
+        INTO TABLE @DATA(lt_taskflow).
 
-      LOOP AT lt_task ASSIGNING FIELD-SYMBOL(<ls_task_query>).
+      LOOP AT lt_taskflow ASSIGNING FIELD-SYMBOL(<ls_taskflow_query>).
 
         IF l_description IS NOT INITIAL.
 
-          IF NOT <ls_task_query>-description CP |*{ l_description }*|.
+          IF NOT <ls_taskflow_query>-description CP |*{ l_description }*|.
 
             CONTINUE.
 
@@ -265,9 +267,9 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
 
         ENDIF.
 
-        APPEND VALUE #( id = <ls_task_query>-id
-                        name = <ls_task_query>-name
-                        description = <ls_task_query>-description ) TO ls_response-tasks.
+        APPEND VALUE #( id = <ls_taskflow_query>-id
+                        name = <ls_taskflow_query>-name
+                        description = <ls_taskflow_query>-description ) TO ls_response-taskflows.
 
       ENDLOOP.
 
@@ -291,7 +293,7 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
 
   METHOD yif_aai_rest_resource~update.
 
-    DATA: ls_request  TYPE ty_request_create_s,
+    DATA: ls_request  TYPE ty_request_create_update_s,
           ls_response TYPE ty_response_update_s.
 
     DATA: l_json TYPE string,
@@ -338,11 +340,11 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
 
     DELETE FROM yaai_task_flow WHERE id = @l_id.
 
-    LOOP AT ls_request-task_flow ASSIGNING FIELD-SYMBOL(<ls_step>).
+    LOOP AT ls_request-tasks ASSIGNING FIELD-SYMBOL(<ls_task>).
 
       INSERT yaai_task_flow FROM @( VALUE #( id = l_id
-                                             task_id = <ls_step>-task_id
-                                             previous_task_id = <ls_step>-previous_task_id ) ).
+                                             task_id = <ls_task>-task_id
+                                             previous_task_id = <ls_task>-previous_task_id ) ).
 
       IF sy-subrc <> 0.
         DATA(l_rollback) = abap_true.
@@ -409,12 +411,22 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
       ls_response-error = 'Error while deleting the task flow.'.
     ELSE.
 
-      DELETE FROM yaai_task_flow WHERE id = @l_id.
+      SELECT @abap_true FROM yaai_task_flow
+        WHERE id = @l_id
+        INTO @DATA(l_exists)
+        UP TO 1 ROWS.
+      ENDSELECT.
 
-      IF sy-subrc <> 0.
-        ls_response-deleted = abap_false.
-        ls_response-error = 'Error while deleting the task flow.'.
-        ROLLBACK WORK.
+      IF sy-subrc = 0.
+
+        DELETE FROM yaai_task_flow WHERE id = @l_id.
+
+        IF sy-subrc <> 0.
+          ls_response-deleted = abap_false.
+          ls_response-error = 'Error while deleting the task flow.'.
+          ROLLBACK WORK.
+        ENDIF.
+
       ENDIF.
 
     ENDIF.

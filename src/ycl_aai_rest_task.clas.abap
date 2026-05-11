@@ -112,8 +112,6 @@ CLASS ycl_aai_rest_task IMPLEMENTATION.
 
   METHOD yif_aai_rest_resource~read.
 
-    DATA lt_rng_name TYPE RANGE OF yaai_task-name.
-
     DATA(ls_response) = VALUE ty_response_read_s( ).
 
     DATA l_json TYPE string.
@@ -123,6 +121,9 @@ CLASS ycl_aai_rest_task IMPLEMENTATION.
     DATA(l_name) = i_o_request->get_form_field( name = 'name' ).
 
     DATA(l_description) = i_o_request->get_form_field( name = 'description' ).
+
+    l_name = to_lower( l_name ).
+    l_description = to_lower( l_description ).
 
     IF l_id IS NOT INITIAL.
 
@@ -142,21 +143,26 @@ CLASS ycl_aai_rest_task IMPLEMENTATION.
 
     ELSE.
 
-      IF l_name IS NOT INITIAL.
-        lt_rng_name = VALUE #( ( sign = 'I' option = 'CP' low = |*{ l_name }*| ) ).
-      ENDIF.
-
       SELECT id, name, description
         FROM yaai_task
-        WHERE name IN @lt_rng_name
-          AND task_flow = @space
+        WHERE task_flow = @space
         INTO TABLE @DATA(lt_task).
 
       LOOP AT lt_task ASSIGNING FIELD-SYMBOL(<ls_task>).
 
+        IF l_name IS NOT INITIAL.
+
+          IF NOT to_lower( <ls_task>-name ) CP |*{ l_name }*|.
+
+            CONTINUE.
+
+          ENDIF.
+
+        ENDIF.
+
         IF l_description IS NOT INITIAL.
 
-          IF NOT <ls_task>-description CP |*{ l_description }*|.
+          IF NOT to_lower( <ls_task>-description ) CP |*{ l_description }*|.
 
             CONTINUE.
 
