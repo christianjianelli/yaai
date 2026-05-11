@@ -47,6 +47,9 @@ CLASS ycl_aai_rest_agent DEFINITION
              filename_ctx    TYPE yde_aai_filename,
              file_ctx_descr  TYPE yde_aai_description,
              prompt_template TYPE yde_aai_prompt_template,
+             task_flow_id    TYPE string,
+             autonomous      TYPE abap_bool,
+             blocked         TYPE abap_bool,
              tools           TYPE ty_tool_t,
              docs            TYPE ty_doc_t,
              models          TYPE ty_model_t,
@@ -172,7 +175,8 @@ CLASS ycl_aai_rest_agent IMPLEMENTATION.
     IF l_agent_id IS NOT INITIAL. " Read
 
       SELECT SINGLE a~id, a~name, a~description, a~sys_inst_id, b~filename AS filename_si, b~description AS file_si_descr,
-                    a~rag_ctx_id, c~filename AS filename_ctx, c~description AS file_ctx_descr, a~prompt_template
+                    a~rag_ctx_id, c~filename AS filename_ctx, c~description AS file_ctx_descr, a~prompt_template,
+                    a~task_flow_id, a~autonomous, a~blocked
         FROM yaai_agent AS a
         LEFT OUTER JOIN yaai_rag AS b
         ON a~sys_inst_id = b~id
@@ -193,6 +197,10 @@ CLASS ycl_aai_rest_agent IMPLEMENTATION.
       ENDIF.
 
       ls_response_read-agent = CORRESPONDING #( ls_agent ).
+
+      IF ls_agent-task_flow_id IS INITIAL.
+        CLEAR ls_response_read-agent-task_flow_id.
+      ENDIF.
 
       SELECT class_name, method_name, proxy_class, description, load_on_demand
         FROM yaai_agent_tool
@@ -245,7 +253,8 @@ CLASS ycl_aai_rest_agent IMPLEMENTATION.
       ENDIF.
 
       SELECT a~id, a~name, a~description, a~sys_inst_id, b~filename AS filename_si, b~description AS file_si_descr,
-             a~rag_ctx_id, c~filename AS filename_ctx, c~description AS file_ctx_descr, a~prompt_template
+             a~rag_ctx_id, c~filename AS filename_ctx, c~description AS file_ctx_descr, a~prompt_template,
+             a~task_flow_id, a~autonomous, a~blocked
         FROM yaai_agent AS a
         LEFT OUTER JOIN yaai_rag AS b
         ON a~sys_inst_id = b~id
@@ -257,9 +266,17 @@ CLASS ycl_aai_rest_agent IMPLEMENTATION.
         INTO TABLE @DATA(lt_agent)
         UP TO 100 ROWS.
 
-      IF lt_agent IS NOT INITIAL.
-        ls_response_query-agents = CORRESPONDING #( lt_agent ).
-      ENDIF.
+      LOOP AT lt_agent ASSIGNING FIELD-SYMBOL(<ls_agent>).
+
+        APPEND INITIAL LINE TO ls_response_query-agents ASSIGNING FIELD-SYMBOL(<ls_agent_query>).
+
+        <ls_agent_query> = CORRESPONDING #( <ls_agent> ).
+
+        IF <ls_agent>-task_flow_id IS INITIAL.
+          CLEAR <ls_agent_query>-task_flow_id.
+        ENDIF.
+
+      ENDLOOP.
 
       l_json = /ui2/cl_json=>serialize(
         EXPORTING
