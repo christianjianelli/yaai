@@ -9,6 +9,22 @@ Legend
 - : removed
 
 
+2026-05-11
+-------------------
+
+! Task REST resource updated 
+! Taskflow REST resource updated
+! Tasks and Taskflow added to Stats REST read
+! Taskflow Id, Autonomous and Blocked fields added to Agent REST resource
+
+
+2026-05-07
+-------------------
+
++ Task REST resource created 
++ Taskflow REST resource created
+
+
 2026-05-04
 -------------------
 
