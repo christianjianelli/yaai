@@ -130,19 +130,40 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
     r_content = i_content.
 
-    " In order to find unicode escape sequences, the regex should have a escaped backslash like '\\u[0-9A-Fa-f]{4}',
-    " but for some reason, on the ABAP WebAS version 7.52, the method deserialize of the class /ui2/cl_json removes it,
-    " instead of replacing the unicode escape sequence by the corresponding unicode character. This is the reason why this method was implemented.
-    FIND ALL OCCURRENCES OF REGEX 'u[0-9A-Fa-f]{4}' IN i_content RESULTS DATA(lt_matches).
+    " Unicode escape sequences are not replaced during the JSON deserialization
+    FIND ALL OCCURRENCES OF REGEX '\\u[0-9A-Fa-f]{4}' IN i_content RESULTS DATA(lt_matches).
 
     LOOP AT lt_matches ASSIGNING FIELD-SYMBOL(<ls_match>).
 
-      DATA(l_offset) = <ls_match>-offset + 1.
-      DATA(l_length) = <ls_match>-length - 1.
+      DATA(l_offset) = <ls_match>-offset + 2.
+      DATA(l_length) = 4.
 
       DATA(l_hexa) = i_content+l_offset(l_length).
 
       DATA(l_character) = cl_abap_conv_in_ce=>uccp( to_upper( l_hexa ) ).
+
+      l_offset = <ls_match>-offset.
+      l_length = <ls_match>-length.
+
+      REPLACE ALL OCCURRENCES OF i_content+l_offset(l_length) IN r_content WITH l_character.
+
+    ENDLOOP.
+
+    FREE lt_matches.
+
+    " Unicode escape sequences should have a escaped backslash like '\\u',
+    " but the JSON deserialization done by the class /ui2/cl_json sometimes removes it.
+    " Here we try to find and replace them.
+    FIND ALL OCCURRENCES OF REGEX 'u[0-9A-Fa-f]{4}' IN i_content RESULTS lt_matches.
+
+    LOOP AT lt_matches ASSIGNING <ls_match>.
+
+      l_offset = <ls_match>-offset + 1.
+      l_length = 4.
+
+      l_hexa = i_content+l_offset(l_length).
+
+      l_character = cl_abap_conv_in_ce=>uccp( to_upper( l_hexa ) ).
 
       l_offset = <ls_match>-offset.
       l_length = <ls_match>-length.
