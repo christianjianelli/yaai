@@ -9,6 +9,12 @@ Legend
 - : removed
 
 
+2026-05-13
+-------------------
+ 
+! Unicode escape sequence replacement method changed to also replace sequences with escaped backslashes
+
+
 2026-05-11
 -------------------
 
