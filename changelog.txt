@@ -9,6 +9,13 @@ Legend
 - : removed
 
 
+2026-05-17
+-------------------
+ 
++ Autonomous Agent field added to Agent REST resource
+* Wrong async chat class fixed for Mistral agent execution in the class YCL_AAI_AGENT
+
+
 2026-05-13
 -------------------
  
