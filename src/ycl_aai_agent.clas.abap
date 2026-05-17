@@ -115,7 +115,7 @@ CLASS ycl_aai_agent IMPLEMENTATION.
 
       WHEN yif_aai_const=>c_mistral.
 
-        l_classname = 'YCL_AAI_ASYNC_CHAT_OPENAI'.
+        l_classname = 'YCL_AAI_ASYNC_CHAT_MISTRAL'.
 
       WHEN yif_aai_const=>c_ollama.
 

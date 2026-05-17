@@ -50,6 +50,8 @@ CLASS ycl_aai_rest_agent DEFINITION
              task_flow_id    TYPE string,
              autonomous      TYPE abap_bool,
              blocked         TYPE abap_bool,
+             start_message   TYPE string,
+             hitl_message    TYPE string,
              tools           TYPE ty_tool_t,
              docs            TYPE ty_doc_t,
              models          TYPE ty_model_t,
@@ -176,7 +178,7 @@ CLASS ycl_aai_rest_agent IMPLEMENTATION.
 
       SELECT SINGLE a~id, a~name, a~description, a~sys_inst_id, b~filename AS filename_si, b~description AS file_si_descr,
                     a~rag_ctx_id, c~filename AS filename_ctx, c~description AS file_ctx_descr, a~prompt_template,
-                    a~task_flow_id, a~autonomous, a~blocked
+                    a~task_flow_id, a~start_message, a~hitl_message, a~autonomous, a~blocked
         FROM yaai_agent AS a
         LEFT OUTER JOIN yaai_rag AS b
         ON a~sys_inst_id = b~id
@@ -254,7 +256,7 @@ CLASS ycl_aai_rest_agent IMPLEMENTATION.
 
       SELECT a~id, a~name, a~description, a~sys_inst_id, b~filename AS filename_si, b~description AS file_si_descr,
              a~rag_ctx_id, c~filename AS filename_ctx, c~description AS file_ctx_descr, a~prompt_template,
-             a~task_flow_id, a~autonomous, a~blocked
+             a~task_flow_id, a~start_message, a~hitl_message, a~autonomous, a~blocked
         FROM yaai_agent AS a
         LEFT OUTER JOIN yaai_rag AS b
         ON a~sys_inst_id = b~id
