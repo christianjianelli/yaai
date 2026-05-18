@@ -9,6 +9,15 @@ Legend
 - : removed
 
 
+2026-05-18
+-------------------
+
++ Agent task flow added to Chat REST resource
++ New Run option added to method run_autonomously of yif_aai_agent and ycl_aai_agent 
++ New Run checkbox added to report yr_aai_agent_run
++ Agent Task tools added to basic setup class
+
+
 2026-05-17
 -------------------
  
