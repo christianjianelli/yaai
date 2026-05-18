@@ -34,11 +34,22 @@ CLASS ycl_aai_rest_chat DEFINITION
              description TYPE string,
            END OF ty_tool_s,
 
-           ty_msg_t   TYPE STANDARD TABLE OF ty_msg_s WITH EMPTY KEY,
+           BEGIN OF ty_task_flow_s,
+             id                 TYPE string,
+             task_id            TYPE string,
+             task_name          TYPE yde_aai_task_name,
+             previous_task_id   TYPE string,
+             previous_task_name TYPE yde_aai_task_name,
+             task_status        TYPE yde_aai_task_status,
+           END OF ty_task_flow_s,
 
-           ty_log_t   TYPE STANDARD TABLE OF ty_log_s WITH EMPTY KEY,
+           ty_task_flow_t TYPE STANDARD TABLE OF ty_task_flow_s WITH EMPTY KEY,
 
-           ty_tools_t TYPE STANDARD TABLE OF ty_tool_s WITH EMPTY KEY,
+           ty_msg_t       TYPE STANDARD TABLE OF ty_msg_s WITH EMPTY KEY,
+
+           ty_log_t       TYPE STANDARD TABLE OF ty_log_s WITH EMPTY KEY,
+
+           ty_tools_t     TYPE STANDARD TABLE OF ty_tool_s WITH EMPTY KEY,
 
            BEGIN OF ty_chat_query_s,
              id         TYPE string,
@@ -64,6 +75,7 @@ CLASS ycl_aai_rest_chat DEFINITION
              messages    TYPE ty_msg_t,
              log         TYPE ty_log_t,
              tools       TYPE ty_tools_t,
+             task_flow   TYPE ty_task_flow_t,
            END OF ty_chat_s,
 
            BEGIN OF ty_response_read_s,
@@ -201,6 +213,39 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
 
       IF sy-subrc = 0.
         ls_response_read-chat-tools = CORRESPONDING #( lt_tools ).
+      ENDIF.
+
+      SELECT a~id, a~chat_id, a~task_id, b~name AS task_name, a~previous_task_id, c~name AS previous_task_name, a~status
+        FROM yaai_agent_task AS a
+        INNER JOIN yaai_task AS b
+        ON a~task_id = b~id
+        LEFT OUTER JOIN yaai_task AS c
+        ON a~previous_task_id = c~id
+       WHERE chat_id = @l_chat_id
+        INTO TABLE @DATA(lt_agent_tasks_db).
+
+      IF lt_agent_tasks_db IS NOT INITIAL.
+
+        DATA(lt_tasks_sorted) = NEW ycl_aai_agent_task_tools( )->sort( i_t_flow = CORRESPONDING #( lt_agent_tasks_db ) ).
+
+        ls_response_read-chat-task_flow = CORRESPONDING #( lt_tasks_sorted ).
+
+        LOOP AT ls_response_read-chat-task_flow ASSIGNING FIELD-SYMBOL(<ls_task_flow>).
+
+          READ TABLE lt_agent_tasks_db ASSIGNING FIELD-SYMBOL(<ls_agent_tasks_db>)
+            WITH KEY task_id = <ls_task_flow>-task_id
+                     previous_task_id = <ls_task_flow>-previous_task_id.
+
+          IF sy-subrc = 0.
+
+            <ls_task_flow>-task_name = <ls_agent_tasks_db>-task_name.
+            <ls_task_flow>-previous_task_name = <ls_agent_tasks_db>-previous_task_name.
+            <ls_task_flow>-task_status = <ls_agent_tasks_db>-status.
+
+          ENDIF.
+
+        ENDLOOP.
+
       ENDIF.
 
       ls_response_read-chats = VALUE #( ( id = ls_response_read-chat-id

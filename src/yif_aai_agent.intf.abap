@@ -24,7 +24,8 @@ INTERFACE yif_aai_agent
   CLASS-METHODS run_autonomously
     IMPORTING
       i_agent_id TYPE yaai_agent-id
-      i_api      TYPE yaai_api-id.
+      i_api      TYPE yaai_api-id
+      i_new_run  TYPE abap_bool DEFAULT abap_false.
 
   METHODS get_system_instructions
     IMPORTING

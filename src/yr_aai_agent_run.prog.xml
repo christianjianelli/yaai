@@ -35,6 +35,12 @@
      <LENGTH>9</LENGTH>
      <SPLIT>D</SPLIT>
     </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_NEW</KEY>
+     <ENTRY>New Run</ENTRY>
+     <LENGTH>15</LENGTH>
+    </item>
    </TPOOL>
   </asx:values>
  </asx:abap>

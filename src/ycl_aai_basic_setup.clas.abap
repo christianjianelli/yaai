@@ -24,6 +24,10 @@ CLASS ycl_aai_basic_setup IMPLEMENTATION.
                                            ( id = 'MISTRAL' base_url = 'https://api.mistral.ai' )
                                            ( id = 'OLLAMA' base_url = 'http://192.168.1.173:11434' ) ) ) ACCEPTING DUPLICATE KEYS.
 
+    IF sy-dbcnt > 0.
+      out->write( |{ sy-dbcnt } APIs inserted into table yaai_api.| ).
+    ENDIF.
+
     INSERT yaai_model FROM TABLE @( VALUE #( ( id = 'OPENAI' model = 'gpt-5.4-mini' default_model = abap_true )
                                              ( id = 'OPENAI' model = 'gpt-5.4' default_model = abap_false )
                                              ( id = 'OPENAI' model = 'gpt-5.5' default_model = abap_false )
@@ -34,6 +38,10 @@ CLASS ycl_aai_basic_setup IMPLEMENTATION.
                                              ( id = 'MISTRAL' model = 'mistral-medium-latest' default_model = abap_true )
                                              ( id = 'MISTRAL' model = 'mistral-large-latest' default_model = abap_false )
                                              ( id = 'OLLAMA' model = 'gemma3:1b' default_model = abap_true ) ) ) ACCEPTING DUPLICATE KEYS.
+
+    IF sy-dbcnt > 0.
+      out->write( |{ sy-dbcnt } models inserted into table yaai_model.| ).
+    ENDIF.
 
     INSERT yaai_tool FROM TABLE @( VALUE #( ( class_name = 'YCL_AAI_FUNC_CALL_TOOLS'
                                               method_name = 'GET_AVAILABLE_TOOLS'
@@ -75,7 +83,19 @@ CLASS ycl_aai_basic_setup IMPLEMENTATION.
                                               method_name = 'DELETE_PLAN'
                                               description = 'Use this tool to delete a plan.' )
 
+                                            ( class_name = 'YCL_AAI_AGENT_TASK_TOOLS'
+                                              method_name = 'GET_TASKS'
+                                              description = 'Use this tool to get the tasks assigned to your task flow.' )
+
+                                            ( class_name = 'YCL_AAI_AGENT_TASK_TOOLS'
+                                              method_name = 'UPDATE_TASK_STATUS'
+                                              description = 'Use this tool to update the tasks status (C = Finished, P = In Progress, E = Failed).' )
+
                                                    ) ) ACCEPTING DUPLICATE KEYS.
+
+    IF sy-dbcnt > 0.
+      out->write( |{ sy-dbcnt } tools inserted into table yaai_tool.| ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

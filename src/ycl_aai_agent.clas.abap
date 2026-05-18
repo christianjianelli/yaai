@@ -65,6 +65,10 @@ CLASS ycl_aai_agent IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    IF i_new_run = abap_true.
+      UPDATE yaai_agent_task SET status = 'C' WHERE id = @i_agent_id.
+    ENDIF.
+
     l_task_name = ls_agent-name.
 
     SELECT chat_id

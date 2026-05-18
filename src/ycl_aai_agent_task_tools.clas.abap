@@ -35,6 +35,12 @@ CLASS ycl_aai_agent_task_tools DEFINITION
                 i_task_status     TYPE yde_aai_task_status
       RETURNING VALUE(r_response) TYPE string.
 
+    METHODS sort
+      IMPORTING
+        i_t_flow        TYPE ty_task_flow_t
+      RETURNING
+        VALUE(r_t_flow) TYPE ty_task_flow_t.
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -183,6 +189,12 @@ CLASS ycl_aai_agent_task_tools IMPLEMENTATION.
                                                             previous_task_id = <ls_task>-previous_task_id ) ).
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD sort.
+
+    r_t_flow = me->_sort_topological( i_t_flow = i_t_flow ).
 
   ENDMETHOD.
 
