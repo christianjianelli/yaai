@@ -412,7 +412,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
           ENDLOOP.
 
-          IF l_tool_calls = me->_max_tool_calls.
+          IF l_tool_calls >= me->_max_tool_calls.
 
             APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
 

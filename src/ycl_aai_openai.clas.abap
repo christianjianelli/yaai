@@ -537,7 +537,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         IF l_function_call = abap_true.
 
-          IF l_tool_calls = me->_max_tool_calls.
+          IF l_tool_calls >= me->_max_tool_calls.
 
             APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
 
@@ -1005,7 +1005,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         IF l_function_call = abap_true.
 
-          IF l_tool_calls = me->_max_tool_calls.
+          IF l_tool_calls >= me->_max_tool_calls.
 
             APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
 
