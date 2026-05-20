@@ -17,4 +17,5 @@ START-OF-SELECTION.
     EXPORTING
       i_agent_id = CONV #( p_agent )
       i_api      = p_api
+      i_new_run  = p_new
   ).

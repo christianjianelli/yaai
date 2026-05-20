@@ -139,7 +139,10 @@ CLASS ycl_aai_agent_task_tools IMPLEMENTATION.
     ENDIF.
 
     UPDATE yaai_agent_task
-      SET status = @i_task_status
+      SET status = @i_task_status,
+          changed_by = @sy-uname,
+          changed_on = @sy-datum,
+          changed_at = @sy-uzeit
       WHERE id = @me->_o_agent->m_agent_id
         AND chat_id = @me->_o_agent->m_chat_id
         AND task_id = @i_task_id.
