@@ -60,7 +60,8 @@ CLASS ycl_aai_openai DEFINITION
   PRIVATE SECTION.
 
     DATA: _o_connection  TYPE REF TO yif_aai_conn,
-          _o_persistence TYPE REF TO yif_aai_db.
+          _o_persistence TYPE REF TO yif_aai_db,
+          _o_log         TYPE REF TO ycl_aai_log.
 
     DATA: _model                         TYPE string,
           _use_completions               TYPE abap_bool VALUE abap_false,
@@ -80,6 +81,10 @@ CLASS ycl_aai_openai DEFINITION
 
     METHODS _load_agent_settings.
 
+    METHODS _log
+      IMPORTING
+        i_s_msg TYPE bapiret2.
+
 ENDCLASS.
 
 
@@ -92,19 +97,32 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     IF i_model IS NOT INITIAL.
       me->_model = i_model.
     ELSE.
+
       DATA(l_id) = yif_aai_const=>c_openai.
+
       IF i_api IS NOT INITIAL.
         l_id = i_api.
       ENDIF.
-      SELECT model FROM yaai_model
+
+      SELECT model
+        FROM yaai_model
         WHERE id = @l_id
           AND default_model = @abap_true
          INTO @me->_model
          UP TO 1 ROWS.                                  "#EC CI_NOORDER
       ENDSELECT.
+
       IF sy-subrc <> 0.
-        me->_model = 'gpt-5-nano'. " default model
+
+        SELECT model
+          FROM yaai_model
+          WHERE id = @l_id
+           INTO @me->_model
+           UP TO 1 ROWS.                                "#EC CI_NOORDER
+        ENDSELECT.
+
       ENDIF.
+
     ENDIF.
 
     me->_messages = i_t_history.
@@ -233,13 +251,32 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     me->_system_instructions_role = 'system'.
 
     IF me->_model IS INITIAL.
+
+      DATA(l_api) = yif_aai_const=>c_openai.
+
+      IF me->_o_connection IS BOUND.
+        l_api = me->_o_connection->m_api.
+      ENDIF.
+
+      me->_log( i_s_msg = VALUE #( number = '018' message_v1 = l_api ) ).
+
+      MESSAGE ID 'YAAI' TYPE 'E' NUMBER '018' WITH l_api INTO DATA(l_error_018).
+
+      RAISE EVENT on_message_failed
+        EXPORTING
+          error_text = l_error_018.
+
       RETURN.
+
     ENDIF.
 
     IF me->_o_persistence IS BOUND AND
        me->_o_persistence->is_chat_blocked( ).
+
       RAISE EVENT on_chat_is_blocked.
-      EXIT.
+
+      RETURN.
+
     ENDIF.
 
     IF i_new = abap_true.
@@ -710,13 +747,26 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     FREE e_t_response.
 
     IF me->_model IS INITIAL.
+
+      me->_log( i_s_msg = VALUE #( number = '018' message_v1 = yif_aai_const=>c_openai ) ).
+
+      MESSAGE ID 'YAAI' TYPE 'E' NUMBER '018' WITH yif_aai_const=>c_openai INTO DATA(l_error_018).
+
+      RAISE EVENT on_message_failed
+        EXPORTING
+          error_text = l_error_018.
+
       RETURN.
+
     ENDIF.
 
     IF me->_o_persistence IS BOUND AND
        me->_o_persistence->is_chat_blocked( ).
+
       RAISE EVENT on_chat_is_blocked.
-      EXIT.
+
+      RETURN.
+
     ENDIF.
 
     IF i_new = abap_true.
@@ -1333,6 +1383,29 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         i_system_instructions = l_system_instructions
       ).
 
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD _log.
+
+    IF me->_o_log IS NOT BOUND.
+      me->_o_log = NEW #( ).
+    ENDIF.
+
+    me->_o_log->add( i_s_msg = i_s_msg ).
+
+    IF sy-msgid IS NOT INITIAL AND
+       sy-msgty IS NOT INITIAL AND
+       sy-msgno IS NOT INITIAL.
+
+      me->_o_log->add( VALUE #( id = sy-msgid
+                                type = sy-msgty
+                                number = sy-msgno
+                                message_v1 = sy-msgv1
+                                message_v2 = sy-msgv2
+                                message_v3 = sy-msgv3
+                                message_v4 = sy-msgv4 ) ).
     ENDIF.
 
   ENDMETHOD.

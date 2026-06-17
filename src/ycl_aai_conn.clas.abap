@@ -44,7 +44,7 @@ CLASS ycl_aai_conn DEFINITION
           _response TYPE string.
 
     METHODS
-      log
+      _log
         IMPORTING
           i_s_msg              TYPE bapiret2
           i_log_system_message TYPE abap_bool DEFAULT abap_false.
@@ -186,7 +186,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     IF sy-subrc <> 0.
 
-      me->log( i_s_msg = VALUE #( number = '001' )
+      me->_log( i_s_msg = VALUE #( number = '001' )
                i_log_system_message = abap_true ).
 
       RAISE EVENT on_connection_error.
@@ -303,7 +303,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     IF sy-subrc <> 0.
 
-      me->log( i_s_msg = VALUE #( number = '002' )
+      me->_log( i_s_msg = VALUE #( number = '002' )
                i_log_system_message = abap_true ).
 
       e_failed = abap_true.
@@ -338,7 +338,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     ELSE.
 
-      me->log( i_s_msg = VALUE #( number = '002' )
+      me->_log( i_s_msg = VALUE #( number = '002' )
                i_log_system_message = abap_true ).
 
       RAISE EVENT on_connection_error.
@@ -357,7 +357,7 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD log.
+  METHOD _log.
 
     IF me->mo_log IS NOT BOUND.
       me->mo_log = NEW #( ).
