@@ -192,7 +192,7 @@ CLASS ycl_aai_async IMPLEMENTATION.
     SELECT id, chat_id, status, username, startdate, starttime
       FROM yaai_async
       WHERE chat_id = @i_chat_id
-      INTO CORRESPONDING FIELDS OF TABLE @r_t_tasks.
+      INTO CORRESPONDING FIELDS OF TABLE @r_t_tasks. "#EC CI_NOFIELD
 
   ENDMETHOD.
 

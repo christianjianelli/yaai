@@ -167,7 +167,7 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
         FROM yaai_agent_plan
         WHERE chat_id = @l_chat_id
         INTO @DATA(ls_agent_plan)
-        UP TO 1 ROWS.
+        UP TO 1 ROWS.                                   "#EC CI_NOFIRST
       ENDSELECT.
 
       IF sy-subrc = 0.

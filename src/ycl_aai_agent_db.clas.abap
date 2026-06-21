@@ -28,8 +28,9 @@ CLASS ycl_aai_agent_db IMPLEMENTATION.
 
     SELECT id FROM yaai_agent
       WHERE name = @i_s_agent-name
+      ORDER BY PRIMARY KEY
       INTO @DATA(l_id)
-      UP TO 1 ROWS.
+      UP TO 1 ROWS.                                     "#EC CI_NOFIELD
     ENDSELECT.
 
     IF sy-subrc = 0.
@@ -146,14 +147,27 @@ CLASS ycl_aai_agent_db IMPLEMENTATION.
           e_s_agent,
           e_t_agent_tools.
 
-    SELECT FROM yaai_agent FIELDS id, name, description, sys_inst_id, rag_ctx_id
-      WHERE id = @i_agent_id
-         OR name = @i_agent_name
-      INTO CORRESPONDING FIELDS OF @e_s_agent
-      UP TO 1 ROWS.                                     "#EC CI_NOORDER
-    ENDSELECT.
 
-    IF sy-subrc <> 0.
+    IF i_agent_id IS NOT INITIAL.
+
+      SELECT FROM yaai_agent FIELDS id, name, description, sys_inst_id, rag_ctx_id
+        WHERE id = @i_agent_id
+         INTO CORRESPONDING FIELDS OF @e_s_agent
+        UP TO 1 ROWS.
+      ENDSELECT.
+
+    ELSEIF i_agent_name IS NOT INITIAL.
+
+      SELECT FROM yaai_agent FIELDS id, name, description, sys_inst_id, rag_ctx_id
+        WHERE name = @i_agent_name
+        ORDER BY PRIMARY KEY
+         INTO CORRESPONDING FIELDS OF @e_s_agent
+        UP TO 1 ROWS.                                   "#EC CI_NOFIELD
+      ENDSELECT.
+
+    ENDIF.
+
+    IF e_s_agent IS INITIAL.
 
       e_error = COND #( WHEN i_agent_id IS SUPPLIED
                         THEN |Agent { i_agent_id } not found in the database|

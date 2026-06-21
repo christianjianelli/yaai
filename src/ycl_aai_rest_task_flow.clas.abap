@@ -234,7 +234,7 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
           APPEND VALUE #( id = <ls_task_flow_task>-id
                           task_id = <ls_task_flow_task>-task_id
                           task_name = <ls_task_flow_task>-task_name
-                          previous_task_id = cond #( WHEN <ls_task_flow_task>-previous_task_id IS NOT INITIAL
+                          previous_task_id = COND #( WHEN <ls_task_flow_task>-previous_task_id IS NOT INITIAL
                                                      THEN <ls_task_flow_task>-previous_task_id
                                                      ELSE space )
                           previous_task_name = <ls_task_flow_task>-previous_task_name ) TO <ls_taskflow>-tasks.
@@ -253,7 +253,7 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
         FROM yaai_task
         WHERE name IN @lt_rng_name
           AND task_flow = @abap_true
-        INTO TABLE @DATA(lt_taskflow).
+        INTO TABLE @DATA(lt_taskflow).                  "#EC CI_NOFIELD
 
       LOOP AT lt_taskflow ASSIGNING FIELD-SYMBOL(<ls_taskflow_query>).
 

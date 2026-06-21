@@ -100,7 +100,7 @@ CLASS ycl_aai_rest_async_task IMPLEMENTATION.
         WHERE startdate IN @lt_rng_date
           AND username IN @lt_rng_username
           INTO TABLE @DATA(lt_async)
-          UP TO 100 ROWS.
+          UP TO 100 ROWS.                               "#EC CI_NOFIELD
 
       LOOP AT lt_async ASSIGNING FIELD-SYMBOL(<ls_async>).
 

@@ -146,7 +146,7 @@ CLASS ycl_aai_rest_task IMPLEMENTATION.
       SELECT id, name, description
         FROM yaai_task
         WHERE task_flow = @space
-        INTO TABLE @DATA(lt_task).
+        INTO TABLE @DATA(lt_task).                      "#EC CI_NOFIELD
 
       LOOP AT lt_task ASSIGNING FIELD-SYMBOL(<ls_task>).
 

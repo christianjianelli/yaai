@@ -190,8 +190,9 @@ CLASS ycl_aai_agent IMPLEMENTATION.
       SELECT id, name, sys_inst_id
         FROM yaai_agent
         WHERE name = @i_agent_name
+        ORDER BY PRIMARY KEY
         INTO CORRESPONDING FIELDS OF @ls_agent
-        UP TO 1 ROWS.                                   "#EC CI_NOORDER
+        UP TO 1 ROWS.                                   "#EC CI_NOFIELD
       ENDSELECT.
 
     ENDIF.
@@ -290,8 +291,9 @@ CLASS ycl_aai_agent IMPLEMENTATION.
       SELECT id, name, prompt_template
         FROM yaai_agent
         WHERE name = @i_agent_name
+        ORDER BY PRIMARY KEY
         INTO CORRESPONDING FIELDS OF @ls_agent
-        UP TO 1 ROWS.                                   "#EC CI_NOORDER
+        UP TO 1 ROWS.                                   "#EC CI_NOFIELD
       ENDSELECT.
 
     ENDIF.

@@ -241,7 +241,7 @@ CLASS ycl_aai_agent_task_tools IMPLEMENTATION.
 
     "--- Step 3: Seed queue with root tasks (in-degree = 0) ---"
     LOOP AT lt_indegree ASSIGNING FIELD-SYMBOL(<ls_root>)
-      WHERE indegree = 0.
+      WHERE indegree = 0.                               "#EC CI_HASHSEQ
 
       APPEND <ls_root>-task_id TO lt_queue.
 

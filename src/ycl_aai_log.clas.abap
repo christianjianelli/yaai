@@ -30,7 +30,7 @@ ENDCLASS.
 
 CLASS ycl_aai_log IMPLEMENTATION.
 
-   METHOD constructor.
+  METHOD constructor.
 
     IF i_chat_id IS SUPPLIED.
       me->m_chat_id = i_chat_id.
@@ -183,7 +183,8 @@ CLASS ycl_aai_log IMPLEMENTATION.
 
   METHOD yif_aai_log~delete_expired_logs.
 
-    DELETE FROM yaai_log WHERE expiry_date < @sy-datum.
+    DELETE FROM yaai_log                                "#EC CI_NOFIELD
+      WHERE expiry_date < @sy-datum.                    "#EC CI_NOWHERE
 
   ENDMETHOD.
 

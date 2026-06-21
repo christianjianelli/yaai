@@ -47,8 +47,9 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
 
       SELECT id FROM yaai_rag
         WHERE filename = @i_filename
+        ORDER BY PRIMARY KEY
         INTO @DATA(l_id)
-        UP TO 1 ROWS.
+        UP TO 1 ROWS.                                   "#EC CI_NOFIELD
       ENDSELECT.
 
       IF sy-subrc = 0.
@@ -123,8 +124,9 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
 
       SELECT FROM yaai_rag FIELDS id, filename, description, keywords
         WHERE filename = @i_filename
+        ORDER BY PRIMARY KEY
         INTO @ls_rag
-        UP TO 1 ROWS.                                   "#EC CI_NOORDER
+        UP TO 1 ROWS.                                   "#EC CI_NOFIELD
       ENDSELECT.
 
       IF sy-subrc <> 0.
@@ -211,8 +213,9 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
       SELECT id, filename
         FROM yaai_rag
         WHERE filename = @i_filename
+        ORDER BY PRIMARY KEY
         INTO @ls_rag
-        UP TO 1 ROWS.                                   "#EC CI_NOORDER
+        UP TO 1 ROWS.                                   "#EC CI_NOFIELD
       ENDSELECT.
 
     ENDIF.
@@ -319,8 +322,9 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
 
       SELECT FROM yaai_rag FIELDS id
         WHERE filename = @i_filename
+        ORDER BY PRIMARY KEY
         INTO @l_id
-        UP TO 1 ROWS.                                   "#EC CI_NOORDER
+        UP TO 1 ROWS.                                   "#EC CI_NOFIELD
       ENDSELECT.
 
     ENDIF.
@@ -384,7 +388,7 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
       WHERE filename IN @lt_rng_filename
         AND description IN @lt_rng_description
         AND keywords IN @lt_rng_keywords
-        INTO TABLE @DATA(lt_documents).
+        INTO TABLE @DATA(lt_documents).                 "#EC CI_NOFIELD
 
     e_t_documents = CORRESPONDING #( lt_documents ).
 
