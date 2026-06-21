@@ -9,6 +9,32 @@ Legend
 - : removed
 
 
+2026-06-21
+-------------------
+
+* ATC warnings corrections and pseudo comments.
+
+
+2026-06-17
+-------------------
+
+* Missing model configuration error logging implemented. 
+
+
+2026-05-20
+-------------------
+
+* Table YAAI_AGENT_TASK field names correction.
+* Agent tasks execution update in table yaai_agent_task fixed to record the last change date, time, user.   
+* Parameters i_new_run passed to the ycl_aai_agent=>run_autonomously method.
+
+
+2026-05-19
+-------------------
+
+! Max tools calls verification changed to check whether the current number of tool calls is greater or equal the configured limit of calls.
+
+
 2026-05-18
 -------------------
 
