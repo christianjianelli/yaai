@@ -22,6 +22,7 @@ INTERFACE yif_aai_ollama
 
   TYPES: BEGIN OF ty_options_s,
            temperature TYPE p LENGTH 2 DECIMALS 1,
+           num_ctx     TYPE i,
          END OF ty_options_s,
 
          BEGIN OF ty_ollama_generate_request_s,
@@ -76,6 +77,10 @@ INTERFACE yif_aai_ollama
   METHODS set_model
     IMPORTING
       i_model TYPE csequence.
+
+  METHODS set_context_length
+    IMPORTING
+      i_context_length TYPE i.
 
   METHODS set_temperature
     IMPORTING

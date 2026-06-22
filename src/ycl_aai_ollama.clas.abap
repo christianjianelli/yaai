@@ -13,6 +13,7 @@ CLASS ycl_aai_ollama DEFINITION
     ALIASES on_chat_is_blocked FOR yif_aai_chat~on_chat_is_blocked.
 
     ALIASES set_model FOR yif_aai_ollama~set_model.
+    ALIASES set_context_length FOR yif_aai_ollama~set_context_length.
     ALIASES set_temperature FOR yif_aai_ollama~set_temperature.
     ALIASES set_system_instructions FOR yif_aai_ollama~set_system_instructions.
     ALIASES set_connection FOR yif_aai_ollama~set_connection.
@@ -50,6 +51,7 @@ CLASS ycl_aai_ollama DEFINITION
 
     DATA: _model                    TYPE string,
           _temperature              TYPE p LENGTH 2 DECIMALS 1,
+          _num_ctx                  TYPE i,
           _system_instructions      TYPE string,
           _ollama_chat_response     TYPE yif_aai_ollama~ty_ollama_chat_response_s,
           _ollama_generate_response TYPE yif_aai_ollama~ty_ollama_generate_response_s,
@@ -111,6 +113,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     me->_temperature = 1.
 
+    me->_num_ctx = 4096.
+
     me->_max_tool_calls = 10.
 
     IF i_o_connection IS SUPPLIED.
@@ -142,6 +146,12 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
   METHOD yif_aai_ollama~set_model.
 
     me->_model = i_model.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_ollama~set_context_length.
+
+    me->_num_ctx = i_context_length.
 
   ENDMETHOD.
 
@@ -354,7 +364,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
         ENDIF.
 
         DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_chat_request_s( model = me->_model
-                                                                                                       options = VALUE #( temperature = me->_temperature )
+                                                                                                       options = VALUE #( temperature = me->_temperature
+                                                                                                                          num_ctx = me->_num_ctx )
                                                                                                        messages = me->_chat_messages
                                                                                                        tools = l_tools ) ).
 
@@ -400,6 +411,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           IF me->_o_persistence IS BOUND.
 
             me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_tokens = me->_ollama_chat_response-eval_count + me->_ollama_chat_response-prompt_eval_count
                                                  i_async_task_id = i_async_task_id
                                                  i_model = CONV #( me->_model ) ).
 
@@ -485,9 +497,9 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
                             content = me->_ollama_chat_response-message-content ).
 
         IF me->_o_persistence IS BOUND.
-          " persist the user message and the augmented prompt
+
           me->_o_persistence->persist_message( i_data = <ls_msg>
-                                               i_prompt = ls_prompt
+                                               i_tokens = me->_ollama_chat_response-eval_count + me->_ollama_chat_response-prompt_eval_count
                                                i_async_task_id = i_async_task_id
                                                i_model = CONV #( me->_model ) ).
         ENDIF.
