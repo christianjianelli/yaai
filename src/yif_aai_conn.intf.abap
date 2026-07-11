@@ -100,4 +100,8 @@ INTERFACE yif_aai_conn
     EXPORTING
       e_http_client TYPE REF TO if_http_client.
 
+  METHODS fetch_oauth_token
+      RETURNING
+        VALUE(r_token) TYPE string.
+
 ENDINTERFACE.

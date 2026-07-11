@@ -77,7 +77,7 @@ CLASS ycl_aai_agent IMPLEMENTATION.
         AND status <> 'C'
         INTO @DATA(l_chat_id)
         UP TO 1 ROWS.
-    ENDSELECT.
+    ENDSELECT.                      "#EC CI_NOORDER
 
     DATA(lo_aai_async) = NEW ycl_aai_async( ).
 
@@ -321,7 +321,7 @@ CLASS ycl_aai_agent IMPLEMENTATION.
           AND b~api = @i_api
         INTO CORRESPONDING FIELDS OF @r_s_model
         UP TO 1 ROWS.
-      ENDSELECT.
+      ENDSELECT.                                          "#EC CI_NOORDER
 
     ENDIF.
 

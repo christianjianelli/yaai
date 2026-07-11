@@ -475,6 +475,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         lo_aai_util->deserialize(
           EXPORTING
             i_json = l_json
+            i_camel_case = abap_true
           IMPORTING
             e_data = me->_openai_chat_comp_response
         ).

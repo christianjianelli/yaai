@@ -26,6 +26,7 @@ CLASS ycl_aai_conn DEFINITION
     ALIASES set_ssl_id FOR yif_aai_conn~set_ssl_id.
     ALIASES get_error_text FOR yif_aai_conn~get_error_text.
     ALIASES get_http_client FOR yif_aai_conn~get_http_client.
+    ALIASES fetch_oauth_token FOR yif_aai_conn~fetch_oauth_token.
 
 
     METHODS
@@ -113,6 +114,22 @@ CLASS ycl_aai_conn IMPLEMENTATION.
             AND numb = '0000'
            INTO @me->m_base_url.
 
+      WHEN yif_aai_const=>c_mistral.
+
+        SELECT SINGLE low FROM tvarvc
+          WHERE name = @yif_aai_const=>c_mistral_base_url_param
+            AND type = 'P'
+            AND numb = '0000'
+           INTO @me->m_base_url.
+
+      WHEN yif_aai_const=>c_sap_ai_core.
+
+        SELECT SINGLE low FROM tvarvc
+          WHERE name = @yif_aai_const=>c_sap_ai_core_base_url_param
+            AND type = 'P'
+            AND numb = '0000'
+           INTO @me->m_base_url.
+
       WHEN OTHERS.
 
         l_name = |YAAI_{ i_api }|.
@@ -150,6 +167,12 @@ CLASS ycl_aai_conn IMPLEMENTATION.
       ENDIF.
 
       me->set_api_key( i_api_key = me->mo_api_key->read( me->m_api ) ).
+
+      IF me->_api_key IS INITIAL.
+
+        me->set_api_key( i_api_key = me->fetch_oauth_token( ) ).
+
+      ENDIF.
 
     ENDIF.
 
@@ -462,6 +485,124 @@ CLASS ycl_aai_conn IMPLEMENTATION.
   METHOD get_http_client.
 
     e_http_client = me->_o_http_client.
+
+  ENDMETHOD.
+
+  METHOD yif_aai_conn~fetch_oauth_token.
+
+    CLEAR r_token.
+
+    SELECT SINGLE id, base_url, client_id, client_secret
+      FROM yaai_oauth
+      WHERE id = @me->m_api
+      INTO @DATA(ls_oauth).
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    DATA(l_url) = |{ ls_oauth-base_url }/oauth/token|.
+
+    DATA(l_credentials) = |{ ls_oauth-client_id }:{ ls_oauth-client_secret }|.
+
+    DATA(l_encoded) = cl_http_utility=>encode_base64( unencoded = l_credentials ).
+
+    "encode_base64 may append a newline — strip it to avoid corrupting the auth header
+    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN l_encoded WITH ''.
+
+    CONDENSE l_encoded NO-GAPS.
+
+    DATA lo_http TYPE REF TO if_http_client.
+
+    cl_http_client=>create_by_url(
+      EXPORTING
+        url                = l_url
+        ssl_id             = me->m_ssl_id
+      IMPORTING
+        client             = lo_http
+      EXCEPTIONS
+        argument_not_found = 1
+        plugin_not_active  = 2
+        internal_error     = 3
+        OTHERS             = 4
+    ).
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    lo_http->request->set_method( if_http_request=>co_request_method_post ).
+
+    lo_http->request->set_header_field(
+      name  = 'Authorization'
+      value = |Basic { l_encoded }|
+    ).
+
+    lo_http->request->set_header_field(
+      name  = 'Content-Type'
+      value = 'application/x-www-form-urlencoded'
+    ).
+
+    lo_http->request->set_cdata(
+      data = 'grant_type=client_credentials'
+    ).
+
+    lo_http->send(
+      EXCEPTIONS
+        http_communication_failure = 1
+        http_invalid_state         = 2
+        OTHERS                     = 3
+    ).
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    lo_http->receive(
+      EXCEPTIONS
+        http_communication_failure = 1
+        http_invalid_state         = 2
+        http_processing_failed     = 3
+        OTHERS                     = 4
+    ).
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    DATA(l_response) = lo_http->response->get_cdata( ).
+
+    lo_http->close( ).
+
+    "Parse access_token from JSON response by finding the value between quotes
+    "Response format: {"access_token":"<token>","token_type":"Bearer",...}
+    DATA: l_search TYPE string,
+          l_pos    TYPE i,
+          l_len    TYPE i,
+          l_start  TYPE i,
+          l_rest   TYPE string,
+          l_end    TYPE i,
+          l_token  TYPE string.
+
+    l_search = `"access_token":"`.
+
+    FIND l_search IN l_response MATCH OFFSET l_pos MATCH LENGTH l_len.
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    l_start = l_pos + l_len.
+
+    l_rest  = l_response+l_start.
+
+    FIND `"` IN l_rest MATCH OFFSET l_end.
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    r_token = l_rest(l_end).
 
   ENDMETHOD.
 

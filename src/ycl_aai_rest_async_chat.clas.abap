@@ -100,6 +100,10 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
 
           lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_ollama ).
 
+        WHEN yif_aai_const=>c_sap_ai_core.
+
+          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_sap_ai_core ).
+
         WHEN OTHERS.
 
           ls_response-error = |LLM API { ls_request-api } is not supported.|.

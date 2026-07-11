@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>YCL_AAI_ASYNC_CHAT_MISTRAL</CLSNAME>
+    <CLSNAME>YCL_AAI_ASYNC_CHAT_SAP_AI_CORE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ABAP AI tools - Async Chat Mistral</DESCRIPT>
+    <DESCRIPT>ABAP AI tools - Async Chat SAP AI Core</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

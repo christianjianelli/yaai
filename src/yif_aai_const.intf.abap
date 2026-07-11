@@ -31,7 +31,12 @@ INTERFACE yif_aai_const
 
   "Mistral
   CONSTANTS: c_mistral                   TYPE string VALUE 'MISTRAL',
-             c_mistral_base_url_param    TYPE string VALUE 'YAAI_MISTRAL_BASE_URL',
-             c_mistral_messages_endpoint TYPE string VALUE '/v1/chat/completions'.
+             c_mistral_base_url_param    TYPE string VALUE 'YAAI_MISTRAL_BASE_URL'.
+
+  "SAP AI Core
+  CONSTANTS: c_sap_ai_core                TYPE string VALUE 'SAP_AI_CORE',
+             c_sap_ai_core_base_url_param TYPE string VALUE 'YAAI_SAP_AI_CORE_BASE_URL',
+             c_sap_ai_core_resource_group TYPE string VALUE 'default',
+             c_sap_ai_core_res_grp_param  TYPE string VALUE 'YAAI_SAP_AI_CORE_RESOURCE_GRP'.
 
 ENDINTERFACE.

@@ -9,11 +9,18 @@ CLASS ycl_aai_rest_llm_api DEFINITION INHERITING FROM ycl_aai_rest_base
              default_model TYPE abap_bool,
            END OF ty_model_s,
 
+           BEGIN OF ty_oauth_s,
+             base_url      TYPE string,
+             client_id     TYPE string,
+             client_secret TYPE string,
+           END OF ty_oauth_s,
+
            ty_model_t TYPE STANDARD TABLE OF ty_model_s WITH EMPTY KEY,
 
            BEGIN OF ty_api_s,
              id       TYPE string,
              base_url TYPE string,
+             oauth    TYPE ty_oauth_s,
              models   TYPE ty_model_t,
            END OF ty_api_s,
 
@@ -69,33 +76,49 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
         WHERE id = @l_id
         INTO CORRESPONDING FIELDS OF TABLE @<ls_api>-models.
 
+      SELECT SINGLE base_url, client_id, client_secret
+        FROM yaai_oauth
+        WHERE id = @l_id
+        INTO CORRESPONDING FIELDS OF @<ls_api>-oauth.
+
     ELSE.
 
       SELECT id, base_url
         FROM yaai_api
         INTO TABLE @DATA(lt_apis).                      "#EC CI_NOWHERE
 
-      SELECT id, model, default_model
-        FROM yaai_model
-        ORDER BY PRIMARY KEY
-        INTO CORRESPONDING FIELDS OF TABLE @lt_models.  "#EC CI_NOWHERE
+      IF sy-subrc = 0.
 
-      LOOP AT lt_apis ASSIGNING FIELD-SYMBOL(<ls_api_db>).
+        SELECT id, model, default_model
+          FROM yaai_model
+          FOR ALL ENTRIES IN @lt_apis
+          WHERE id = @lt_apis-id
+          ORDER BY PRIMARY KEY
+          INTO CORRESPONDING FIELDS OF TABLE @lt_models. "#EC CI_NO_TRANSFORM
 
-        APPEND INITIAL LINE TO ls_response-apis ASSIGNING <ls_api>.
+        LOOP AT lt_apis ASSIGNING FIELD-SYMBOL(<ls_api_db>).
 
-        <ls_api>-id = <ls_api_db>-id.
-        <ls_api>-base_url = <ls_api_db>-base_url.
+          APPEND INITIAL LINE TO ls_response-apis ASSIGNING <ls_api>.
 
-        LOOP AT lt_models ASSIGNING FIELD-SYMBOL(<ls_model_db>)
-          WHERE id = <ls_api_db>-id.
+          <ls_api>-id = <ls_api_db>-id.
+          <ls_api>-base_url = <ls_api_db>-base_url.
 
-          APPEND VALUE #( model = <ls_model_db>-model
-                          default_model = <ls_model_db>-default_model ) TO <ls_api>-models.
+          SELECT SINGLE base_url, client_id, client_secret
+            FROM yaai_oauth
+            WHERE id = @<ls_api>-id
+            INTO CORRESPONDING FIELDS OF @<ls_api>-oauth.
+
+          LOOP AT lt_models ASSIGNING FIELD-SYMBOL(<ls_model_db>)
+            WHERE id = <ls_api_db>-id.
+
+            APPEND VALUE #( model = <ls_model_db>-model
+                            default_model = <ls_model_db>-default_model ) TO <ls_api>-models.
+
+          ENDLOOP.
 
         ENDLOOP.
 
-      ENDLOOP.
+      ENDIF.
 
     ENDIF.
 
@@ -130,7 +153,8 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
   METHOD yif_aai_rest_resource~update.
 
     DATA: ls_request  TYPE ty_api_s,
-          ls_response TYPE ty_response_update_s.
+          ls_response TYPE ty_response_update_s,
+          ls_oauth    TYPE yaai_oauth.
 
     DATA(l_json) = i_o_request->get_cdata( ).
 
@@ -152,6 +176,29 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
       ls_response-updated = abap_true.
     ELSE.
       "TODO: handle error
+    ENDIF.
+
+    IF ls_request-oauth-client_id IS NOT INITIAL AND
+       ls_request-oauth-client_secret IS NOT INITIAL.
+
+      ls_oauth-id = ls_request-id.
+      ls_oauth-base_url = ls_request-oauth-base_url.
+      ls_oauth-client_id = ls_request-oauth-client_id.
+      ls_oauth-client_secret = ls_request-oauth-client_secret.
+
+      MODIFY yaai_oauth FROM @ls_oauth.
+
+    ELSE.
+
+      SELECT SINGLE @abap_true
+        FROM yaai_oauth
+        WHERE id = @ls_request-id
+        INTO @DATA(l_exist).
+
+      IF sy-subrc = 0.
+        DELETE FROM yaai_oauth WHERE id = @ls_request-id.
+      ENDIF.
+
     ENDIF.
 
     DELETE FROM yaai_model
