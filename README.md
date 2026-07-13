@@ -251,6 +251,3 @@ This repository contains examples that demonstrate the basic usage of the ABAP A
 ## Contributing
 
   This project aims to bring AI capabilities into ABAP, and contributions from the community are highly welcome. Everyone is welcome to contribute. More details are found in [Contributing](CONTRIBUTING.md).
-
-## Star History
-![Star History Chart](https://api.star-history.com/svg?repos=christianjianelli/yaai&type=Date)
