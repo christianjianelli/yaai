@@ -129,18 +129,6 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
        pretty_name = /ui2/cl_json=>pretty_mode-camel_case
     ).
 
-    IF ls_response-apis IS INITIAL.
-
-      i_o_response->set_status(
-        EXPORTING
-          code = 404
-          reason = 'Not Found'
-      ).
-
-      RETURN.
-
-    ENDIF.
-
     i_o_response->set_content_type( content_type = 'application/json' ).
 
     i_o_response->set_cdata(
