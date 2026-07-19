@@ -6,7 +6,7 @@
 
 ## Quickstart
 
-### Running Your First ABAP AI Google Gemini Application
+### Running Your First ABAP AI tools Google Gemini Application
 
 This quickstart demonstrates how to create a simple LLM application. It shows you how to connect to the LLM and perform a basic chat interaction.
 
@@ -17,10 +17,10 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
     **Note**: To run the application on SAP NetWeaver AS ABAP Developer Edition, we recommend using NGINX as a reverse proxy to expose a local HTTP endpoint—it’s much simpler than manually configuring SSL on the SAP system.
 
 **Steps:**
-1.  Create an ABAP AI Connection instance;
+1.  Create an ABAP AI tools Connection instance;
 2.  Set the Base URL;
 3.  Set the API Key;
-4.  Create an ABAP AI Google Gemini instance;
+4.  Create an ABAP AI tools Google Gemini instance;
 5.  Call the CHAT method.
 
 **Example:**
@@ -38,7 +38,7 @@ o_aai_conn->set_api_key( i_api_key = 'REPLACE_THIS_TEXT_WITH_YOUR_GOOGLE_GEMINI_
 
 o_aai_conn->yif_aai_conn~suppress_content_type( ).
 
-DATA(o_aai_google) = NEW ycl_aai_google( i_model = 'gemini-2.5-flash'
+DATA(o_aai_google) = NEW ycl_aai_google( i_model = 'gemini-3.5-flash'
                                          i_o_connection = o_aai_conn ).
 
 o_aai_google->chat(
@@ -57,21 +57,21 @@ ENDLOOP.
 
 **Result:**
 
-The following screenshot shows the output you can expect after running the example ABAP AI report. The response from the LLM will be displayed line by line in the SAP GUI output window.
+The following screenshot shows the output you can expect after running the example ABAP AI tools report. The response from the LLM will be displayed line by line in the SAP GUI output window.
 
-![Output of the ABAP AI LLM quickstart application](../images/QuickstartReportRunGoogle.png)
+![Output of the ABAP AI tools LLM quickstart application](../images/QuickstartReportRunGoogle.png)
 
 
-### Running a simple ABAP AI Google Gemini Chat Application
+### Running a simple ABAP AI tools Google Gemini Chat Application
 
-The ABAP AI Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
+The ABAP AI tools Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
 
 ```abap
 REPORT yaai_r_simple_llm_chat_google.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
 
-PARAMETERS: p_model  TYPE string DEFAULT 'gemini-2.5-flash' LOWER CASE VISIBLE LENGTH 20,
+PARAMETERS: p_model  TYPE string DEFAULT 'gemini-3.5-flash' LOWER CASE VISIBLE LENGTH 20,
             p_prompt TYPE string DEFAULT 'What is the capital of Italy?' LOWER CASE VISIBLE LENGTH 50.
 
 SELECTION-SCREEN: SKIP 1,
@@ -96,7 +96,7 @@ INITIALIZATION.
 
   o_aai_conn->yif_aai_conn~suppress_content_type( ).
 
-  DATA(o_aai_google) = NEW ycl_aai_google( i_model = 'gemini-2.5-flash'
+  DATA(o_aai_google) = NEW ycl_aai_google( i_model = 'gemini-3.5-flash'
                                            i_o_connection = o_aai_conn ).
 
 AT SELECTION-SCREEN.
@@ -113,21 +113,21 @@ AT SELECTION-SCREEN.
 
 **Result:**
 
-The following screenshots show the output you can expect after running the example ABAP AI Chat report.
+The following screenshots show the output you can expect after running the example ABAP AI tools Chat report.
 
-![Output of the ABAP AI Google Gemini quickstart application](../images/QuickstartReportRunGoogleChat_1.png)
+![Output of the ABAP AI tools Google Gemini quickstart application](../images/QuickstartReportRunGoogleChat_1.png)
 
-![Output of the ABAP AI Google Gemini quickstart application](../images/QuickstartReportRunGoogleChat_2.png)
+![Output of the ABAP AI tools Google Gemini quickstart application](../images/QuickstartReportRunGoogleChat_2.png)
 
 
-Now that you've run your first Google Gemini ABAP AI applications, consider exploring more examples and additional features.😊
+Now that you've run your first Google Gemini ABAP AI tools applications, consider exploring more examples and additional features.😊
 
 ## More Examples
 
 [**ABAP AI tools - Usage Examples**](https://github.com/christianjianelli/yaai_examples)
 This repository contains examples that demonstrate the basic usage of the ABAP AI tools with multiple providers, including Anthropic, Google, OpenAI, Ollama, Mistral, and Nvidia.
 
-## Explore ABAP AI Features
+## Explore ABAP AI tools Features
   - **Prompt Templates:** Learn how to define and use [prompt templates](../prompt_templates.md) for more dynamic and reusable prompts.
   - **LLM System Instructions:** Pass [system instructions](system_instructions.md) to guide the behavior of the language model for specific tasks.
   - **Tool/Function Calling:** Enable LLM applications to trigger ABAP logic using [tools](function_calling.md).

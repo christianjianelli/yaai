@@ -28,7 +28,7 @@ Example entries in TVARVC:
 
 ### Automatic Instantiation
 
-If the configuration parameters are properly maintained, the ABAP AI framework will automatically create and manage the `Connection` instance for you. In most cases, you do not need to instantiate the object manually—simply use the relevant ABAP AI APIs, and the connection will be handled internally.
+If the configuration parameters are properly maintained, the ABAP AI tools framework will automatically create and manage the `Connection` instance for you. In most cases, you do not need to instantiate the object manually—simply use the relevant ABAP AI tools APIs, and the connection will be handled internally.
 
 ### Manual Instantiation
 

@@ -16,8 +16,8 @@ In Google AI Studio, click on "Get API Key".
 4. **Copy and store your API key securely**  
    Copy the generated API key and keep it in a secure place.
 
-5. **Use your API key in your ABAP AI application**  
-   When configuring your ABAP AI connection, provide the API key as shown in the examples.
+5. **Use your API key in your ABAP AI tools application**  
+   When configuring your ABAP AI tools connection, provide the API key as shown in the examples.
 
 
 > **Warning:** Never share your API key publicly or commit it to version control. Treat it as a sensitive secret.

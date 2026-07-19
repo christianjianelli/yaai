@@ -17,10 +17,10 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
     **Note**: To run the application on SAP NetWeaver AS ABAP Developer Edition, we recommend using NGINX as a reverse proxy to expose a local HTTP endpoint—it’s much simpler than manually configuring SSL on the SAP system.
 
 **Steps:**
-1.  Create an ABAP AI Connection instance;
+1.  Create an ABAP AI tools Connection instance;
 2.  Set the Base URL;
 3.  Set the API Key;
-4.  Create an ABAP AI Anthropic instance;
+4.  Create an ABAP AI tools Anthropic instance;
 5.  Call the CHAT method.
 
 **Example:**
@@ -56,14 +56,14 @@ START-OF-SELECTION.
 
 **Result:**
 
-The following screenshot shows the output you can expect after running the example ABAP AI report. The response from the LLM will be displayed line by line in the SAP GUI output window.
+The following screenshot shows the output you can expect after running the example ABAP AI tools report. The response from the LLM will be displayed line by line in the SAP GUI output window.
 
-![Output of the ABAP AI LLM quickstart application](../images/QuickstartReportRunAnthropic.png)
+![Output of the ABAP AI tools LLM quickstart application](../images/QuickstartReportRunAnthropic.png)
 
 
-### Running a simple ABAP AI Anthropic Chat Application
+### Running a simple ABAP AI tools Anthropic Chat Application
 
-The ABAP AI Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
+The ABAP AI Chat tools stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
 
 ```abap
 REPORT yaai_simple_llm_chat_anthropic.
@@ -122,24 +122,24 @@ AT SELECTION-SCREEN.
 
 **Result:**
 
-The following screenshots show the output you can expect after running the example ABAP AI Chat report.
+The following screenshots show the output you can expect after running the example ABAP AI tools Chat report.
 
-![Output of the ABAP AI OpenAI Chat quickstart application](../images/QuickstartReportRunAnthropicChat_1.png)
+![Output of the ABAP AI tools OpenAI Chat quickstart application](../images/QuickstartReportRunAnthropicChat_1.png)
 
-![Output of the ABAP AI OpenAI Chat quickstart application](../images/QuickstartReportRunAnthropicChat_2.png)
+![Output of the ABAP AI tools OpenAI Chat quickstart application](../images/QuickstartReportRunAnthropicChat_2.png)
 
-![Output of the ABAP AI OpenAI Chat quickstart application](../images/QuickstartReportRunAnthropicChat_3.png)
+![Output of the ABAP AI tools OpenAI Chat quickstart application](../images/QuickstartReportRunAnthropicChat_3.png)
 
-![Output of the ABAP AI OpenAI Chat quickstart application](../images/QuickstartReportRunAnthropicChat_4.png)
+![Output of the ABAP AI tools OpenAI Chat quickstart application](../images/QuickstartReportRunAnthropicChat_4.png)
 
-Now that you've run your first Anthropic ABAP AI applications, consider exploring more examples and additional features.😊
+Now that you've run your first Anthropic ABAP AI tools applications, consider exploring more examples and additional features.😊
 
 ## More Examples
 
 [**ABAP AI tools - Usage Examples**](https://github.com/christianjianelli/yaai_examples)
 This repository contains examples that demonstrate the basic usage of the ABAP AI tools with multiple providers, including Anthropic, Google, OpenAI, Ollama, Mistral, and Nvidia.
 
-## Explore ABAP AI Features
+## Explore ABAP AI tools Features
   - **Prompt Templates:** Learn how to define and use [prompt templates](../prompt_templates.md) for more dynamic and reusable prompts.
   - **LLM System Instructions:** Pass [system instructions](system_instructions.md) to guide the behavior of the language model for specific tasks.
   - **Tool Use/Function Calling:** Enable LLM applications to trigger ABAP logic via [tool use](function_calling.md).

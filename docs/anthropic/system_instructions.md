@@ -2,7 +2,7 @@
 
 ## Overview
 
-System instructions (also known as "system prompts") are special messages provided to a Large Language Model (LLM) to guide its behavior, tone, or constraints during a conversation. In ABAP AI, you can pass system instructions to the LLM using the `set_system_instructions` method of the `ycl_aai_anthropic` class.
+System instructions (also known as "system prompts") are special messages provided to a Large Language Model (LLM) to guide its behavior, tone, or constraints during a conversation. In ABAP AI tools, you can pass system instructions to the LLM using the `set_system_instructions` method of the `ycl_aai_anthropic` class.
 
 ## Purpose
 

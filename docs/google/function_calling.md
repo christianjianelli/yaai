@@ -1,10 +1,10 @@
 # yaai - ABAP AI tools - Function Calling - Google Gemini
 
-The ABAP AI function calling feature integrates Google Gemini's function calling capabilities with ABAP global classes, enabling large language models (LLMs) to invoke ABAP instance methods programmatically. This allows for dynamic, AI-driven workflows where LLMs can request the execution of ABAP logic and receive structured results.
+The ABAP AI tools function calling feature integrates Google Gemini's function calling capabilities with ABAP global classes, enabling large language models (LLMs) to invoke ABAP instance methods programmatically. This allows for dynamic, AI-driven workflows where LLMs can request the execution of ABAP logic and receive structured results.
 
 ## Overview
 
-Google Gemini function calling enables LLMs to interact with external functions by describing them in a machine-readable format. In the ABAP AI context, this means exposing ABAP class methods as callable functions. The ABAP AI framework serializes method signatures and parameters, allowing the LLM to understand available methods and their expected inputs.
+Google Gemini function calling enables LLMs to interact with external functions by describing them in a machine-readable format. In the ABAP AI tools context, this means exposing ABAP class methods as callable functions. The ABAP AI tools framework serializes method signatures and parameters, allowing the LLM to understand available methods and their expected inputs.
 
 Supported parameter types:
 - Scalar types (e.g., `STRING`, `INT4`, `P`, `D`, `C`, ...)
@@ -17,7 +17,7 @@ Supported parameter types:
     Create a global class with instance methods you want to expose. Ensure method parameters are scalar, flat structures, or flat tables. The method can only have `IMPORTING` parameters; `EXPORTING` and `CHANGING` parameters are not supported. The method must have a `RETURNING` parameter named `R_RESPONSE` of type `STRING`.
 
 2. **Register the Class/Method**  
-    Use the ABAP AI framework to register the class and method for function calling.  
+    Use the ABAP AI tools framework to register the class and method for function calling.  
     The method `add_methods` of the class `ycl_aai_func_call_google` must be used to register the methods you want to expose for function calling.  
     The framework will generate a function schema compatible with Google Gemini.
 
@@ -29,17 +29,17 @@ Supported parameter types:
     ```    
 
 3. **Bind Tools to Google Gemini**  
-    The ABAP AI Google Gemini `bind_tools` method expects an object (instance) of the class `ycl_aai_func_call_google` as its argument. This object manages the registration and invocation of ABAP methods as callable tools for Gemini function calling.
+    The ABAP AI tools Google Gemini `bind_tools` method expects an object (instance) of the class `ycl_aai_func_call_google` as its argument. This object manages the registration and invocation of ABAP methods as callable tools for Gemini function calling.
 
     ```abap
     lo_aai_google->bind_tools( lo_function_calling ).
     ```
 
 4. **Describe Functions to Google Gemini**  
-    The ABAP AI framework provides a JSON schema describing available methods and their parameters. This schema is sent to the Google Gemini API as part of the function calling setup.
+    The ABAP AI tools framework provides a JSON schema describing available methods and their parameters. This schema is sent to the Google Gemini API as part of the function calling setup.
 
 5. **Invoke via LLM**  
-    When the LLM determines a function call is needed, it returns a function call request with parameter values. The ABAP AI framework parses this request and invokes the corresponding ABAP method.
+    When the LLM determines a function call is needed, it returns a function call request with parameter values. The ABAP AI tools framework parses this request and invokes the corresponding ABAP method.
 
 6. **Return Result**  
     The ABAP method is executed, and its result is returned in the `R_RESPONSE` RETURNING parameter of type `STRING`. This value is then sent back to the LLM as the function call response.
@@ -133,7 +133,7 @@ START-OF-SELECTION.
 
 ### Overview
 
-ABAP AI Tools supports the execution of ABAP logic via Large Language Models (LLMs) by allowing methods to be called dynamically. However, because ABAP is a strongly typed language, the parameters expected by ABAP methods must be in precise formats and types.
+ABAP AI tools supports the execution of ABAP logic via Large Language Models (LLMs) by allowing methods to be called dynamically. However, because ABAP is a strongly typed language, the parameters expected by ABAP methods must be in precise formats and types.
 
 LLMs, on the other hand, often struggle to provide perfectly formatted values. To bridge this gap and avoid runtime errors (e.g. type conversion errors, short dumps), we introduce the Proxy Class Pattern.
 
@@ -153,7 +153,7 @@ A minor mismatch in types or formats (e.g., a string `"10.00"` instead of a numb
 
 ### Solution: Proxy Class Interface
 
-To prevent type mismatch issues, ABAP AI Tools allows you to define a Proxy Class alongside your concrete implementation.
+To prevent type mismatch issues, ABAP AI tools allows you to define a Proxy Class alongside your concrete implementation.
 
  - The **Concrete Class** is used to generate the **JSON Schema** that will be sent to the LLM, ensuring it understands the method signature and data format.
 
@@ -238,9 +238,9 @@ ENDCLASS.
 ```
 ### How It Works Internally
 
-1. Schema Generation: ABAP AI Tools uses **RTTI (Runtime Type Information)** to inspect the concrete class method signature and generate a JSON schema.
+1. Schema Generation: ABAP AI tools uses **RTTI (Runtime Type Information)** to inspect the concrete class method signature and generate a JSON schema.
 
-2. Execution: When the LLM returns a tool call, ABAP AI Tools:
+2. Execution: When the LLM returns a tool call, ABAP AI tools:
   - Calls the proxy class method with the LLM-provided input values.
   - Inside the proxy, the values are validated and/or converted.
   - Finally, the concrete class logic is invoked with the correctly typed parameters.

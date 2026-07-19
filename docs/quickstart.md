@@ -1,6 +1,6 @@
 # yaai - ABAP AI tools - Quickstart
 
-## Running Your First ABAP AI Application
+## Running Your First ABAP AI tools Application
 
 This quickstart demonstrates how to create a simple LLM application. It shows you how to connect to the LLM and perform a basic chat interaction.
 
@@ -11,10 +11,10 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
     **Note**: To run the application on SAP NetWeaver AS ABAP Developer Edition, we recommend using NGINX as a reverse proxy to expose a local HTTP endpoint—it’s much simpler than manually configuring SSL on the SAP system.
 
 **Steps:**
-1.  Create an ABAP AI Connection instance;
+1.  Create an ABAP AI tools Connection instance;
 2.  Set the Base URL;
 3.  Set the API Key;
-4.  Create an ABAP AI OpenAI instance;
+4.  Create an ABAP AI tools OpenAI instance;
 5.  Call the CHAT method.
 
 **Complete Example:**
@@ -50,14 +50,14 @@ START-OF-SELECTION.
 
 **Result:**
 
-The following screenshot shows the output you can expect after running the example ABAP AI report. The response from the LLM will be displayed line by line in the SAP GUI output window.
+The following screenshot shows the output you can expect after running the example ABAP AI tools report. The response from the LLM will be displayed line by line in the SAP GUI output window.
 
-![Output of the ABAP AI LLM quickstart application](images/QuickstartReportRunOpenAI.png)
+![Output of the ABAP AI tools LLM quickstart application](images/QuickstartReportRunOpenAI.png)
 
 
-## Running a simple ABAP AI Chat Application
+## Running a simple ABAP AI tools Chat Application
 
-The ABAP AI Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
+The ABAP AI tools Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
 
 ### Complete Example
 
@@ -120,13 +120,13 @@ AT SELECTION-SCREEN.
 
 The following screenshots show the output you can expect after running the example ABAP AI Chat report.
 
-![Output of the ABAP AI Chat quickstart application](images/QuickstartReportRunOpenAIChat_1.png)
+![Output of the ABAP AI tools Chat quickstart application](images/QuickstartReportRunOpenAIChat_1.png)
 
-![Output of the ABAP AI Chat quickstart application](images/QuickstartReportRunOpenAIChat_2.png)
+![Output of the ABAP AI tools Chat quickstart application](images/QuickstartReportRunOpenAIChat_2.png)
 
-![Output of the ABAP AI Chat quickstart application](images/QuickstartReportRunOpenAIChat_3.png)
+![Output of the ABAP AI tools Chat quickstart application](images/QuickstartReportRunOpenAIChat_3.png)
 
-![Output of the ABAP AI Chat quickstart application](images/QuickstartReportRunOpenAIChat_4.png)
+![Output of the ABAP AI tools Chat quickstart application](images/QuickstartReportRunOpenAIChat_4.png)
 
 ## More Examples
 

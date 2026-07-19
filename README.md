@@ -30,22 +30,22 @@ These features empower you to build intelligent, enterprise-ready ABAP applicati
 Configuring AI agents in ABAP AI tools involves maintaining a bunch of database tables. To make this whole process easier, the ABAP AI tools Cockpit was built. It’s a frontend application designed to streamline the development of AI agents created with ABAP AI tools.
 
 <p>
-  <img src="./docs/images/screenshot-cockpit-home.jpg" alt="ABAP AI UI Chat" width="500px">
+  <img src="./docs/images/screenshot-cockpit-home.jpg" alt="ABAP AI tools UI Chat" width="500px">
 </p>
 
 [**ABAP AI tools - Function Calling Library**](https://github.com/christianjianelli/yaai_fc)
 A comprehensive function calling library designed specifically for AI agents to interact with ABAP Dictionary (DDIC) objects and related development artifacts in SAP ABAP environments. This library bridges the gap between natural language instructions and ABAP development operations, allowing AI agents to create, modify, and manage ABAP Dictionary objects and other ABAP development artifacts like message classes and translations, on the user's behalf.
 
 [**ABAP AI tools - User Interface**](https://github.com/christianjianelli/yaai_ui)
-The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
+The ABAP AI tools UI repository provides interfaces to interact with LLMs directly from your SAP system.
   
 <p>
-  <img src="docs/images/abap_ai_ui_chat.png" alt="ABAP AI UI Chat" width="500px">
-  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Chat</a>
+  <img src="docs/images/abap_ai_ui_chat.png" alt="ABAP AI tools UI Chat" width="500px">
+  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI tools Chat</a>
   <br>
   <br>
   <img src="docs/images/yaai_ui_code_assist.png" alt="ABAP AI UI Code Assistant" width="500px">
-  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Code Assistant</a>
+  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI tools Code Assistant</a>
 </p>
 
 ## Installation
@@ -87,7 +87,7 @@ You have now successfully installed the `ABAP AI tools!`
 
 ## Quickstart
 
-### Running Your First ABAP AI Application
+### Running Your First ABAP AI tools Application
 
 This quickstart demonstrates how to create a simple LLM application. It shows you how to connect to the LLM and perform a basic chat interaction.
 
@@ -98,10 +98,10 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
     **Note**: To run the application on SAP NetWeaver AS ABAP Developer Edition, we recommend using NGINX as a reverse proxy to expose a local HTTP endpoint—it’s much simpler than manually configuring SSL on the SAP system.
 
 **Steps:**
-1.  Create an ABAP AI Connection instance;
+1.  Create an ABAP AI tools Connection instance;
 2.  Set the Base URL;
 3.  Set the API Key;
-4.  Create an ABAP AI OpenAI instance;
+4.  Create an ABAP AI tools OpenAI instance;
 5.  Call the CHAT method.
 
 **Complete Example:**
@@ -137,14 +137,14 @@ START-OF-SELECTION.
 
 **Result:**
 
-The following screenshot shows the output you can expect after running the example ABAP AI report. The response from the LLM will be displayed line by line in the SAP GUI output window.
+The following screenshot shows the output you can expect after running the example ABAP AI tools report. The response from the LLM will be displayed line by line in the SAP GUI output window.
 
-![Output of the ABAP AI LLM quickstart application](docs/images/QuickstartReportRunOpenAI.png)
+![Output of the ABAP AI tools LLM quickstart application](docs/images/QuickstartReportRunOpenAI.png)
 
 
-### Running a simple ABAP AI Chat Application
+### Running a simple ABAP AI tools Chat Application
 
-The ABAP AI Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
+The ABAP AI tools Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
 
 #### Complete Example
 
@@ -205,15 +205,15 @@ AT SELECTION-SCREEN.
 
 **Result:**
 
-The following screenshots show the output you can expect after running the example ABAP AI Chat report.
+The following screenshots show the output you can expect after running the example ABAP AI tools Chat report.
 
-![Output of the ABAP AI Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_1.png)
+![Output of the ABAP AI tools Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_1.png)
 
-![Output of the ABAP AI Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_2.png)
+![Output of the ABAP AI tools Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_2.png)
 
-![Output of the ABAP AI Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_3.png)
+![Output of the ABAP AI tools Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_3.png)
 
-![Output of the ABAP AI Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_4.png)
+![Output of the ABAP AI tools Chat quickstart application](docs/images/QuickstartReportRunOpenAIChat_4.png)
 
 
 ### More Examples
@@ -223,19 +223,19 @@ This repository contains examples that demonstrate the basic usage of the ABAP A
 
 ## Next Steps
 
-  Now that you've run your first ABAP AI applications, consider exploring additional features. 😊
+  Now that you've run your first ABAP AI tools applications, consider exploring additional features. 😊
 
   ### Choose Your API:
 
   To get started with your preferred API, check out the dedicated guides:
 
-  - [OpenAI](docs/openai/README.md): Learn how to use ABAP AI with OpenAI models.
-  - [Anthropic](docs/anthropic/README.md): Learn how to use ABAP AI with Anthropic models.
-  - [Google Gemini](docs/google/README.md): Learn how to use ABAP AI with Google Gemini models.
-  - [Mistral](docs/mistral/README.md): Learn how to use ABAP AI with Mistral models.
-  - [Ollama](docs/ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
-  - [DeepSeek](docs/deepseek/README.md): Learn how to use ABAP AI with DeepSeek models.
-  - [Moonshot AI](docs/moonshot/README.md): Learn how to use ABAP AI with Moonshot AI models.
+  - [OpenAI](docs/openai/README.md): Learn how to use ABAP AI tools with OpenAI models.
+  - [Anthropic](docs/anthropic/README.md): Learn how to use ABAP AI tools with Anthropic models.
+  - [Google Gemini](docs/google/README.md): Learn how to use ABAP AI tools with Google Gemini models.
+  - [Mistral](docs/mistral/README.md): Learn how to use ABAP AI tools with Mistral models.
+  - [Ollama](docs/ollama/README.md): Learn how to use ABAP AI tools with with local or self-hosted Ollama models.
+  - [DeepSeek](docs/deepseek/README.md): Learn how to use ABAP AI tools with DeepSeek models.
+  - [Moonshot AI](docs/moonshot/README.md): Learn how to use ABAP AI tools with Moonshot AI models.
 
   ### Read the documentation
 

@@ -6,7 +6,7 @@
 
 ## Quickstart
 
-### Running Your First ABAP AI Ollama Application
+### Running Your First ABAP AI tools Ollama Application
 
 This quickstart demonstrates how to create a simple LLM application. It shows you how to connect to the LLM and perform a basic chat interaction.
 
@@ -14,9 +14,9 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
 - You must have [Ollama](https://ollama.com/download) installed and running locally or accessible on your network.
 
 **Steps:**
-1.  Create an ABAP AI Connection instance;
+1.  Create an ABAP AI tools Connection instance;
 2.  Set the Base URL;
-4.  Create an ABAP AI Ollama instance;
+4.  Create an ABAP AI tools Ollama instance;
 5.  Call the CHAT method.
 
 **Example:**
@@ -50,14 +50,14 @@ START-OF-SELECTION.
 
 **Result:**
 
-The following screenshot shows the output you can expect after running the example ABAP AI Ollama report. The response from the LLM will be displayed line by line in the SAP GUI output window.
+The following screenshot shows the output you can expect after running the example ABAP AI tools Ollama report. The response from the LLM will be displayed line by line in the SAP GUI output window.
 
-![Output of the ABAP AI LLM quickstart application](../images/QuickstartReportRunOllama.png)
+![Output of the ABAP AI tools LLM quickstart application](../images/QuickstartReportRunOllama.png)
 
 
-### Running a simple ABAP AI Ollama Chat Application
+### Running a simple ABAP AI tools Ollama Chat Application
 
-The ABAP AI Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
+The ABAP AI tools Chat stores all conversation exchanges in memory. At any time, you can retrieve the full conversation history, allowing you to review previous messages or continue the dialogue seamlessly.
 
 ```abap
 REPORT yaai_r_simple_llm_chat_ollama.
@@ -116,23 +116,23 @@ AT SELECTION-SCREEN.
 
 The following screenshots show the output you can expect after running the example ABAP AI Chat report.
 
-![Output of the ABAP AI Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_1.png)
+![Output of the ABAP AI tools Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_1.png)
 
-![Output of the ABAP AI Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_2.png)
+![Output of the ABAP AI tools Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_2.png)
 
-![Output of the ABAP AI Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_3.png)
+![Output of the ABAP AI tools Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_3.png)
 
-![Output of the ABAP AI Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_4.png)
+![Output of the ABAP AI tools Ollama Chat quickstart application](../images/QuickstartReportRunOllamaChat_4.png)
 
 
-Now that you've run your first Ollama ABAP AI applications, consider exploring more examples and additional features.😊
+Now that you've run your first Ollama ABAP AI tools applications, consider exploring more examples and additional features.😊
 
 ## More Examples
 
 [**ABAP AI tools - Usage Examples**](https://github.com/christianjianelli/yaai_examples)
 This repository contains examples that demonstrate the basic usage of the ABAP AI tools with multiple providers, including Anthropic, Google, OpenAI, Ollama, Mistral, and Nvidia.
 
-## Explore ABAP AI Features
+## Explore ABAP AI tools Features
   - **Prompt Templates:** Learn how to define and use [prompt templates](../prompt_templates.md) for more dynamic and reusable prompts.
   - **LLM System Instructions:** Pass [system instructions](system_instructions.md) to guide the behavior of the language model for specific tasks.
   - **Tool/Function Calling:** Enable LLM applications to trigger ABAP logic using [tools](function_calling.md).

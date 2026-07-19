@@ -26,7 +26,7 @@ The `TVARVC` table (accessible via transaction STVARV) is also supported for con
 
 ### Configuration Parameters for Custom APIs
 
-If you want the ABAP AI to automatically construct the full API URL for a custom API, you need to create a parameter in TVARVC using the naming pattern `YAAI_{API_NAME}`. Replace `{API_NAME}` with your API's name (for example, `YAAI_MYAPI`). 
+If you want the ABAP AI tools to automatically construct the full API URL for a custom API, you need to create a parameter in TVARVC using the naming pattern `YAAI_{API_NAME}`. Replace `{API_NAME}` with your API's name (for example, `YAAI_MYAPI`). 
 
 When creating a connection to a custom API, specify the API name as a parameter. For example:
 

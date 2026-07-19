@@ -28,38 +28,38 @@ These features empower you to build intelligent, enterprise-ready ABAP applicati
 Configuring AI agents in ABAP AI tools involves maintaining a bunch of database tables. To make this whole process easier, the ABAP AI tools Cockpit was built. It’s a frontend application designed to streamline the development of AI agents created with ABAP AI tools.
 
 <p>
-  <img src="./images/screenshot-cockpit-home.jpg" alt="ABAP AI UI Chat" width="500px">
+  <img src="./images/screenshot-cockpit-home.jpg" alt="ABAP AI tools UI Chat" width="500px">
 </p>
 
 [**ABAP AI tools - Function Calling Library**](https://github.com/christianjianelli/yaai_fc)
 A comprehensive function calling library designed specifically for AI agents to interact with ABAP Dictionary (DDIC) objects and related development artifacts in SAP ABAP environments. This library bridges the gap between natural language instructions and ABAP development operations, allowing AI agents to create, modify, and manage ABAP Dictionary objects and other ABAP development artifacts like message classes and translations, on the user's behalf.
 
 [**ABAP AI tools User Interface**](https://github.com/christianjianelli/yaai_ui)
-The ABAP AI UI repository provides interfaces to interact with LLMs directly from your SAP system.
+The ABAP AI tools UI repository provides interfaces to interact with LLMs directly from your SAP system.
   
 <p>
-  <img src="./images/abap_ai_ui_chat.png" alt="ABAP AI UI Chat" width="500px">
-  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Chat</a>
+  <img src="./images/abap_ai_ui_chat.png" alt="ABAP AI tools UI Chat" width="500px">
+  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI tools Chat</a>
   <br>
   <br>
-  <img src="./images/yaai_ui_code_assist.png" alt="ABAP AI UI Code Assistant" width="500px">
-  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI Code Assistant</a>
+  <img src="./images/yaai_ui_code_assist.png" alt="ABAP AI tools UI Code Assistant" width="500px">
+  <br><a href="https://github.com/christianjianelli/yaai_ui">ABAP AI tools Code Assistant</a>
 </p>
 
 ## Get Started
-  - [Installation](installation.md): See how to install ABAP AI.
-  - [Quickstart](quickstart.md): Run your first ABAP AI applications.
+  - [Installation](installation.md): See how to install ABAP AI tools.
+  - [Quickstart](quickstart.md): Run your first ABAP AI tools applications.
   - [Configuration](config.md): See how to configure Connections.
-  - [Usage Examples](https://github.com/christianjianelli/yaai_examples): This repository contains examples that demonstrate the basic usage of the ABAP AI tools with multiple providers, including Anthropic, Google, OpenAI, Ollama, Mistral, and Nvidia.
+  - [Usage Examples](https://github.com/christianjianelli/yaai_examples): This repository contains examples that demonstrate the basic usage of the ABAP AI tools with multiple providers, including Anthropic, Google, OpenAI, Ollama, Mistral, DeepSeek, Moonshot AI, and Nvidia.
 
 ## APIs
-  - [OpenAI](openai/README.md): Learn how to use ABAP AI with OpenAI models.
-  - [Anthropic](anthropic/README.md): Learn how to use ABAP AI with Anthropic models.
-  - [Google Gemini](google/README.md): Learn how to use ABAP AI with Google Gemini models.
-  - [Mistral](mistral/README.md): Learn how to use ABAP AI with Mistral models.
-  - [Ollama](ollama/README.md): Learn how to use ABAP AI with with local or self-hosted Ollama models.
-  - [DeepSeek](deepseek/README.md): Learn how to use ABAP AI with DeepSeek models.
-  - [Moonshot AI](moonshot/README.md): Learn how to use ABAP AI with Moonshot AI models.
+  - [OpenAI](openai/README.md): Learn how to use ABAP AI tools with OpenAI models.
+  - [Anthropic](anthropic/README.md): Learn how to use ABAP AI tools with Anthropic models.
+  - [Google Gemini](google/README.md): Learn how to use ABAP AI tools with Google Gemini models.
+  - [Mistral](mistral/README.md): Learn how to use ABAP AI tools with Mistral models.
+  - [Ollama](ollama/README.md): Learn how to use ABAP AI tools with with local or self-hosted Ollama models.
+  - [DeepSeek](deepseek/README.md): Learn how to use ABAP AI tools with DeepSeek models.
+  - [Moonshot AI](moonshot/README.md): Learn how to use ABAP AI tools with Moonshot AI models.
 
 ## Features
 - [System Instructions](system_instructions.md): Learn how to pass System Instructions to a LLM.

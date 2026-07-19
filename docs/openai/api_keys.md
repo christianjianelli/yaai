@@ -16,8 +16,8 @@ OpenAI API keys are required to authenticate your applications when accessing Op
 4. **Copy and store your API key securely**  
    Copy the generated API key and store it in a secure location. You will not be able to view it again after closing the dialog.
 
-5. **Use your API key in your ABAP AI application**  
-   When configuring your ABAP AI connection, provide the API key as shown in the examples.
+5. **Use your API key in your ABAP AI tools application**  
+   When configuring your ABAP AI tools connection, provide the API key as shown in the examples.
 
 > **Warning:** Never share your API key publicly or commit it to version control. Treat it as a sensitive secret.
 

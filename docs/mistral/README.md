@@ -10,7 +10,7 @@
 
 ## Quickstart
 
-### Running Your First ABAP AI Mistral Application
+### Running Your First ABAP AI tools Mistral Application
 
 This quickstart demonstrates how to create a simple LLM application. It shows you how to connect to the LLM and perform a basic chat interaction.
 
@@ -19,10 +19,10 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
 *   Import Mistral API server certificates into SAP trust manager. The [abapGit documentation](https://docs.abapgit.org/user-guide/setup/ssl-setup.html) explains in detail how to do it.
 
 **Steps:**
-1.  Create an ABAP AI Connection instance;
+1.  Create an ABAP AI tools Connection instance;
 2.  Set the Base URL;
 3.  Set the API Key;
-4.  Create an ABAP AI OpenAI instance;
+4.  Create an ABAP AI tools OpenAI instance;
 5.  Call the CHAT method.
 
 **Example:**
@@ -61,7 +61,7 @@ START-OF-SELECTION.
 
 The following screenshot shows the output you can expect after running the example ABAP AI report. The response from the LLM will be displayed line by line in the SAP GUI output window.
 
-![Output of the ABAP AI LLM quickstart application](../images/QuickstartReportRunMistral.png)
+![Output of the ABAP AI tools LLM quickstart application](../images/QuickstartReportRunMistral.png)
 
 ## More Examples
 

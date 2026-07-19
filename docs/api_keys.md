@@ -58,13 +58,13 @@ When you instantiate a `ycl_aai_conn` connection object with an API name, it wil
 DATA(lo_connection) = NEW ycl_aai_conn( i_api = 'OPENAI' ).
 ```
 
-Repeating the previous example, but this time using the ABAP AI constants instead of hardcoded values.
+Repeating the previous example, but this time using the ABAP AI tools constants instead of hardcoded values.
 
 ```abap
 DATA(lo_connection) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
 ```
 
-You can implement your own version of the `yif_aai_api_key` interface. After creating a class that implements the interface `yif_aai_api_key`, pass an instance of your custom class to the ABAP AI Connection object. The connection object will then automatically use your implementation to retrieve the API key, allowing you to integrate with secure storage or other key management systems as needed.
+You can implement your own version of the `yif_aai_api_key` interface. After creating a class that implements the interface `yif_aai_api_key`, pass an instance of your custom class to the ABAP AI tools Connection object. The connection object will then automatically use your implementation to retrieve the API key, allowing you to integrate with secure storage or other key management systems as needed.
 
 ```abap
 "Instantiate your custom API key management class, for example a class named 'ycl_aai_my_custom_api_key', and pass it to the connection object as follows:

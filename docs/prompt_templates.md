@@ -1,6 +1,6 @@
 # yaai - ABAP AI tools - Prompt Templates
 
-This guide explains how to use the classes `ycl_aai_prompt` and `ycl_aai_prompt_template` to generate prompts from templates in ABAP AI.
+This guide explains how to use the classes `ycl_aai_prompt` and `ycl_aai_prompt_template` to generate prompts from templates in ABAP AI tools.
 
 ## Overview
 
@@ -113,7 +113,7 @@ START-OF-SELECTION.
 
 This is a Retrieval-Augmented Generation (RAG) style example, where the prompt template is dynamically filled with both the user's question and the retrieved context. This approach enhances the AI's ability to generate relevant and accurate responses by grounding the answer in external, up-to-date information.
 
-This example demonstrates how to use the ABAP AI Prompt `ycl_aai_prompt` with its default parameter structure `yif_aai_prompt=>ty_params_basic_s`. The structure contains two fields: one for the user's chat message (question) and another for the context, which would be retrieved from a Vector Database (or some other source).
+This example demonstrates how to use the ABAP AI tools Prompt `ycl_aai_prompt` with its default parameter structure `yif_aai_prompt=>ty_params_basic_s`. The structure contains two fields: one for the user's chat message (question) and another for the context, which would be retrieved from a Vector Database (or some other source).
 
 The default parameters structure provides a standardized way to pass both the user message and context, simplifying the integration of RAG workflows into your ABAP applications.
 
@@ -177,4 +177,4 @@ What does this transaction do?
 
 ## Additional Note
 
-The ABAP AI prompt template can also be used to create system instructions that are passed to the Large Language Model (LLM). This allows you to define the behavior, tone, or constraints for the AI's responses by generating system-level prompts in a structured and reusable way.
+The ABAP AI tools prompt template can also be used to create system instructions that are passed to the Large Language Model (LLM). This allows you to define the behavior, tone, or constraints for the AI's responses by generating system-level prompts in a structured and reusable way.

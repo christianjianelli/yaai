@@ -1,4 +1,4 @@
-# yaai - ABAP AI Tools: Retrieval-Augmented Generation (RAG)
+# yaai - ABAP AI tools: Retrieval-Augmented Generation (RAG)
 
 ## Introduction: Why RAG Matters
 Every SAP system is unique, filled with custom "Z-processes" and enhancements that go far beyond standard documentation. A Large Language Model (LLM), no matter how advanced, cannot know your company's specific "ZRET" goods return process. Retrieval-Augmented Generation (RAG) bridges this gap by connecting AI to your organization's private knowledge base.
@@ -41,7 +41,7 @@ A standard LLM cannot answer this, as "ZRET" is unique to your company. Here’s
 
 Armed with precise, company-specific facts, the LLM can now generate a trustworthy answer and cite its source.
 
-## Using RAG in ABAP AI Tools
+## Using RAG in ABAP AI tools
 ABAP AI tools do not provide a built-in feature to interact directly with vector databases. However, they offer the `yif_aai_rag` interface, which you can use to implement your own RAG solution and integrate it with ABAP AI tools.
 
 The class `ycl_aai_rag_chroma` is provided as a simple example of how to implement a RAG system using a [Chroma](https://docs.trychroma.com/docs/overview/introduction) vector database. The example demonstrates how to retrieve context from a vector database and how to use a prompt template to generate the augmented prompt.
