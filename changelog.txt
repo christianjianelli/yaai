@@ -9,6 +9,39 @@ Legend
 - : removed
 
 
+
+2026-07-19
+-------------------
+
++ DeepSeek support via chat completions
++ Moonshot AI support via chat completions
+
+
+2026-07-13
+-------------------
+
++ LLM API rest service bugfix
+
+
+2026-07-11
+-------------------
+
++ SAP AI Core support via chat completions
+
+
+2026-06-22
+-------------------
+
++ Ollama set context length.
++ Ollama number of tokens persistence.
+
+
+2026-06-21
+-------------------
+
+* ATC warnings corrections and pseudo comments.
+
+
 2026-06-21
 -------------------
 

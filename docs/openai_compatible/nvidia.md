@@ -14,7 +14,7 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
 
 **Requirements:** 
 *   You have a valid Nvidia API Key.
-*   Import OpenAI server certificates into SAP trust manager. The [abapGit documentation](https://docs.abapgit.org/user-guide/setup/ssl-setup.html) explains in detail how to do it.
+*   Import Nvidia API server certificates into SAP trust manager. The [abapGit documentation](https://docs.abapgit.org/user-guide/setup/ssl-setup.html) explains in detail how to do it.
 
 **Steps:**
 1.  Create an ABAP AI Connection instance;

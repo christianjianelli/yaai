@@ -1,22 +1,22 @@
-# yaai - ABAP AI tools - Mistral
+# yaai - ABAP AI tools - DeepSeek
 
 <p>
-  <img src="../images/Mistral_AI_logo_(2025–).svg" alt="Mistral Logo" width="200px">
+  <img src="../images/deepseek.png" alt="DeepSeek Logo" width="200px">
 </p>
 
-**Website**: https://mistral.ai/
+**Website**: https://deepseek.com/en/
 
-**Try the API**: https://console.mistral.ai/home
+**API Documentation**: https://api-docs.deepseek.com/
 
 ## Quickstart
 
-### Running Your First ABAP AI Mistral Application
+### Running Your First ABAP AI DeepSeek Application
 
 This quickstart demonstrates how to create a simple LLM application. It shows you how to connect to the LLM and perform a basic chat interaction.
 
 **Requirements:** 
-*   You have a valid Mistral API Key.
-*   Import Mistral API server certificates into SAP trust manager. The [abapGit documentation](https://docs.abapgit.org/user-guide/setup/ssl-setup.html) explains in detail how to do it.
+*   You have a valid DeepSeek API Key.
+*   Import DeepSeek API server certificates into SAP trust manager. The [abapGit documentation](https://docs.abapgit.org/user-guide/setup/ssl-setup.html) explains in detail how to do it.
 
 **Steps:**
 1.  Create an ABAP AI Connection instance;
@@ -28,22 +28,22 @@ This quickstart demonstrates how to create a simple LLM application. It shows yo
 **Example:**
 
 ```abap
-REPORT yaai_r_simple_llm_app_mistral LINE-SIZE 500.
+REPORT yaai_r_simple_llm_app_deepseek LINE-SIZE 500.
 
 START-OF-SELECTION.
 
   DATA(o_aai_conn) = NEW ycl_aai_conn( ).
 
-  o_aai_conn->set_base_url( i_base_url = 'https://api.mistral.ai' ).
+  o_aai_conn->set_base_url( i_base_url = 'https://api.deepseek.com' ).
 
-  o_aai_conn->set_api_key( i_api_key = 'REPLACE_THIS_TEXT_WITH_YOUR_OPENAI_API_KEY' ).
+  o_aai_conn->set_api_key( i_api_key = 'REPLACE_THIS_TEXT_WITH_YOUR_DEEPSEEK_API_KEY' ).
 
-  DATA(o_aai_mistral) = NEW ycl_aai_openai( i_model = 'mistral-large-latest'
-                                            i_o_connection = o_aai_conn ).
+  DATA(o_aai_deepseek) = NEW ycl_aai_openai( i_model = 'deepseek-v4-flash'
+                                             i_o_connection = o_aai_conn ).
 
-  o_aai_mistral->use_completions( ).
+  o_aai_deepseek->use_completions( ).
 
-  o_aai_mistral->chat(
+  o_aai_deepseek->chat(
     EXPORTING
       i_message    = 'What is the capital of France?'
     IMPORTING
@@ -61,7 +61,7 @@ START-OF-SELECTION.
 
 The following screenshot shows the output you can expect after running the example ABAP AI report. The response from the LLM will be displayed line by line in the SAP GUI output window.
 
-![Output of the ABAP AI LLM quickstart application](../images/QuickstartReportRunMistral.png)
+![Output of the ABAP AI LLM quickstart application](../images/QuickstartReportRunDeepSeek.png)
 
 ## More Examples
 
