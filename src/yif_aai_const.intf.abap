@@ -39,4 +39,12 @@ INTERFACE yif_aai_const
              c_sap_ai_core_resource_group TYPE string VALUE 'default',
              c_sap_ai_core_res_grp_param  TYPE string VALUE 'YAAI_SAP_AI_CORE_RESOURCE_GRP'.
 
+  "Deepseek
+  CONSTANTS: c_deepseek                   TYPE string VALUE 'DEEPSEEK',
+             c_deepseek_base_url_param    TYPE string VALUE 'YAAI_DEEPSEEK_BASE_URL'.
+
+  "Moonshot AI
+  CONSTANTS: c_moonshot                   TYPE string VALUE 'MOONSHOT',
+             c_moonshot_base_url_param    TYPE string VALUE 'YAAI_MOONSHOT_BASE_URL'.
+
 ENDINTERFACE.

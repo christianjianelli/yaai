@@ -23,7 +23,9 @@ CLASS ycl_aai_basic_setup IMPLEMENTATION.
                                            ( id = 'GOOGLE' base_url = 'https://generativelanguage.googleapis.com' )
                                            ( id = 'MISTRAL' base_url = 'https://api.mistral.ai' )
                                            ( id = 'OLLAMA' base_url = 'http://192.168.1.173:11434' )
-                                           ( id = 'SAP_AI_CORE' base_url = 'https://your-deployment_url' ) ) ) ACCEPTING DUPLICATE KEYS.
+                                           ( id = 'SAP_AI_CORE' base_url = 'https://your-deployment_url' )
+                                           ( id = 'DEEPSEEK' base_url = 'https://api.deepseek.com' )
+                                           ( id = 'MOONSHOT' base_url = 'https://api.moonshot.ai' ) ) ) ACCEPTING DUPLICATE KEYS.
 
     IF sy-dbcnt > 0.
       out->write( |{ sy-dbcnt } APIs inserted into table yaai_api.| ).
@@ -39,7 +41,11 @@ CLASS ycl_aai_basic_setup IMPLEMENTATION.
                                              ( id = 'MISTRAL' model = 'mistral-medium-latest' default_model = abap_true )
                                              ( id = 'MISTRAL' model = 'mistral-large-latest' default_model = abap_false )
                                              ( id = 'OLLAMA' model = 'gemma3:1b' default_model = abap_true )
-                                             ( id = 'SAP_AI_CORE' model = 'gpt-4.1' default_model = abap_true ) ) ) ACCEPTING DUPLICATE KEYS.
+                                             ( id = 'SAP_AI_CORE' model = 'gpt-4.1' default_model = abap_true )
+                                             ( id = 'DEEPSEEK' model = 'deepseek-v4-flash' default_model = abap_true )
+                                             ( id = 'DEEPSEEK' model = 'deepseek-v4-pro' default_model = abap_false )
+                                             ( id = 'MOONSHOT' model = 'kimi-k2.6' default_model = abap_false )
+                                             ( id = 'MOONSHOT' model = 'kimi-k3' default_model = abap_true ) ) ) ACCEPTING DUPLICATE KEYS.
 
     IF sy-dbcnt > 0.
       out->write( |{ sy-dbcnt } models inserted into table yaai_model.| ).

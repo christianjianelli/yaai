@@ -9,16 +9,29 @@
     <SCRLEN1>10</SCRLEN1>
     <SCRLEN2>20</SCRLEN2>
     <SCRLEN3>40</SCRLEN3>
-    <DDTEXT>ABAP AI tools - Async Task Start Date</DDTEXT>
+    <DDTEXT>Async Task Start Date</DDTEXT>
     <REPTEXT>Async Task End Date</REPTEXT>
     <SCRTEXT_S>End Date</SCRTEXT_S>
     <SCRTEXT_M>Async Task End Date</SCRTEXT_M>
     <SCRTEXT_L>Async Task End Date</SCRTEXT_L>
-    <DTELMASTER>P</DTELMASTER>
+    <DTELMASTER>E</DTELMASTER>
     <DATATYPE>DATS</DATATYPE>
     <LENG>000008</LENG>
     <OUTPUTLEN>000010</OUTPUTLEN>
    </DD04V>
+   <I18N_LANGS>
+    <LANGU>P</LANGU>
+   </I18N_LANGS>
+   <DD04_TEXTS>
+    <item>
+     <DDLANGUAGE>P</DDLANGUAGE>
+     <DDTEXT>ABAP AI tools - Async Task End Date</DDTEXT>
+     <REPTEXT>Async Task End Date</REPTEXT>
+     <SCRTEXT_S>End Date</SCRTEXT_S>
+     <SCRTEXT_M>Async Task End Date</SCRTEXT_M>
+     <SCRTEXT_L>Async Task End Date</SCRTEXT_L>
+    </item>
+   </DD04_TEXTS>
   </asx:values>
  </asx:abap>
 </abapGit>

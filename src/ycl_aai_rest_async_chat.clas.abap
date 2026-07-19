@@ -78,53 +78,34 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
 
     IF ls_request-chat_id IS INITIAL.
 
-      CASE ls_request-api.
+      SELECT SINGLE @abap_true
+            FROM yaai_api
+            WHERE id = @ls_request-api
+             INTO @DATA(l_exist).
 
-        WHEN yif_aai_const=>c_openai.
+      IF sy-subrc <> 0.
 
-          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_openai ).
+        ls_response-error = |LLM API { ls_request-api } is not supported.|.
 
-        WHEN yif_aai_const=>c_anthropic.
+        l_json = /ui2/cl_json=>serialize(
+          EXPORTING
+            data = ls_response
+            compress = abap_false
+            pretty_name = /ui2/cl_json=>pretty_mode-camel_case
+        ).
 
-          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_anthropic ).
+        i_o_response->set_content_type( content_type = 'application/json' ).
 
-        WHEN yif_aai_const=>c_google.
+        i_o_response->set_cdata(
+          EXPORTING
+            data = l_json
+        ).
 
-          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_google ).
+        RETURN.
 
-        WHEN yif_aai_const=>c_mistral.
+      ENDIF.
 
-          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_mistral ).
-
-        WHEN yif_aai_const=>c_ollama.
-
-          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_ollama ).
-
-        WHEN yif_aai_const=>c_sap_ai_core.
-
-          lo_aai_db = NEW ycl_aai_db( i_api = yif_aai_const=>c_sap_ai_core ).
-
-        WHEN OTHERS.
-
-          ls_response-error = |LLM API { ls_request-api } is not supported.|.
-
-          l_json = /ui2/cl_json=>serialize(
-            EXPORTING
-              data = ls_response
-              compress = abap_false
-              pretty_name = /ui2/cl_json=>pretty_mode-camel_case
-          ).
-
-          i_o_response->set_content_type( content_type = 'application/json' ).
-
-          i_o_response->set_cdata(
-            EXPORTING
-              data = l_json
-          ).
-
-          RETURN.
-
-      ENDCASE.
+      lo_aai_db = NEW ycl_aai_db( i_api = ls_request-api ).
 
       ls_response-chat_id = lo_aai_db->m_id.
 

@@ -8,7 +8,7 @@
     <DATATYPE>CHAR</DATATYPE>
     <LENG>000255</LENG>
     <OUTPUTLEN>000255</OUTPUTLEN>
-    <DDTEXT>ABAP AI tools - Base URL</DDTEXT>
+    <DDTEXT>Base URL</DDTEXT>
    </DD01V>
   </asx:values>
  </asx:abap>

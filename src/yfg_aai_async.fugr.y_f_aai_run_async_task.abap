@@ -100,19 +100,41 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
 
     WHEN OTHERS.
 
-      DATA(lo_async) = NEW ycl_aai_async( ).
+      SELECT SINGLE @abap_true
+        FROM yaai_api
+        WHERE id = @i_api
+        INTO @DATA(l_exist).
 
-      lo_async->update_status(
+      IF sy-subrc <> 0.
+
+        DATA(lo_async) = NEW ycl_aai_async( ).
+
+        lo_async->update_status(
+          EXPORTING
+            i_task_id = i_task_id
+            i_status  = yif_aai_async=>mc_task_failed
+        ).
+
+        DATA(lo_log) = NEW ycl_aai_log( i_chat_id ).
+
+        lo_log->add( VALUE #( number = '016' type = 'E' message_v1 = i_api ) ).
+
+        RETURN.
+
+      ENDIF.
+
+      NEW ycl_aai_async_chat_openai( )->run(
         EXPORTING
-          i_task_id = i_task_id
-          i_status  = yif_aai_async=>mc_task_failed
+          i_task_id  = i_task_id
+          i_chat_id  = i_chat_id
+          i_api      = i_api
+          i_api_key  = i_api_key
+          i_message  = i_message
+          i_context  = i_context
+          i_agent_id = i_agent_id
+          i_model    = i_model
+          i_log      = abap_true
       ).
-
-      DATA(lo_log) = NEW ycl_aai_log( i_chat_id ).
-
-      lo_log->add( VALUE #( number = '016' type = 'E' message_v1 = i_api ) ).
-
-      RETURN.
 
   ENDCASE.
 

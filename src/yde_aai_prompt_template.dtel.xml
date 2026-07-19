@@ -10,12 +10,12 @@
     <SCRLEN1>10</SCRLEN1>
     <SCRLEN2>20</SCRLEN2>
     <SCRLEN3>40</SCRLEN3>
-    <DDTEXT>ABAP AI tools - Prompt Template</DDTEXT>
+    <DDTEXT>Prompt Template</DDTEXT>
     <REPTEXT>Prompt Template</REPTEXT>
     <SCRTEXT_S>PromptTpl</SCRTEXT_S>
     <SCRTEXT_M>Prompt Template</SCRTEXT_M>
     <SCRTEXT_L>Prompt Template</SCRTEXT_L>
-    <DTELMASTER>P</DTELMASTER>
+    <DTELMASTER>E</DTELMASTER>
     <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>

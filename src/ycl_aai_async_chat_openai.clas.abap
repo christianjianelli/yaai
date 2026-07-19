@@ -69,13 +69,13 @@ CLASS ycl_aai_async_chat_openai IMPLEMENTATION.
         i_status  = yif_aai_async=>mc_task_running
     ).
 
-    DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
+    DATA(lo_aai_conn) = NEW ycl_aai_conn( i_api = COND #( WHEN i_api IS INITIAL THEN yif_aai_const=>c_openai ELSE i_api ) ).
 
     IF i_api_key IS NOT INITIAL.
       lo_aai_conn->set_api_key( i_api_key = i_api_key ).
     ENDIF.
 
-    DATA(lo_aai_db) = NEW ycl_aai_db( i_api = yif_aai_const=>c_openai
+    DATA(lo_aai_db) = NEW ycl_aai_db( i_api = COND #( WHEN i_api IS INITIAL THEN yif_aai_const=>c_openai ELSE i_api )
                                       i_id = i_chat_id ).
 
     DATA(lo_log) = NEW ycl_aai_log( i_chat_id = i_chat_id ).
@@ -104,10 +104,15 @@ CLASS ycl_aai_async_chat_openai IMPLEMENTATION.
     SET HANDLER me->on_tool_call_response FOR ALL INSTANCES.
     SET HANDLER me->on_tool_call_error FOR ALL INSTANCES.
 
-    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_model = i_model
+    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_api = COND #( WHEN i_api IS INITIAL THEN yif_aai_const=>c_sap_ai_core ELSE i_api )
+                                              i_model = i_model
                                               i_o_connection = lo_aai_conn
                                               i_o_persistence = lo_aai_db
                                               i_o_agent = lo_agent ).
+
+    IF i_api IS NOT INITIAL.
+      lo_aai_openai->use_completions( abap_true ).
+    ENDIF.
 
     IF i_context IS INITIAL.
 

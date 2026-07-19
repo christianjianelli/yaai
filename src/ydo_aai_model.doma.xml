@@ -8,7 +8,7 @@
     <DATATYPE>CHAR</DATATYPE>
     <LENG>000050</LENG>
     <OUTPUTLEN>000050</OUTPUTLEN>
-    <DDTEXT>ABAP AI tools - LLM Model</DDTEXT>
+    <DDTEXT>LLM Model</DDTEXT>
    </DD01V>
   </asx:values>
  </asx:abap>

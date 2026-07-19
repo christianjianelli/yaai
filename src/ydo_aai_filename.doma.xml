@@ -8,7 +8,7 @@
     <DATATYPE>CHAR</DATATYPE>
     <LENG>000200</LENG>
     <OUTPUTLEN>000200</OUTPUTLEN>
-    <DDTEXT>ABAP AI tools - RAG file name</DDTEXT>
+    <DDTEXT>RAG file name</DDTEXT>
    </DD01V>
   </asx:values>
  </asx:abap>

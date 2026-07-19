@@ -429,12 +429,14 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
           l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_completions_req_s( model = me->_model
                                                                                                       stream = abap_false
+                                                                                                      temperature = me->_temperature
                                                                                                       messages = me->get_conversation_chat_comp( ) ) ).
 
         ELSE.
 
           l_json = lo_aai_util->serialize( i_data = VALUE yif_aai_openai~ty_openai_comp_tools_req_s( model = me->_model
                                                                                                      stream = abap_false
+                                                                                                     temperature = me->_temperature
                                                                                                      messages = me->get_conversation_chat_comp( )
                                                                                                      tools = l_tools ) ).
 
@@ -483,6 +485,17 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         IF me->_openai_chat_comp_response-object = 'error'.
 
           e_response = |{ me->_openai_chat_comp_response-code }: { me->_openai_chat_comp_response-message }|.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
+          EXIT.
+        ENDIF.
+
+        IF me->_openai_chat_comp_response-error-message IS NOT INITIAL.
+
+          e_response = |{ me->_openai_chat_comp_response-error-code } { me->_openai_chat_comp_response-error-message }|.
 
           RAISE EVENT on_message_failed
             EXPORTING

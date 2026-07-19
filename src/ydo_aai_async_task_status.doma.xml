@@ -8,7 +8,7 @@
     <DATATYPE>CHAR</DATATYPE>
     <LENG>000012</LENG>
     <OUTPUTLEN>000012</OUTPUTLEN>
-    <DDTEXT>ABAP AI tools - Async Task Status</DDTEXT>
+    <DDTEXT>Async Task Status</DDTEXT>
    </DD01V>
   </asx:values>
  </asx:abap>

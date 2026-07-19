@@ -5,6 +5,7 @@ INTERFACE yif_aai_async_chat_run
     IMPORTING
               i_task_id         TYPE yde_aai_async_task_id
               i_chat_id         TYPE yde_aai_chat_id
+              i_api             TYPE csequence OPTIONAL
               i_api_key         TYPE csequence OPTIONAL
               i_message         TYPE csequence
               i_context         TYPE csequence OPTIONAL
