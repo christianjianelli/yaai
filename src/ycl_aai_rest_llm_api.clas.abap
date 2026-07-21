@@ -20,6 +20,7 @@ CLASS ycl_aai_rest_llm_api DEFINITION INHERITING FROM ycl_aai_rest_base
            BEGIN OF ty_api_s,
              id       TYPE string,
              base_url TYPE string,
+             disabled TYPE abap_bool,
              oauth    TYPE ty_oauth_s,
              models   TYPE ty_model_t,
            END OF ty_api_s,
@@ -66,7 +67,7 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
 
       APPEND INITIAL LINE TO ls_response-apis ASSIGNING FIELD-SYMBOL(<ls_api>).
 
-      SELECT SINGLE id, base_url
+      SELECT SINGLE id, base_url, disabled
         FROM yaai_api
         WHERE id = @l_id
         INTO CORRESPONDING FIELDS OF @<ls_api>.
@@ -83,7 +84,7 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
 
     ELSE.
 
-      SELECT id, base_url
+      SELECT id, base_url, disabled
         FROM yaai_api
         INTO TABLE @DATA(lt_apis).                      "#EC CI_NOWHERE
 
@@ -102,6 +103,7 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
 
           <ls_api>-id = <ls_api_db>-id.
           <ls_api>-base_url = <ls_api_db>-base_url.
+          <ls_api>-disabled = <ls_api_db>-disabled.
 
           SELECT SINGLE base_url, client_id, client_secret
             FROM yaai_oauth
@@ -157,7 +159,8 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
     ls_response-updated = abap_false.
 
     UPDATE yaai_api
-      SET base_url = @ls_request-base_url
+      SET base_url = @ls_request-base_url,
+          disabled = @ls_request-disabled
       WHERE id = @ls_request-id.
 
     IF sy-subrc = 0.
