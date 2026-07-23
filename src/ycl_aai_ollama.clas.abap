@@ -273,7 +273,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
-                                               i_async_task_id = i_async_task_id ).
+                                               i_async_task_id = i_async_task_id
+                                               i_model = CONV #( me->_model ) ).
         ENDIF.
 
       ENDIF.
@@ -391,6 +392,20 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
+          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
           EXIT.
 
         ENDIF.
@@ -401,6 +416,26 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           IMPORTING
             e_data = me->_ollama_chat_response
         ).
+
+        IF me->_ollama_chat_response IS INITIAL.
+
+          MESSAGE e020(yaai) INTO e_response.
+
+          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
+        ENDIF.
 
         IF me->_ollama_chat_response-message-tool_calls[] IS NOT INITIAL AND me->mo_function_calling IS BOUND.
 
@@ -483,6 +518,20 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
+          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
           EXIT.
 
         ENDIF.
@@ -519,6 +568,20 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
           <l_response> = e_response.
         ENDIF.
+
+        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+        <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
+
+        IF me->_o_persistence IS BOUND.
+          me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_async_task_id = i_async_task_id
+                                               i_model = CONV #( me->_model ) ).
+        ENDIF.
+
+        RAISE EVENT on_message_failed
+          EXPORTING
+            error_text = e_response.
 
         EXIT.
 

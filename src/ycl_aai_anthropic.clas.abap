@@ -409,6 +409,16 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
+          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant' content = lo_aai_util->serialize( i_data = e_response ) ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
           RAISE EVENT on_message_failed
             EXPORTING
               error_text = e_response.
@@ -433,6 +443,16 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
           IF e_t_response IS REQUESTED.
             APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
             <l_response> = e_response.
+          ENDIF.
+
+          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant' content = lo_aai_util->serialize( i_data = e_response ) ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
           ENDIF.
 
           RAISE EVENT on_message_failed

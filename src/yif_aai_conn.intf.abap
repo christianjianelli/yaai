@@ -24,7 +24,13 @@ INTERFACE yif_aai_conn
 
   EVENTS on_request_send.
   EVENTS on_response_received.
-  EVENTS on_connection_error.
+  EVENTS on_connection_error
+    EXPORTING
+      VALUE(msgno) TYPE syst-msgno OPTIONAL
+      VALUE(msgv1) TYPE syst-msgv1 OPTIONAL
+      VALUE(msgv2) TYPE syst-msgv2 OPTIONAL
+      VALUE(msgv3) TYPE syst-msgv3 OPTIONAL
+      VALUE(msgv4) TYPE syst-msgv4 OPTIONAL.
 
   METHODS
     create_connection

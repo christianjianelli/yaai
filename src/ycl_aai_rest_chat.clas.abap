@@ -128,7 +128,7 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
 
     DATA(l_id) = condense( to_upper( i_o_request->get_form_field( name = 'id' ) ) ).
 
-    IF l_id = 'UNDEFINED'.
+    IF l_id = 'UNDEFINED' ##NO_TEXT.
 
       "Not Found
       i_o_response->set_status(
@@ -167,7 +167,7 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
         FROM yaai_agent_plan
         WHERE chat_id = @l_chat_id
         INTO @DATA(ls_agent_plan)
-        UP TO 1 ROWS.                                   "#EC CI_NOFIRST
+        UP TO 1 ROWS.                                   "#EC CI_NOORDER "#EC CI_NOFIRST
       ENDSELECT.
 
       IF sy-subrc = 0.

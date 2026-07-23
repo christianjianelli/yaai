@@ -115,7 +115,7 @@ CLASS ycl_aai_agent_task_tools IMPLEMENTATION.
           AND ddlanguage = @sy-langu
           AND domvalue_l = @<ls_agent_tasks>-status
           INTO @l_task_status
-          UP TO 1 ROWS.
+          UP TO 1 ROWS. "#EC CI_NOORDER
       ENDSELECT.
 
       SELECT SINGLE id, name, description

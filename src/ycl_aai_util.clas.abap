@@ -327,7 +327,7 @@ CLASS ycl_aai_util IMPLEMENTATION.
                 FROM dd02t
                 WHERE tabname = @ls_ddic_header-tabname
                   AND ddlanguage = @sy-langu
-                INTO @ls_flddescr-fieldtext.
+                INTO @ls_flddescr-fieldtext. "#EC CI_NOORDER
 
             ENDIF.
 
@@ -349,7 +349,7 @@ CLASS ycl_aai_util IMPLEMENTATION.
                 FROM dd40t
                 WHERE typename = @ls_ddic_header-tabname
                   AND ddlanguage = @sy-langu
-                INTO @ls_flddescr-fieldtext.
+                INTO @ls_flddescr-fieldtext. "#EC CI_NOORDER
 
             ENDIF.
 

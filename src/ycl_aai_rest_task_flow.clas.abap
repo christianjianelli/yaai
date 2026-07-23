@@ -150,7 +150,7 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
 
     IF l_rollback = abap_true.
 
-      ROLLBACK WORK.
+      ROLLBACK WORK. "#EC CI_ROLLBACK
 
       ls_response-error = 'Error while creating the task flow.'.
 
@@ -354,7 +354,7 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
 
     IF l_rollback = abap_true.
 
-      ROLLBACK WORK.
+      ROLLBACK WORK. "#EC CI_ROLLBACK
 
       ls_response-error = 'Error while updating the task flow.'.
 
@@ -424,7 +424,7 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
         IF sy-subrc <> 0.
           ls_response-deleted = abap_false.
           ls_response-error = 'Error while deleting the task flow.'.
-          ROLLBACK WORK.
+          ROLLBACK WORK. "#EC CI_ROLLBACK
         ENDIF.
 
       ENDIF.

@@ -306,6 +306,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_async_task_id = i_async_task_id
                                                i_model = CONV #( me->_model ) ).
         ENDIF.
 
@@ -439,6 +440,16 @@ CLASS ycl_aai_google IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
+          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
           RAISE EVENT on_message_failed
             EXPORTING
               error_text = e_response.
@@ -455,11 +466,43 @@ CLASS ycl_aai_google IMPLEMENTATION.
             e_data       = ls_response
         ).
 
+        IF ls_response IS INITIAL.
+
+          MESSAGE e020(yaai) INTO e_response.
+
+          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
+          RETURN.
+
+        ENDIF.
+
         RAISE EVENT on_response_received.
 
         IF ls_response-error IS NOT INITIAL.
 
           e_response = |Error! code: { ls_response-error-code }, message: { ls_response-error-message }, status: { ls_response-error-status }|.
+
+          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
 
           RAISE EVENT on_message_failed
             EXPORTING
@@ -574,6 +617,20 @@ CLASS ycl_aai_google IMPLEMENTATION.
           APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
           <l_response> = e_response.
         ENDIF.
+
+        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+
+        <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
+
+        IF me->_o_persistence IS BOUND.
+          me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_async_task_id = i_async_task_id
+                                               i_model = CONV #( me->_model ) ).
+        ENDIF.
+
+        RAISE EVENT on_message_failed
+          EXPORTING
+            error_text = e_response.
 
       ENDIF.
 

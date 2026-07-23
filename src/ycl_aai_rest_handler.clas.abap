@@ -172,7 +172,7 @@ CLASS ycl_aai_rest_handler IMPLEMENTATION.
 
             e_error = lo_ex_create_object->get_text( ).
 
-            RETURN.
+            EXIT. "#EC CI_NOORDER
 
         ENDTRY.
 

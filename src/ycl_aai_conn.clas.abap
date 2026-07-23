@@ -47,8 +47,8 @@ CLASS ycl_aai_conn DEFINITION
     METHODS
       _log
         IMPORTING
-          i_s_msg              TYPE bapiret2
-          i_log_system_message TYPE abap_bool DEFAULT abap_false.
+          i_s_msg              TYPE bapiret2.
+*          i_log_system_message TYPE abap_bool DEFAULT abap_false.
 
 
 ENDCLASS.
@@ -148,6 +148,26 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     r_created = abap_false.
 
+    SELECT SINGLE disabled
+      FROM yaai_api
+      WHERE id = @me->m_api
+      INTO @DATA(l_disabled).
+
+    IF l_disabled = abap_true.
+
+      " API is currently disabled
+      me->_log( i_s_msg = VALUE #( number = '019' message_v1 = me->m_api ) ).
+*                i_log_system_message = abap_true ).
+
+      RAISE EVENT on_connection_error
+        EXPORTING
+          msgno = '019'
+          msgv1 = CONV #( me->m_api ).
+
+      RETURN.
+
+    ENDIF.
+
     me->_url = me->m_base_url.
 
     IF i_endpoint IS NOT INITIAL AND i_endpoint(1) <> '/'.
@@ -209,8 +229,8 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     IF sy-subrc <> 0.
 
-      me->_log( i_s_msg = VALUE #( number = '001' )
-               i_log_system_message = abap_true ).
+      me->_log( i_s_msg = VALUE #( number = '001' ) ).
+*                i_log_system_message = abap_true ).
 
       RAISE EVENT on_connection_error.
 
@@ -326,12 +346,14 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     IF sy-subrc <> 0.
 
-      me->_log( i_s_msg = VALUE #( number = '002' )
-               i_log_system_message = abap_true ).
+      me->_log( i_s_msg = VALUE #( number = '002' ) ).
+*                i_log_system_message = abap_true ).
 
       e_failed = abap_true.
 
-      RAISE EVENT on_connection_error.
+      RAISE EVENT on_connection_error
+        EXPORTING
+          msgno = '002'.
 
       RETURN.
 
@@ -361,10 +383,12 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     ELSE.
 
-      me->_log( i_s_msg = VALUE #( number = '002' )
-               i_log_system_message = abap_true ).
+      me->_log( i_s_msg = VALUE #( number = '002' ) ).
+*                i_log_system_message = abap_true ).
 
-      RAISE EVENT on_connection_error.
+      RAISE EVENT on_connection_error
+        EXPORTING
+          msgno = '002'.
 
       e_failed = abap_true.
 
@@ -388,18 +412,18 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     me->mo_log->add( i_s_msg = i_s_msg ).
 
-    IF sy-msgid IS NOT INITIAL AND
-       sy-msgty IS NOT INITIAL AND
-       sy-msgno IS NOT INITIAL.
-
-      me->mo_log->add( VALUE #( id = sy-msgid
-                                type = sy-msgty
-                                number = sy-msgno
-                                message_v1 = sy-msgv1
-                                message_v2 = sy-msgv2
-                                message_v3 = sy-msgv3
-                                message_v4 = sy-msgv4 ) ).
-    ENDIF.
+*    IF sy-msgid IS NOT INITIAL AND
+*       sy-msgty IS NOT INITIAL AND
+*       sy-msgno IS NOT INITIAL.
+*
+*      me->mo_log->add( VALUE #( id = sy-msgid
+*                                type = sy-msgty
+*                                number = sy-msgno
+*                                message_v1 = sy-msgv1
+*                                message_v2 = sy-msgv2
+*                                message_v3 = sy-msgv3
+*                                message_v4 = sy-msgv4 ) ).
+*    ENDIF.
 
   ENDMETHOD.
 
@@ -463,7 +487,11 @@ CLASS ycl_aai_conn IMPLEMENTATION.
              <ls_msg>-message_v4
         INTO l_text.
 
-      e_error_text = |{ e_error_text } ; { l_text }|.
+      IF e_error_text IS INITIAL.
+        e_error_text = l_text.
+      ELSE.
+        e_error_text = |{ e_error_text } ; { l_text }|.
+      ENDIF.
 
     ENDLOOP.
 

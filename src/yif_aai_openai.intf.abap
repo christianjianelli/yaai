@@ -200,13 +200,13 @@ INTERFACE yif_aai_openai
            model  TYPE string,
          END OF ty_openai_embed_response_s.
 
-  CONSTANTS: mc_verbosity_low            TYPE string VALUE 'low',
-             mc_verbosity_medium         TYPE string VALUE 'medium',
-             mc_verbosity_high           TYPE string VALUE 'high',
-             mc_reasoning_effort_minimal TYPE string VALUE 'minimal',
-             mc_reasoning_effort_low     TYPE string VALUE 'low',
-             mc_reasoning_effort_medium  TYPE string VALUE 'medium',
-             mc_reasoning_effort_high    TYPE string VALUE 'high'.
+  CONSTANTS: mc_verbosity_low            TYPE string VALUE 'low' ##NO_TEXT,
+             mc_verbosity_medium         TYPE string VALUE 'medium' ##NO_TEXT,
+             mc_verbosity_high           TYPE string VALUE 'high' ##NO_TEXT,
+             mc_reasoning_effort_minimal TYPE string VALUE 'minimal' ##NO_TEXT,
+             mc_reasoning_effort_low     TYPE string VALUE 'low' ##NO_TEXT,
+             mc_reasoning_effort_medium  TYPE string VALUE 'medium' ##NO_TEXT,
+             mc_reasoning_effort_high    TYPE string VALUE 'high' ##NO_TEXT.
 
   DATA: mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY,
         mo_agent            TYPE REF TO yif_aai_agent READ-ONLY.

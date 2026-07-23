@@ -461,9 +461,25 @@ CLASS ycl_aai_openai IMPLEMENTATION.
               e_error_text = e_response
           ).
 
-          IF e_t_response IS REQUESTED.
-            APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
-            <l_response> = e_response.
+          IF e_response IS NOT INITIAL.
+
+            IF e_t_response IS REQUESTED.
+              APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
+              <l_response> = e_response.
+            ENDIF.
+
+            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = 'assistant'
+                                content = e_response
+                                type = 'message' ).
+
+            IF me->_o_persistence IS BOUND.
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_async_task_id = i_async_task_id
+                                                   i_model = CONV #( me->_model ) ).
+            ENDIF.
+
           ENDIF.
 
           RAISE EVENT on_message_failed
@@ -482,9 +498,54 @@ CLASS ycl_aai_openai IMPLEMENTATION.
             e_data = me->_openai_chat_comp_response
         ).
 
+        IF me->_openai_chat_comp_response IS INITIAL OR
+           condense( to_upper( me->_openai_chat_comp_response-detail ) ) = yif_aai_const=>c_unauthorized.
+
+          MESSAGE e020(yaai) INTO e_response.
+
+          IF me->_openai_chat_comp_response-detail IS NOT INITIAL.
+            e_response = |{ e_response } Detail: { me->_openai_chat_comp_response-detail }|.
+          ENDIF.
+
+          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant'
+                              content = e_response
+                              type = 'message' ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
+          RETURN.
+
+        ENDIF.
+
         IF me->_openai_chat_comp_response-object = 'error'.
 
           e_response = |{ me->_openai_chat_comp_response-code }: { me->_openai_chat_comp_response-message }|.
+
+          IF e_response IS NOT INITIAL.
+
+            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = 'assistant'
+                                content = e_response
+                                type = 'message' ).
+
+            IF me->_o_persistence IS BOUND.
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_async_task_id = i_async_task_id
+                                                   i_model = CONV #( me->_model ) ).
+            ENDIF.
+
+          ENDIF.
 
           RAISE EVENT on_message_failed
             EXPORTING
@@ -496,6 +557,18 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         IF me->_openai_chat_comp_response-error-message IS NOT INITIAL.
 
           e_response = |{ me->_openai_chat_comp_response-error-code } { me->_openai_chat_comp_response-error-message }|.
+
+          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant'
+                              content = e_response
+                              type = 'message' ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
 
           RAISE EVENT on_message_failed
             EXPORTING
@@ -640,6 +713,22 @@ CLASS ycl_aai_openai IMPLEMENTATION.
           IMPORTING
             e_error_text = e_response
         ).
+
+        IF e_response IS NOT INITIAL.
+
+          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant'
+                              content = e_response
+                              type = 'message' ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
+        ENDIF.
 
         RAISE EVENT on_message_failed
           EXPORTING
@@ -969,9 +1058,25 @@ CLASS ycl_aai_openai IMPLEMENTATION.
               e_error_text = e_response
           ).
 
-          IF e_t_response IS REQUESTED.
-            APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
-            <l_response> = e_response.
+          IF e_response IS NOT INITIAL.
+
+            IF e_t_response IS REQUESTED.
+              APPEND INITIAL LINE TO e_t_response ASSIGNING FIELD-SYMBOL(<l_response>).
+              <l_response> = e_response.
+            ENDIF.
+
+            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+            <ls_msg> = VALUE #( role = 'assistant'
+                                content = e_response
+                                type = 'message' ).
+
+            IF me->_o_persistence IS BOUND.
+              me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                   i_async_task_id = i_async_task_id
+                                                   i_model = CONV #( me->_model ) ).
+            ENDIF.
+
           ENDIF.
 
           RAISE EVENT on_message_failed
@@ -990,6 +1095,30 @@ CLASS ycl_aai_openai IMPLEMENTATION.
           IMPORTING
             e_data = me->_openai_generate_response
         ).
+
+        IF me->_openai_generate_response IS INITIAL.
+
+          MESSAGE e020(yaai) INTO e_response.
+
+          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant'
+                              content = e_response
+                              type = 'message' ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
+          RAISE EVENT on_message_failed
+            EXPORTING
+              error_text = e_response.
+
+          RETURN.
+
+        ENDIF.
 
         RAISE EVENT on_response_received.
 
@@ -1095,6 +1224,18 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
           e_response = |{ _openai_generate_response-error-code }: { _openai_generate_response-error-message }|.
 
+          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+          <ls_msg> = VALUE #( role = 'assistant'
+                              content = e_response
+                              type = 'message' ).
+
+          IF me->_o_persistence IS BOUND.
+            me->_o_persistence->persist_message( i_data = <ls_msg>
+                                                 i_async_task_id = i_async_task_id
+                                                 i_model = CONV #( me->_model ) ).
+          ENDIF.
+
           RAISE EVENT on_message_failed
             EXPORTING
               error_text = e_response.
@@ -1145,6 +1286,18 @@ CLASS ycl_aai_openai IMPLEMENTATION.
             e_error_text = e_response
         ).
 
+        APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+        <ls_msg> = VALUE #( role = 'assistant'
+                            content = e_response
+                            type = 'message' ).
+
+        IF me->_o_persistence IS BOUND.
+          me->_o_persistence->persist_message( i_data = <ls_msg>
+                                               i_async_task_id = i_async_task_id
+                                               i_model = CONV #( me->_model ) ).
+        ENDIF.
+
         RAISE EVENT on_message_failed
             EXPORTING
               error_text = e_response.
@@ -1164,9 +1317,21 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       e_response = 'We''re having a little trouble getting a complete answer to your question at the moment.'.
 
+      APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+
+      <ls_msg> = VALUE #( role = 'assistant'
+                          content = e_response
+                          type = 'message' ).
+
+      IF me->_o_persistence IS BOUND.
+        me->_o_persistence->persist_message( i_data = <ls_msg>
+                                             i_async_task_id = i_async_task_id
+                                             i_model = CONV #( me->_model ) ).
+      ENDIF.
+
     ENDIF.
 
-    IF e_t_response IS REQUESTED.
+    IF e_t_response IS REQUESTED AND e_response IS NOT INITIAL.
 
       SPLIT e_response AT cl_abap_char_utilities=>newline INTO TABLE e_t_response.
 

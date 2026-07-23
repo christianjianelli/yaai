@@ -13,7 +13,13 @@ CLASS ycl_aai_async_chat_google DEFINITION
 
     METHODS on_http_response_received FOR EVENT on_response_received OF ycl_aai_conn.
 
-    METHODS on_connection_error FOR EVENT on_connection_error OF ycl_aai_conn.
+    METHODS on_connection_error FOR EVENT on_connection_error OF ycl_aai_conn
+      IMPORTING
+        msgno
+        msgv1
+        msgv2
+        msgv3
+        msgv4.
 
     METHODS on_message_send FOR EVENT on_message_send OF ycl_aai_google.
 
@@ -42,7 +48,10 @@ CLASS ycl_aai_async_chat_google DEFINITION
 
   PRIVATE SECTION.
 
-    DATA: _chat_id TYPE yde_aai_chat_id,
+    DATA: _o_async TYPE REF TO ycl_aai_async.
+
+    DATA: _task_id TYPE yde_aai_async_task_id,
+          _chat_id TYPE yde_aai_chat_id,
           _log     TYPE abap_bool.
 
 ENDCLASS.
@@ -57,13 +66,13 @@ CLASS ycl_aai_async_chat_google IMPLEMENTATION.
 
     CLEAR r_response.
 
+    me->_task_id = i_task_id.
     me->_chat_id = i_chat_id.
-
     me->_log = i_log.
 
-    DATA(lo_async) = NEW ycl_aai_async( ).
+    me->_o_async = NEW ycl_aai_async( ).
 
-    lo_async->update_status(
+    me->_o_async->update_status(
       EXPORTING
         i_task_id = i_task_id
         i_status  = yif_aai_async=>mc_task_running
@@ -76,7 +85,7 @@ CLASS ycl_aai_async_chat_google IMPLEMENTATION.
     ENDIF.
 
     DATA(lo_aai_db) = NEW ycl_aai_db( i_api = yif_aai_const=>c_google
-                                        i_id = i_chat_id ).
+                                      i_id = i_chat_id ).
 
     DATA(lo_log) = NEW ycl_aai_log( i_chat_id = i_chat_id ).
 
@@ -159,11 +168,18 @@ CLASS ycl_aai_async_chat_google IMPLEMENTATION.
 
     ENDIF.
 
-    lo_async->update_status(
-      EXPORTING
-        i_task_id = i_task_id
-        i_status  = yif_aai_async=>mc_task_finished
-    ).
+    DATA(l_async_task_status) = me->_o_async->get_status( i_task_id ).
+
+    IF l_async_task_status <> yif_aai_async=>mc_task_failed AND
+       l_async_task_status <> yif_aai_async=>mc_task_cancelled.
+
+      me->_o_async->update_status(
+        EXPORTING
+          i_task_id = i_task_id
+          i_status  = yif_aai_async=>mc_task_finished
+      ).
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -343,11 +359,30 @@ CLASS ycl_aai_async_chat_google IMPLEMENTATION.
 
   METHOD on_connection_error.
 
+    me->_o_async->update_status(
+      EXPORTING
+        i_task_id = me->_task_id
+        i_status  = yif_aai_async=>mc_task_failed
+    ).
+
     IF me->_log = abap_true.
 
       DATA(lo_log) = NEW ycl_aai_log( me->_chat_id ).
 
-      lo_log->add( VALUE #( number = '001' type = 'E' ) ).
+      IF msgno IS NOT INITIAL.
+
+        lo_log->add( VALUE #( number = msgno
+                              type = 'E'
+                              message_v1 = msgv1
+                              message_v2 = msgv2
+                              message_v3 = msgv3
+                              message_v4 = msgv4 ) ).
+
+      ELSE.
+
+        lo_log->add( VALUE #( number = '001' type = 'E' ) ).
+
+      ENDIF.
 
     ENDIF.
 

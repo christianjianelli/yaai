@@ -242,7 +242,7 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
           WHERE id = @ls_rag-id.
 
         IF sy-subrc <> 0.
-          ROLLBACK WORK.
+          ROLLBACK WORK. "#EC CI_ROLLBACK
           e_error = 'Error while updating the document'.
           RETURN.
         ENDIF.
@@ -290,7 +290,7 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
         INSERT yaai_rag_data FROM TABLE @lt_aai_rag_data.
 
         IF sy-subrc <> 0.
-          ROLLBACK WORK.
+          ROLLBACK WORK. "#EC CI_ROLLBACK
           e_updated = abap_false.
           e_error = 'Error while updating the file content'.
           RETURN.

@@ -185,7 +185,7 @@ CLASS ycl_aai_rest_agent IMPLEMENTATION.
         LEFT OUTER JOIN yaai_rag AS c
         ON a~rag_ctx_id = c~id
         WHERE a~id = @l_agent_id
-        INTO @DATA(ls_agent).
+        INTO @DATA(ls_agent). "#EC CI_NOORDER
 
       IF ls_agent IS INITIAL.
 
