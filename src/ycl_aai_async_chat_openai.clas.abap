@@ -113,7 +113,7 @@ CLASS ycl_aai_async_chat_openai IMPLEMENTATION.
     SET HANDLER me->on_tool_call_response FOR ALL INSTANCES.
     SET HANDLER me->on_tool_call_error FOR ALL INSTANCES.
 
-    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_api = COND #( WHEN i_api IS INITIAL THEN yif_aai_const=>c_sap_ai_core ELSE i_api )
+    DATA(lo_aai_openai) = NEW ycl_aai_openai( i_api = COND #( WHEN i_api IS INITIAL THEN yif_aai_const=>c_openai ELSE i_api )
                                               i_model = i_model
                                               i_o_connection = lo_aai_conn
                                               i_o_persistence = lo_aai_db
