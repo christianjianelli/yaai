@@ -10,7 +10,7 @@ This repository provides a set of tools designed to facilitate Artificial Intell
   - **[Google Gemini](./docs/google/README.md)**
   - **[Mistral](./docs/mistral/README.md)**
   - **[Ollama](./docs/ollama/README.md)**
-  - **SAP AI Core**
+  - **[SAP AI Core](./docs/sap_ai_core/README.md)**
   - **[Deepseek](./docs/deepseek/README.md)**
   - **[Moonshot](./docs/moonshot/README.md)**
   - APIs from other providers, such as Nvidia, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.

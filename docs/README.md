@@ -8,7 +8,7 @@ This repository provides a set of tools designed to facilitate Artificial Intell
   - **[Google Gemini](google/README.md)**
   - **[Mistral](openai_compatible/mistral.md)**
   - **[Ollama](ollama/README.md)**
-  - **SAP AI Core**
+  - **[SAP AI Core](sap_ai_core/README.md)**
   - **[Deepseek](deepseek/README.md)**
   - **[Moonshot](moonshot/README.md)**
   - APIs from other providers, such as Nvidia, that implement the OpenAI API standards also work with ABAP AI tools, possibly requiring minor adjustments.
@@ -58,6 +58,7 @@ The ABAP AI tools UI repository provides interfaces to interact with LLMs direct
   - [Google Gemini](google/README.md): Learn how to use ABAP AI tools with Google Gemini models.
   - [Mistral](mistral/README.md): Learn how to use ABAP AI tools with Mistral models.
   - [Ollama](ollama/README.md): Learn how to use ABAP AI tools with with local or self-hosted Ollama models.
+  - [SAP AI Core](sap_ai_core/README.md): Learn how to use ABAP AI tools with SAP AI Core models.
   - [DeepSeek](deepseek/README.md): Learn how to use ABAP AI tools with DeepSeek models.
   - [Moonshot AI](moonshot/README.md): Learn how to use ABAP AI tools with Moonshot AI models.
 
