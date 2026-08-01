@@ -9,6 +9,29 @@ Legend
 - : removed
 
 
+2026-08-01 (Version 1.2.2)
+-------------------
++ Images support added to OpenAI Responses API
++ Files support added to OpenAI Responses API 
+! Private attributes (structures and internal tables) prefix added (_s and _t) to OpenAI, Ollama, Google and Anthropic main classes
++ ABAP AI tools version added to the constants interface
++ ABAP AI tools version add to REST handler class    
+
+
+2026-07-25
+-------------------
+* Bugfix: OpenAI API wrongly set as SAP AI Core 
+
+
+2026-07-23
+-------------------
++ Error handling improvements across all supported APIs
+
+
+2026-07-21
+-------------------
++ API Disabled field added to the database table and REST service 
+
 
 2026-07-19
 -------------------
