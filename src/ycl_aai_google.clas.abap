@@ -51,10 +51,11 @@ CLASS ycl_aai_google DEFINITION
           _o_persistence TYPE REF TO yif_aai_db,
           _o_log         TYPE REF TO ycl_aai_log.
 
+    DATA: _t_chat_messages     TYPE yif_aai_google~ty_contents_t.
+
     DATA: _model               TYPE string,
           _temperature         TYPE p LENGTH 2 DECIMALS 1,
           _system_instructions TYPE string,
-          _chat_messages       TYPE yif_aai_google~ty_contents_t,
           _max_tool_calls      TYPE i.
 
     METHODS _load_agent_settings.
@@ -111,7 +112,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
     ENDIF.
 
     IF i_t_history IS SUPPLIED.
-      me->_chat_messages = i_t_history.
+      me->_t_chat_messages = i_t_history.
     ENDIF.
 
     IF i_o_persistence IS SUPPLIED.
@@ -120,7 +121,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
       me->_o_persistence->get_chat(
         IMPORTING
-          e_t_msg_data = me->_chat_messages
+          e_t_msg_data = me->_t_chat_messages
       ).
 
     ENDIF.
@@ -280,7 +281,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     IF i_new = abap_true.
 
-      FREE me->_chat_messages.
+      FREE me->_t_chat_messages.
 
     ENDIF.
 
@@ -294,13 +295,13 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
-    IF me->_chat_messages IS INITIAL.
+    IF me->_t_chat_messages IS INITIAL.
 
       IF i_greeting IS NOT INITIAL.
 
         l_greeting = '{"text": ' && lo_aai_util->serialize( i_greeting ) && '}'.
 
-        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
+        APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
 
         <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( l_greeting ) ) ).
 
@@ -332,7 +333,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     ENDIF.
 
-    APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+    APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
     <ls_msg> = VALUE #( role = 'user' parts = VALUE #( ( l_message ) ) ).
 
@@ -371,7 +372,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
       IF me->_o_connection->create_connection( i_endpoint = l_endpoint ).
 
-        DATA(ls_generate_request) = VALUE yif_aai_google~ty_google_generate_request_s( contents = me->_chat_messages ).
+        DATA(ls_generate_request) = VALUE yif_aai_google~ty_google_generate_request_s( contents = me->_t_chat_messages ).
 
         "Do not send system messages to the API. They are being persisted just to be make them visible to the developer.
         DELETE ls_generate_request-contents WHERE role = 'system'.
@@ -440,7 +441,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
-          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
 
@@ -470,7 +471,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           MESSAGE e020(yaai) INTO e_response.
 
-          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
 
@@ -494,7 +495,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           e_response = |Error! code: { ls_response-error-code }, message: { ls_response-error-message }, status: { ls_response-error-status }|.
 
-          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
 
@@ -580,7 +581,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           IF l_tool_calls >= me->_max_tool_calls.
 
-            APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
             "The maximum number of tool calls allowed has been reached.
             MESSAGE ID 'YAAI' TYPE 'S' NUMBER '017' INTO l_message.
@@ -618,7 +619,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
           <l_response> = e_response.
         ENDIF.
 
-        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+        APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
         <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
 
@@ -645,7 +646,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     r_conversation = NEW ycl_aai_util( )->serialize(
       EXPORTING
-        i_data = me->_chat_messages
+        i_data = me->_t_chat_messages
     ).
 
   ENDMETHOD.
@@ -653,7 +654,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
   METHOD yif_aai_google~get_history.
 
-    e_t_history = me->_chat_messages.
+    e_t_history = me->_t_chat_messages.
 
   ENDMETHOD.
 
@@ -667,7 +668,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
   METHOD yif_aai_google~set_history.
 
-    me->_chat_messages = i_t_history.
+    me->_t_chat_messages = i_t_history.
 
   ENDMETHOD.
 
@@ -775,7 +776,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     ls_contents-role = i_s_response-role.
 
-    APPEND ls_contents TO me->_chat_messages.
+    APPEND ls_contents TO me->_t_chat_messages.
 
     IF me->_o_persistence IS BOUND.
       me->_o_persistence->persist_message( i_data = ls_contents

@@ -6,7 +6,14 @@ CLASS ycl_aai_rest_async_chat DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES: BEGIN OF ty_request_create_s,
+    TYPES: BEGIN OF ty_file_s,
+             filename TYPE string,
+             content  TYPE string,
+           END OF ty_file_s,
+
+           ty_file_t TYPE STANDARD TABLE OF ty_file_s WITH EMPTY KEY,
+
+           BEGIN OF ty_request_create_s,
              chat_id  TYPE string,
              api      TYPE string,
              api_key  TYPE string,
@@ -14,6 +21,7 @@ CLASS ycl_aai_rest_async_chat DEFINITION
              context  TYPE string,
              agent_id TYPE string,
              model    TYPE string,
+             files    TYPE ty_file_t,
            END OF ty_request_create_s,
 
            BEGIN OF ty_response_create_s,

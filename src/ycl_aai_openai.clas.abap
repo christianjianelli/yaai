@@ -64,6 +64,7 @@ CLASS ycl_aai_openai DEFINITION
           _o_log         TYPE REF TO ycl_aai_log.
 
     DATA: _model                         TYPE string,
+          _max_tool_calls                TYPE i,
           _use_completions               TYPE abap_bool VALUE abap_false,
           _temperature                   TYPE p LENGTH 2 DECIMALS 1,
           _parallel_tool_calls           TYPE abap_bool VALUE abap_false,
@@ -72,12 +73,15 @@ CLASS ycl_aai_openai DEFINITION
           _reasoning_effort              TYPE string,
           _system_instructions           TYPE string,
           _system_instructions_role      TYPE string,
-          _openai_generate_request       TYPE yif_aai_openai~ty_openai_generate_request_s,
-          _openai_generate_response      TYPE yif_aai_openai~ty_openai_generate_response_s,
-          _openai_chat_comp_response     TYPE yif_aai_openai~ty_openai_chat_comp_resp_s,
-          _openai_transcription_response TYPE yif_aai_openai~ty_openai_transcription_resp_s,
-          _messages                      TYPE yif_aai_openai~ty_generate_messages_t,
-          _max_tool_calls                TYPE i.
+*          _s_openai_generate_request     TYPE yif_aai_openai~ty_openai_generate_request_s,
+          _s_openai_generate_response    TYPE yif_aai_openai~ty_openai_generate_response_s,
+          _s_openai_chat_comp_response   TYPE yif_aai_openai~ty_openai_chat_comp_resp_s,
+          _s_openai_transcript_response  TYPE yif_aai_openai~ty_openai_transcription_resp_s,
+          _t_messages                    TYPE yif_aai_openai~ty_generate_messages_t,
+          _t_messages_db                 TYPE yif_aai_db=>ty_messages_t,
+          _t_message_images              TYPE yif_aai_openai~ty_message_images_t,
+          _t_message_files               TYPE yif_aai_openai~ty_message_files_t.
+
 
     METHODS _load_agent_settings.
 
@@ -125,7 +129,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     ENDIF.
 
-    me->_messages = i_t_history.
+    me->_t_messages = i_t_history.
 
     me->_temperature = 1. "non gpt5 models
 
@@ -150,7 +154,8 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       me->_o_persistence->get_chat(
         IMPORTING
-          e_t_msg_data = me->_messages
+          e_t_messages = me->_t_messages_db
+          e_t_msg_data = me->_t_messages
       ).
 
     ENDIF.
@@ -280,7 +285,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     ENDIF.
 
     IF i_new = abap_true.
-      FREE me->_messages.
+      FREE me->_t_messages.
     ENDIF.
 
     IF i_o_agent IS BOUND AND me->mo_agent IS NOT BOUND.
@@ -288,11 +293,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
       me->_load_agent_settings( ).
     ENDIF.
 
-    IF me->_messages IS INITIAL.
+    IF me->_t_messages IS INITIAL.
 
       IF me->_system_instructions IS NOT INITIAL.
 
-        APPEND INITIAL LINE TO me->_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
+        APPEND INITIAL LINE TO me->_t_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
 
         <ls_msg> = VALUE #( role = me->_system_instructions_role
                             content = me->_system_instructions
@@ -306,7 +311,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       IF i_greeting IS NOT INITIAL.
 
-        APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+        APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
         <ls_msg> = VALUE #( role = 'assistant'
                             content = i_greeting
@@ -324,18 +329,18 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       IF me->_system_instructions IS NOT INITIAL.
 
-        READ TABLE me->_messages TRANSPORTING NO FIELDS
+        READ TABLE me->_t_messages TRANSPORTING NO FIELDS
           WITH KEY role = me->_system_instructions_role.
 
         IF sy-subrc <> 0.
 
           INSERT VALUE #( role = me->_system_instructions_role
                           content = me->_system_instructions
-                          type = 'message' ) INTO me->_messages INDEX 1.
+                          type = 'message' ) INTO me->_t_messages INDEX 1.
 
           IF me->_o_persistence IS BOUND.
 
-            READ TABLE me->_messages ASSIGNING <ls_msg> INDEX 1.
+            READ TABLE me->_t_messages ASSIGNING <ls_msg> INDEX 1.
 
             me->_o_persistence->persist_system_instructions( i_data = <ls_msg> ).
 
@@ -359,7 +364,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     ENDIF.
 
-    APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+    APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
     <ls_msg> = VALUE #( role = 'user'
                         content = l_message
@@ -414,7 +419,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       IF me->_o_connection->create_connection( i_endpoint = me->m_endpoint ).
 
-        FREE me->_openai_chat_comp_response.
+        FREE me->_s_openai_chat_comp_response.
 
         IF me->mo_function_calling IS BOUND.
 
@@ -468,7 +473,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
               <l_response> = e_response.
             ENDIF.
 
-            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'assistant'
                                 content = e_response
@@ -495,19 +500,19 @@ CLASS ycl_aai_openai IMPLEMENTATION.
             i_json = l_json
             i_camel_case = abap_true
           IMPORTING
-            e_data = me->_openai_chat_comp_response
+            e_data = me->_s_openai_chat_comp_response
         ).
 
-        IF me->_openai_chat_comp_response IS INITIAL OR
-           condense( to_upper( me->_openai_chat_comp_response-detail ) ) = yif_aai_const=>c_unauthorized.
+        IF me->_s_openai_chat_comp_response IS INITIAL OR
+           condense( to_upper( me->_s_openai_chat_comp_response-detail ) ) = yif_aai_const=>c_unauthorized.
 
           MESSAGE e020(yaai) INTO e_response.
 
-          IF me->_openai_chat_comp_response-detail IS NOT INITIAL.
-            e_response = |{ e_response } Detail: { me->_openai_chat_comp_response-detail }|.
+          IF me->_s_openai_chat_comp_response-detail IS NOT INITIAL.
+            e_response = |{ e_response } Detail: { me->_s_openai_chat_comp_response-detail }|.
           ENDIF.
 
-          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant'
                               content = e_response
@@ -527,13 +532,13 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         ENDIF.
 
-        IF me->_openai_chat_comp_response-object = 'error'.
+        IF me->_s_openai_chat_comp_response-object = 'error'.
 
-          e_response = |{ me->_openai_chat_comp_response-code }: { me->_openai_chat_comp_response-message }|.
+          e_response = |{ me->_s_openai_chat_comp_response-code }: { me->_s_openai_chat_comp_response-message }|.
 
           IF e_response IS NOT INITIAL.
 
-            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'assistant'
                                 content = e_response
@@ -554,11 +559,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
           EXIT.
         ENDIF.
 
-        IF me->_openai_chat_comp_response-error-message IS NOT INITIAL.
+        IF me->_s_openai_chat_comp_response-error-message IS NOT INITIAL.
 
-          e_response = |{ me->_openai_chat_comp_response-error-code } { me->_openai_chat_comp_response-error-message }|.
+          e_response = |{ me->_s_openai_chat_comp_response-error-code } { me->_s_openai_chat_comp_response-error-message }|.
 
-          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant'
                               content = e_response
@@ -581,7 +586,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         DATA(l_function_call) = abap_false.
 
-        LOOP AT me->_openai_chat_comp_response-choices ASSIGNING FIELD-SYMBOL(<ls_choices>).
+        LOOP AT me->_s_openai_chat_comp_response-choices ASSIGNING FIELD-SYMBOL(<ls_choices>).
 
           IF <ls_choices>-message-tool_calls IS INITIAL.
             CONTINUE.
@@ -591,7 +596,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
           LOOP AT <ls_choices>-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool_calls>).
 
-            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = <ls_choices>-message-role
                                 type = 'function_call'
@@ -602,11 +607,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
             IF me->_o_persistence IS BOUND.
 
               me->_o_persistence->persist_message( i_data = <ls_msg>
-                                                   i_tokens = _openai_chat_comp_response-usage-total_tokens
+                                                   i_tokens = _s_openai_chat_comp_response-usage-total_tokens
                                                    i_async_task_id = i_async_task_id
                                                    i_model = CONV #( me->_model ) ).
 
-              CLEAR _openai_chat_comp_response-usage-total_tokens.
+              CLEAR _s_openai_chat_comp_response-usage-total_tokens.
 
             ENDIF.
 
@@ -642,7 +647,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                 r_response    = DATA(l_tool_response)
             ).
 
-            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'tool'
                                 type = 'function_call_output'
@@ -663,7 +668,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
           IF l_tool_calls >= me->_max_tool_calls.
 
-            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'user'
                                 type = 'message' ).
@@ -682,7 +687,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
           CONTINUE.
         ENDIF.
 
-        LOOP AT me->_openai_chat_comp_response-choices ASSIGNING <ls_choices>.
+        LOOP AT me->_s_openai_chat_comp_response-choices ASSIGNING <ls_choices>.
 
           IF <ls_choices>-message-role <> 'assistant'.
             CONTINUE.
@@ -690,7 +695,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
           e_response = lo_aai_util->replace_unicode_escape_seq( <ls_choices>-message-content ).
 
-          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = <ls_choices>-message-role
                               type = 'message'
@@ -698,7 +703,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_message( i_data = <ls_msg>
-                                                 i_tokens = _openai_chat_comp_response-usage-total_tokens
+                                                 i_tokens = _s_openai_chat_comp_response-usage-total_tokens
                                                  i_async_task_id = i_async_task_id
                                                  i_model = CONV #( me->_model ) ).
           ENDIF.
@@ -716,7 +721,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         IF e_response IS NOT INITIAL.
 
-          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant'
                               content = e_response
@@ -819,10 +824,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
         EXPORTING
           i_json = l_json
         IMPORTING
-          e_data = me->_openai_transcription_response
+          e_data = me->_s_openai_transcript_response
       ).
 
-      e_response = me->_openai_transcription_response-text.
+      e_response = me->_s_openai_transcript_response-text.
 
     ENDIF.
 
@@ -873,7 +878,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     ENDIF.
 
     IF i_new = abap_true.
-      FREE me->_messages.
+      FREE me->_t_messages.
     ENDIF.
 
     IF i_o_agent IS BOUND AND me->mo_agent IS NOT BOUND.
@@ -881,11 +886,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
       me->_load_agent_settings( ).
     ENDIF.
 
-    IF me->_messages IS INITIAL.
+    IF me->_t_messages IS INITIAL.
 
       IF me->_system_instructions IS NOT INITIAL.
 
-        APPEND INITIAL LINE TO me->_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
+        APPEND INITIAL LINE TO me->_t_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
 
         <ls_msg> = VALUE #( role = me->_system_instructions_role
                             content = me->_system_instructions
@@ -901,7 +906,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       IF i_greeting IS NOT INITIAL.
 
-        APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+        APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
         <ls_msg> = VALUE #( role = 'assistant'
                             content = i_greeting
@@ -919,16 +924,16 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       IF me->_system_instructions IS NOT INITIAL.
 
-        READ TABLE me->_messages TRANSPORTING NO FIELDS
+        READ TABLE me->_t_messages TRANSPORTING NO FIELDS
           WITH KEY role = 'developer'.
 
         IF sy-subrc <> 0.
 
           INSERT VALUE #( role = 'developer'
                           content = me->_system_instructions
-                          type = 'message' ) INTO me->_messages INDEX 1.
+                          type = 'message' ) INTO me->_t_messages INDEX 1.
 
-          READ TABLE me->_messages ASSIGNING <ls_msg> INDEX 1.
+          READ TABLE me->_t_messages ASSIGNING <ls_msg> INDEX 1.
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_system_instructions( i_data = <ls_msg> ).
@@ -952,7 +957,9 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     ENDIF.
 
-    APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+    APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
+
+    DATA(l_seqno) = lines( me->_t_messages ).
 
     <ls_msg> = VALUE #( role = 'user'
                         content = l_message
@@ -967,11 +974,36 @@ CLASS ycl_aai_openai IMPLEMENTATION.
     ENDIF.
 
     IF me->_o_persistence IS BOUND.
+
       " persist the user message and the augmented prompt
-      me->_o_persistence->persist_message( i_data = <ls_msg>
-                                           i_prompt = ls_prompt
-                                           i_async_task_id = i_async_task_id
-                                           i_model = CONV #( me->_model ) ).
+      me->_o_persistence->persist_message(
+        EXPORTING
+          i_data = <ls_msg>
+          i_prompt = ls_prompt
+          i_async_task_id = i_async_task_id
+          i_model = CONV #( me->_model )
+        IMPORTING
+          e_seqno = l_seqno
+      ).
+
+    ENDIF.
+
+    IF i_t_images IS NOT INITIAL.
+
+      DATA(ls_message_images) = VALUE yif_aai_openai~ty_message_images_s( seqno = l_seqno
+                                                                          images = CORRESPONDING #( i_t_images ) ).
+
+      INSERT ls_message_images INTO TABLE me->_t_message_images.
+
+    ENDIF.
+
+    IF i_t_files IS NOT INITIAL.
+
+      DATA(ls_message_files) = VALUE yif_aai_openai~ty_message_files_s( seqno = l_seqno
+                                                                        files = CORRESPONDING #( i_t_files ) ).
+
+      INSERT ls_message_files INTO TABLE me->_t_message_files.
+
     ENDIF.
 
     " In memory we keep the augmented prompt instead of the user message
@@ -1007,7 +1039,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_openai_generate_endpoint ).
 
-        FREE me->_openai_generate_response.
+        FREE me->_s_openai_generate_response.
 
         IF me->mo_function_calling IS BOUND.
 
@@ -1065,7 +1097,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
               <l_response> = e_response.
             ENDIF.
 
-            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'assistant'
                                 content = e_response
@@ -1093,14 +1125,14 @@ CLASS ycl_aai_openai IMPLEMENTATION.
           EXPORTING
             i_json = l_json
           IMPORTING
-            e_data = me->_openai_generate_response
+            e_data = me->_s_openai_generate_response
         ).
 
-        IF me->_openai_generate_response IS INITIAL.
+        IF me->_s_openai_generate_response IS INITIAL.
 
           MESSAGE e020(yaai) INTO e_response.
 
-          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant'
                               content = e_response
@@ -1124,7 +1156,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         DATA(l_function_call) = abap_false.
 
-        LOOP AT _openai_generate_response-output ASSIGNING FIELD-SYMBOL(<ls_output>).
+        LOOP AT _s_openai_generate_response-output ASSIGNING FIELD-SYMBOL(<ls_output>).
 
           IF <ls_output>-type <> 'function_call'.
             CONTINUE.
@@ -1132,7 +1164,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
           l_function_call = abap_true.
 
-          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( type = 'function_call'
                               arguments = <ls_output>-arguments
@@ -1142,11 +1174,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
           IF me->_o_persistence IS BOUND.
 
             me->_o_persistence->persist_message( i_data = <ls_msg>
-                                                 i_tokens = _openai_generate_response-usage-total_tokens
+                                                 i_tokens = _s_openai_generate_response-usage-total_tokens
                                                  i_async_task_id = i_async_task_id
                                                  i_model = CONV #( me->_model ) ).
 
-            CLEAR _openai_generate_response-usage-total_tokens.
+            CLEAR _s_openai_generate_response-usage-total_tokens.
 
           ENDIF.
 
@@ -1182,7 +1214,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
               r_response    = DATA(l_tool_response)
           ).
 
-          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( type = 'function_call_output'
                               call_id = <ls_output>-call_id
@@ -1200,7 +1232,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
           IF l_tool_calls >= me->_max_tool_calls.
 
-            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'user'
                                 type = 'message' ).
@@ -1220,11 +1252,11 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         ENDIF.
 
-        IF _openai_generate_response-error IS NOT INITIAL.
+        IF _s_openai_generate_response-error IS NOT INITIAL.
 
-          e_response = |{ _openai_generate_response-error-code }: { _openai_generate_response-error-message }|.
+          e_response = |{ _s_openai_generate_response-error-code }: { _s_openai_generate_response-error-message }|.
 
-          APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant'
                               content = e_response
@@ -1244,7 +1276,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         ENDIF.
 
-        LOOP AT _openai_generate_response-output ASSIGNING <ls_output>.
+        LOOP AT _s_openai_generate_response-output ASSIGNING <ls_output>.
 
           IF <ls_output>-type <> 'message' OR <ls_output>-role <> 'assistant'.
             CONTINUE.
@@ -1256,7 +1288,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
               CONTINUE.
             ENDIF.
 
-            APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
             <ls_content>-text = lo_aai_util->replace_unicode_escape_seq( <ls_content>-text ).
 
@@ -1266,7 +1298,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
             IF me->_o_persistence IS BOUND.
               me->_o_persistence->persist_message( i_data = <ls_msg>
-                                                   i_tokens = _openai_generate_response-usage-total_tokens
+                                                   i_tokens = _s_openai_generate_response-usage-total_tokens
                                                    i_async_task_id = i_async_task_id
                                                    i_model = CONV #( me->_model ) ).
             ENDIF.
@@ -1286,7 +1318,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
             e_error_text = e_response
         ).
 
-        APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+        APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
         <ls_msg> = VALUE #( role = 'assistant'
                             content = e_response
@@ -1317,7 +1349,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
       e_response = 'We''re having a little trouble getting a complete answer to your question at the moment.'.
 
-      APPEND INITIAL LINE TO me->_messages ASSIGNING <ls_msg>.
+      APPEND INITIAL LINE TO me->_t_messages ASSIGNING <ls_msg>.
 
       <ls_msg> = VALUE #( role = 'assistant'
                           content = e_response
@@ -1348,7 +1380,9 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
-    LOOP AT me->_messages ASSIGNING FIELD-SYMBOL(<ls_message>).
+    LOOP AT me->_t_messages ASSIGNING FIELD-SYMBOL(<ls_message>).
+
+      DATA(l_index) = sy-tabix.
 
       CLEAR l_json.
 
@@ -1356,9 +1390,85 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
         WHEN 'message'.
 
-          DATA(ls_message) = CORRESPONDING yif_aai_openai~ty_type_message_s( <ls_message> ).
+          DATA(ls_message) = CORRESPONDING yif_aai_openai~ty_message_content_json_s( <ls_message> ).
 
-          l_json = lo_aai_util->serialize( ls_message ).
+          CASE ls_message-role.
+
+            WHEN yif_aai_openai=>mc_developer OR yif_aai_openai=>mc_user.
+
+              DATA(ls_input_text) = VALUE yif_aai_openai=>ty_input_text_s( type = yif_aai_openai=>mc_input_text
+                                                                           text = ls_message-content ).
+
+              l_json = lo_aai_util->serialize( ls_input_text ).
+
+              IF ls_message-role = yif_aai_openai=>mc_user.
+
+                READ TABLE me->_t_messages_db ASSIGNING FIELD-SYMBOL(<ls_message_db>) INDEX l_index.
+
+                IF sy-subrc = 0.
+                  l_index = <ls_message_db>-seqno.
+                ENDIF.
+
+                READ TABLE me->_t_message_images ASSIGNING FIELD-SYMBOL(<ls_message_images>)
+                  WITH KEY seqno = l_index.
+
+                IF sy-subrc = 0.
+
+                  LOOP AT <ls_message_images>-images ASSIGNING FIELD-SYMBOL(<ls_image>).
+
+                    DATA(ls_input_image) = VALUE yif_aai_openai~ty_input_image_s( image_url = <ls_image>-image_url
+                                                                                  type = yif_aai_openai~mc_input_image
+                                                                                  detail = 'auto' ).
+
+                    DATA(l_json_image) = lo_aai_util->serialize( ls_input_image ).
+
+                    l_json = |{ l_json },{ l_json_image }|.
+
+                  ENDLOOP.
+
+                ENDIF.
+
+                READ TABLE me->_t_message_files ASSIGNING FIELD-SYMBOL(<ls_message_files>)
+                  WITH KEY seqno = l_index.
+
+                IF sy-subrc = 0.
+
+                  LOOP AT <ls_message_files>-files ASSIGNING FIELD-SYMBOL(<ls_file>).
+
+                    DATA(ls_input_file) = VALUE yif_aai_openai~ty_input_file_s( type = yif_aai_openai~mc_input_file
+                                                                                filename = <ls_file>-filename
+                                                                                file_data = <ls_file>-file_data ).
+
+                    DATA(l_json_file) = lo_aai_util->serialize( ls_input_file ).
+
+                    l_json = |{ l_json },{ l_json_file }|.
+
+                  ENDLOOP.
+
+                ENDIF.
+
+              ENDIF.
+
+              ls_message-content = |[{ l_json }]|.
+
+              l_json = lo_aai_util->serialize( ls_message ).
+
+            WHEN yif_aai_openai=>mc_assistant.
+
+              DATA(ls_output_text) = VALUE yif_aai_openai=>ty_input_text_s( type = yif_aai_openai=>mc_output_text
+                                                                            text = ls_message-content ).
+
+              l_json = lo_aai_util->serialize( ls_output_text ).
+
+              ls_message-content = |[{ l_json }]|.
+
+              l_json = lo_aai_util->serialize( ls_message ).
+
+            WHEN OTHERS.
+
+              l_json = lo_aai_util->serialize( ls_message ).
+
+          ENDCASE.
 
         WHEN 'function_call'.
 
@@ -1377,7 +1487,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
       IF r_conversation IS INITIAL.
         r_conversation = l_json.
       ELSE.
-        r_conversation = |{ r_conversation }, { l_json }|.
+        r_conversation = |{ r_conversation },{ l_json }|.
       ENDIF.
 
     ENDLOOP.
@@ -1395,7 +1505,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
-    LOOP AT me->_messages ASSIGNING FIELD-SYMBOL(<ls_message>).
+    LOOP AT me->_t_messages ASSIGNING FIELD-SYMBOL(<ls_message>).
 
       CLEAR l_json.
 
@@ -1444,7 +1554,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD yif_aai_openai~get_history.
 
-    e_t_history = me->_messages.
+    e_t_history = me->_t_messages.
 
   ENDMETHOD.
 
@@ -1465,7 +1575,7 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
   METHOD yif_aai_openai~set_history.
 
-    me->_messages = i_t_history.
+    me->_t_messages = i_t_history.
 
   ENDMETHOD.
 

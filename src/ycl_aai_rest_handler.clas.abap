@@ -74,6 +74,18 @@ CLASS ycl_aai_rest_handler IMPLEMENTATION.
       path     = ''
     ).
 
+    " ABAP AI tools Version
+    IF to_lower( lt_path_info[ 1 ] ) = 'version'.
+
+      server->response->set_cdata(
+        EXPORTING
+          data = |{ yif_aai_const=>c_version }|                 " Character data
+      ).
+
+      RETURN.
+
+    ENDIF.
+
     " Get Resource Instance
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
     me->get_rest_resource_instance(
@@ -172,7 +184,7 @@ CLASS ycl_aai_rest_handler IMPLEMENTATION.
 
             e_error = lo_ex_create_object->get_text( ).
 
-            EXIT. "#EC CI_NOORDER
+            EXIT.                                       "#EC CI_NOORDER
 
         ENDTRY.
 

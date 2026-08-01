@@ -49,13 +49,14 @@ CLASS ycl_aai_ollama DEFINITION
           _o_persistence TYPE REF TO yif_aai_db,
           _o_log         TYPE REF TO ycl_aai_log.
 
+    DATA: _t_chat_messages          TYPE yif_aai_ollama~ty_chat_messages_t.
+
     DATA: _model                    TYPE string,
           _temperature              TYPE p LENGTH 2 DECIMALS 1,
           _num_ctx                  TYPE i,
           _system_instructions      TYPE string,
           _ollama_chat_response     TYPE yif_aai_ollama~ty_ollama_chat_response_s,
           _ollama_generate_response TYPE yif_aai_ollama~ty_ollama_generate_response_s,
-          _chat_messages            TYPE yif_aai_ollama~ty_chat_messages_t,
           _max_tool_calls           TYPE i.
 
     METHODS _load_agent_settings.
@@ -127,7 +128,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       me->_o_persistence->get_chat(
         IMPORTING
-          e_t_msg_data = me->_chat_messages
+          e_t_msg_data = me->_t_chat_messages
       ).
 
     ENDIF.
@@ -169,13 +170,13 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   METHOD yif_aai_ollama~set_history.
 
-    me->_chat_messages = i_t_history.
+    me->_t_chat_messages = i_t_history.
 
   ENDMETHOD.
 
   METHOD yif_aai_ollama~get_history.
 
-    e_t_history = me->_chat_messages.
+    e_t_history = me->_t_chat_messages.
 
   ENDMETHOD.
 
@@ -247,15 +248,15 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     IF i_new = abap_true.
 
-      FREE me->_chat_messages.
+      FREE me->_t_chat_messages.
 
     ENDIF.
 
-    IF me->_chat_messages IS INITIAL.
+    IF me->_t_chat_messages IS INITIAL.
 
       IF me->_system_instructions IS NOT INITIAL.
 
-        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
+        APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
 
         <ls_msg> = VALUE #( role = 'system' content = me->_system_instructions ).
 
@@ -267,7 +268,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       IF i_greeting IS NOT INITIAL.
 
-        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+        APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
         <ls_msg> = VALUE #( role = 'assistant' content = i_greeting ).
 
@@ -283,15 +284,15 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       IF me->_system_instructions IS NOT INITIAL.
 
-        READ TABLE me->_chat_messages TRANSPORTING NO FIELDS
+        READ TABLE me->_t_chat_messages TRANSPORTING NO FIELDS
           WITH KEY role = 'system'.
 
         IF sy-subrc <> 0.
 
-          INSERT VALUE #( role = 'system' content = me->_system_instructions ) INTO me->_chat_messages INDEX 1.
+          INSERT VALUE #( role = 'system' content = me->_system_instructions ) INTO me->_t_chat_messages INDEX 1.
 
           IF me->_o_persistence IS BOUND.
-            me->_o_persistence->persist_system_instructions( i_data = me->_chat_messages[ 1 ] ).
+            me->_o_persistence->persist_system_instructions( i_data = me->_t_chat_messages[ 1 ] ).
           ENDIF.
 
         ENDIF.
@@ -312,7 +313,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     ENDIF.
 
-    APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+    APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
     <ls_msg> = VALUE #( role = 'user' content = i_message ).
 
@@ -367,7 +368,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
         DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_chat_request_s( model = me->_model
                                                                                                        options = VALUE #( temperature = me->_temperature
                                                                                                                           num_ctx = me->_num_ctx )
-                                                                                                       messages = me->_chat_messages
+                                                                                                       messages = me->_t_chat_messages
                                                                                                        tools = l_tools ) ).
 
         me->_o_connection->set_body( l_json ).
@@ -392,7 +393,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
-          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
 
@@ -421,7 +422,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
           MESSAGE e020(yaai) INTO e_response.
 
-          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
 
@@ -439,7 +440,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         IF me->_ollama_chat_response-message-tool_calls[] IS NOT INITIAL AND me->mo_function_calling IS BOUND.
 
-          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = me->_ollama_chat_response-message.
 
@@ -470,7 +471,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
                 r_response    = DATA(l_tool_response)
             ).
 
-            APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'tool'
                                 tool_name = <ls_tool>-function-name
@@ -488,7 +489,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
           IF l_tool_calls >= me->_max_tool_calls.
 
-            APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'user' ).
 
@@ -518,7 +519,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
-          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
 
@@ -538,9 +539,9 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         me->_ollama_chat_response-message-content = lo_aai_util->replace_unicode_escape_seq( me->_ollama_chat_response-message-content ).
 
-        APPEND me->_ollama_chat_response-message TO me->_chat_messages.
+        APPEND me->_ollama_chat_response-message TO me->_t_chat_messages.
 
-        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+        APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
         <ls_msg> = VALUE #( role =  me->_ollama_chat_response-message-role
                             content = me->_ollama_chat_response-message-content ).
@@ -569,7 +570,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           <l_response> = e_response.
         ENDIF.
 
-        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+        APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
         <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
 
@@ -740,7 +741,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   METHOD get_chat_messages.
 
-    rt_messages = me->_chat_messages.
+    rt_messages = me->_t_chat_messages.
 
   ENDMETHOD.
 

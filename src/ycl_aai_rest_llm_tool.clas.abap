@@ -159,8 +159,7 @@ CLASS ycl_aai_rest_llm_tool IMPLEMENTATION.
         WHERE class_name IN @lt_rng_class_name
           AND method_name IN @lt_rng_method_name
           AND description IN @lt_rng_description
-          INTO TABLE @DATA(lt_tool)
-          UP TO 100 ROWS.
+          INTO TABLE @DATA(lt_tool).
 
       IF sy-subrc = 0.
         ls_response_query-tools = CORRESPONDING #( lt_tool ).

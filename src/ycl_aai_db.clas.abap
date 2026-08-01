@@ -222,6 +222,7 @@ CLASS ycl_aai_db IMPLEMENTATION.
           l_model  TYPE yde_aai_model.
 
     CLEAR: e_id,
+           e_seqno,
            e_persisted.
 
     IF i_id IS SUPPLIED.
@@ -247,6 +248,8 @@ CLASS ycl_aai_db IMPLEMENTATION.
 
       l_seqno = 1.
 
+      e_seqno = l_seqno.
+
     ENDIF.
 
     e_id = l_id.
@@ -259,6 +262,8 @@ CLASS ycl_aai_db IMPLEMENTATION.
         INTO @l_seqno.
 
       l_seqno = l_seqno + 1.
+
+      e_seqno = l_seqno.
 
     ENDIF.
 

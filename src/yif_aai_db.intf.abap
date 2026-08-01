@@ -37,6 +37,7 @@ INTERFACE yif_aai_db
       i_model         TYPE yde_aai_model OPTIONAL
     EXPORTING
       e_id            TYPE uuid
+      e_seqno         TYPE yde_aai_seqno
       e_persisted     TYPE abap_bool.
 
   METHODS persist_tools

@@ -51,11 +51,12 @@ CLASS ycl_aai_anthropic DEFINITION
           _o_persistence TYPE REF TO yif_aai_db,
           _o_log         TYPE REF TO ycl_aai_log.
 
+    DATA: _t_chat_messages TYPE yif_aai_anthropic~ty_chat_messages_t.
+
     DATA: _model               TYPE string,
           _temperature         TYPE p LENGTH 2 DECIMALS 1,
           _max_tokens          TYPE i VALUE 2048,
           _system_instructions TYPE string,
-          _chat_messages       TYPE yif_aai_anthropic~ty_chat_messages_t,
           _max_tool_calls      TYPE i.
 
     METHODS _load_agent_settings.
@@ -116,7 +117,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
       me->_o_persistence->get_chat(
         IMPORTING
-          e_t_msg_data = me->_chat_messages
+          e_t_msg_data = me->_t_chat_messages
       ).
 
     ENDIF.
@@ -253,15 +254,15 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
     IF i_new = abap_true.
 
-      FREE me->_chat_messages.
+      FREE me->_t_chat_messages.
 
     ENDIF.
 
-    IF me->_chat_messages IS INITIAL.
+    IF me->_t_chat_messages IS INITIAL.
 
       IF i_greeting IS NOT INITIAL.
 
-        APPEND INITIAL LINE TO me->_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
+        APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
 
         <ls_msg> = VALUE #( role = 'assistant' content = lo_aai_util->serialize( i_data = i_greeting ) ).
 
@@ -275,7 +276,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
     ENDIF.
 
-    APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+    APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
     IF i_o_prompt IS BOUND.
 
@@ -375,14 +376,14 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
         "Do not send system messages to the API. They are being persisted just to be make them visible to the developer.
         "The system instructions are passed in the system field (see the serialization below).
-        DELETE me->_chat_messages WHERE role = 'system'.
+        DELETE me->_t_chat_messages WHERE role = 'system'.
 
         DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_anthropic~ty_anthropic_chat_request_s( model = me->_model
                                                                                                              temperature = me->_temperature
                                                                                                              max_tokens = me->_max_tokens
                                                                                                              stream = abap_false
                                                                                                              system = me->_system_instructions
-                                                                                                             messages = me->_chat_messages
+                                                                                                             messages = me->_t_chat_messages
                                                                                                              tools = l_tools ) ).
 
         me->_o_connection->set_body( l_json ).
@@ -409,7 +410,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
-          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant' content = lo_aai_util->serialize( i_data = e_response ) ).
 
@@ -445,7 +446,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
             <l_response> = e_response.
           ENDIF.
 
-          APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+          APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
           <ls_msg> = VALUE #( role = 'assistant' content = lo_aai_util->serialize( i_data = e_response ) ).
 
@@ -491,7 +492,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
               IF <ls_content>-type = 'text'.
 
-                APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+                APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
                 <ls_msg> = VALUE #( role = ls_anthropic_chat_response-role
                                     content = <ls_content>-text ).
@@ -520,7 +521,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
                 IF <ls_content_aux>-type = 'text'.
 
-                  APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+                  APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
                   <ls_content_aux>-text = lo_aai_util->replace_unicode_escape_seq( <ls_content_aux>-text ).
 
@@ -578,7 +579,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
               CONTINUE.
             ENDIF.
 
-            APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = ls_anthropic_chat_response-role
                                 content = lo_aai_util->serialize( i_data = <ls_content> ) ).
@@ -604,7 +605,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
             l_tool_response = '[{"type": "tool_result", "tool_use_id": "' && <ls_content>-id && '","content": ' && l_tool_response && '}]'.
 
-            APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'user' content = l_tool_response ).
 
@@ -618,7 +619,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
           IF l_tool_calls >= me->_max_tool_calls.
 
-            APPEND INITIAL LINE TO me->_chat_messages ASSIGNING <ls_msg>.
+            APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
             <ls_msg> = VALUE #( role = 'user' ).
 
@@ -668,14 +669,14 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
   METHOD yif_aai_anthropic~get_conversation.
 
-    rt_messages = me->_chat_messages.
+    rt_messages = me->_t_chat_messages.
 
   ENDMETHOD.
 
 
   METHOD yif_aai_anthropic~get_history.
 
-    e_t_history = me->_chat_messages.
+    e_t_history = me->_t_chat_messages.
 
   ENDMETHOD.
 
@@ -689,7 +690,7 @@ CLASS ycl_aai_anthropic IMPLEMENTATION.
 
   METHOD yif_aai_anthropic~set_history.
 
-    me->_chat_messages = i_t_history.
+    me->_t_chat_messages = i_t_history.
 
   ENDMETHOD.
 

@@ -21,6 +21,12 @@ INTERFACE yif_aai_openai
            type    TYPE string,
          END OF ty_type_message_s,
 
+         BEGIN OF ty_message_content_json_s,
+           role    TYPE string,
+           content TYPE /ui2/cl_json=>json,
+           type    TYPE string,
+         END OF ty_message_content_json_s,
+
          BEGIN OF ty_type_text_s,
            verbosity TYPE string,
          END OF ty_type_text_s,
@@ -80,7 +86,53 @@ INTERFACE yif_aai_openai
            role       TYPE string,
            content    TYPE string,
            tool_calls TYPE ty_function_call_chat_comp_t,
-         END OF ty_type_message_chat_comp_s.
+         END OF ty_type_message_chat_comp_s,
+
+         BEGIN OF ty_input_text_s,
+           type TYPE string,
+           text TYPE string,
+         END OF ty_input_text_s,
+
+         BEGIN OF ty_input_image_s,
+           type      TYPE string,
+           image_url TYPE string,
+           detail    TYPE string,
+         END OF ty_input_image_s,
+
+         ty_input_image_t TYPE STANDARD TABLE OF ty_input_image_s WITH EMPTY KEY,
+
+         BEGIN OF ty_input_file_s,
+           type      TYPE string,
+           filename  TYPE string,
+           file_data TYPE string,
+         END OF ty_input_file_s,
+
+         ty_input_file_t TYPE STANDARD TABLE OF ty_input_file_s WITH EMPTY KEY,
+
+         BEGIN OF ty_image_s,
+           image_url TYPE string,
+         END OF ty_image_s,
+
+         BEGIN OF ty_file_s,
+           filename  TYPE string,
+           file_data TYPE string,
+         END OF ty_file_s,
+
+         ty_images_t TYPE STANDARD TABLE OF ty_image_s WITH EMPTY KEY,
+         ty_files_t  TYPE STANDARD TABLE OF ty_file_s WITH EMPTY KEY,
+
+         BEGIN OF ty_message_images_s,
+           seqno TYPE yde_aai_seqno,
+           images TYPE ty_images_t,
+         END OF ty_message_images_s,
+
+         BEGIN OF ty_message_files_s,
+           seqno TYPE yde_aai_seqno,
+           files TYPE ty_files_t,
+         END OF ty_message_files_s,
+
+         ty_message_images_t TYPE SORTED TABLE OF ty_message_images_s WITH UNIQUE KEY seqno,
+         ty_message_files_t  TYPE SORTED TABLE OF ty_message_files_s WITH UNIQUE KEY seqno.
 
   TYPES: BEGIN OF ty_openai_generate_request_s,
            model               TYPE string,
@@ -206,7 +258,14 @@ INTERFACE yif_aai_openai
              mc_reasoning_effort_minimal TYPE string VALUE 'minimal' ##NO_TEXT,
              mc_reasoning_effort_low     TYPE string VALUE 'low' ##NO_TEXT,
              mc_reasoning_effort_medium  TYPE string VALUE 'medium' ##NO_TEXT,
-             mc_reasoning_effort_high    TYPE string VALUE 'high' ##NO_TEXT.
+             mc_reasoning_effort_high    TYPE string VALUE 'high' ##NO_TEXT,
+             mc_developer                TYPE string VALUE 'developer' ##NO_TEXT,
+             mc_user                     TYPE string VALUE 'user' ##NO_TEXT,
+             mc_assistant                TYPE string VALUE 'assistant' ##NO_TEXT,
+             mc_input_text               TYPE string VALUE 'input_text' ##NO_TEXT,
+             mc_output_text              TYPE string VALUE 'output_text' ##NO_TEXT,
+             mc_input_image              TYPE string VALUE 'input_image' ##NO_TEXT,
+             mc_input_file               TYPE string VALUE 'input_file' ##NO_TEXT.
 
   DATA: mo_function_calling TYPE REF TO yif_aai_func_call_openai READ-ONLY,
         mo_agent            TYPE REF TO yif_aai_agent READ-ONLY.
@@ -277,6 +336,8 @@ INTERFACE yif_aai_openai
       i_new           TYPE abap_bool DEFAULT abap_false
       i_greeting      TYPE csequence OPTIONAL
       i_async_task_id TYPE csequence OPTIONAL
+      i_t_images      TYPE ty_images_t OPTIONAL
+      i_t_files       TYPE ty_files_t OPTIONAL
       i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
       i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
         PREFERRED PARAMETER i_message
