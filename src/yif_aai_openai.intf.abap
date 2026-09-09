@@ -53,6 +53,12 @@ INTERFACE yif_aai_openai
            output  TYPE string,
          END OF ty_function_call_output_s,
 
+         BEGIN OF ty_function_call_output_f_s,
+           type    TYPE string,
+           call_id TYPE string,
+           output  TYPE /ui2/cl_json=>json,
+         END OF ty_function_call_output_f_s,
+
          BEGIN OF ty_function_s,
            name      TYPE string,
            arguments TYPE string,
@@ -71,6 +77,11 @@ INTERFACE yif_aai_openai
            content TYPE string,
          END OF ty_type_message_chat_comp_nt_s,
 
+         BEGIN OF ty_type_message_chat_comp_cj_s, " Message content json
+           role    TYPE string,
+           content TYPE /ui2/cl_json=>json,
+         END OF ty_type_message_chat_comp_cj_s,
+
          BEGIN OF ty_type_message_chat_comp_tc_s, " Function/Tool Calling Message
            role       TYPE string,
            tool_calls TYPE ty_function_call_chat_comp_t,
@@ -81,6 +92,12 @@ INTERFACE yif_aai_openai
            content      TYPE string,
            tool_call_id TYPE string,
          END OF ty_type_message_chat_comp_tr_s,
+
+         BEGIN OF ty_type_msg_chat_comp_trj_s, " Function/Tool Response Message (files)
+           role         TYPE string,
+           content      TYPE /ui2/cl_json=>json,
+           tool_call_id TYPE string,
+         END OF ty_type_msg_chat_comp_trj_s,
 
          BEGIN OF ty_type_message_chat_comp_s,
            role       TYPE string,
@@ -99,15 +116,11 @@ INTERFACE yif_aai_openai
            detail    TYPE string,
          END OF ty_input_image_s,
 
-         ty_input_image_t TYPE STANDARD TABLE OF ty_input_image_s WITH EMPTY KEY,
-
          BEGIN OF ty_input_file_s,
            type      TYPE string,
            filename  TYPE string,
            file_data TYPE string,
          END OF ty_input_file_s,
-
-         ty_input_file_t TYPE STANDARD TABLE OF ty_input_file_s WITH EMPTY KEY,
 
          BEGIN OF ty_image_s,
            image_url TYPE string,
@@ -122,7 +135,7 @@ INTERFACE yif_aai_openai
          ty_files_t  TYPE STANDARD TABLE OF ty_file_s WITH EMPTY KEY,
 
          BEGIN OF ty_message_images_s,
-           seqno TYPE yde_aai_seqno,
+           seqno  TYPE yde_aai_seqno,
            images TYPE ty_images_t,
          END OF ty_message_images_s,
 
@@ -132,7 +145,22 @@ INTERFACE yif_aai_openai
          END OF ty_message_files_s,
 
          ty_message_images_t TYPE SORTED TABLE OF ty_message_images_s WITH UNIQUE KEY seqno,
-         ty_message_files_t  TYPE SORTED TABLE OF ty_message_files_s WITH UNIQUE KEY seqno.
+         ty_message_files_t  TYPE SORTED TABLE OF ty_message_files_s  WITH UNIQUE KEY seqno,
+
+         BEGIN OF ty_image_url_chat_compl_s,
+           url    TYPE string,
+           detail TYPE string,
+         END OF ty_image_url_chat_compl_s,
+
+         BEGIN OF ty_content_image_chat_compl_s,
+           type      TYPE string,
+           image_url TYPE ty_image_url_chat_compl_s,
+         END OF ty_content_image_chat_compl_s,
+
+         BEGIN OF ty_content_file_chat_compl_s,
+           type TYPE string,
+           file TYPE ty_file_s,
+         END OF ty_content_file_chat_compl_s.
 
   TYPES: BEGIN OF ty_openai_generate_request_s,
            model               TYPE string,
@@ -336,8 +364,7 @@ INTERFACE yif_aai_openai
       i_new           TYPE abap_bool DEFAULT abap_false
       i_greeting      TYPE csequence OPTIONAL
       i_async_task_id TYPE csequence OPTIONAL
-      i_t_images      TYPE ty_images_t OPTIONAL
-      i_t_files       TYPE ty_files_t OPTIONAL
+      i_t_files       TYPE ytt_aai_files OPTIONAL
       i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
       i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
         PREFERRED PARAMETER i_message
@@ -352,6 +379,7 @@ INTERFACE yif_aai_openai
       i_new           TYPE abap_bool DEFAULT abap_false
       i_greeting      TYPE csequence OPTIONAL
       i_async_task_id TYPE csequence OPTIONAL
+      i_t_files       TYPE ytt_aai_files OPTIONAL
       i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
       i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
         PREFERRED PARAMETER i_message
@@ -368,6 +396,7 @@ INTERFACE yif_aai_openai
 
   METHODS audio_transcription
     IMPORTING
+      i_filename TYPE string
       i_input    TYPE xstring
     EXPORTING
       e_response TYPE string.

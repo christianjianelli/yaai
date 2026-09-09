@@ -51,7 +51,10 @@ CLASS ycl_aai_google DEFINITION
           _o_persistence TYPE REF TO yif_aai_db,
           _o_log         TYPE REF TO ycl_aai_log.
 
-    DATA: _t_chat_messages     TYPE yif_aai_google~ty_contents_t.
+    DATA: _t_chat_messages  TYPE yif_aai_google~ty_contents_t,
+          _t_messages_db    TYPE yif_aai_db=>ty_messages_t,
+          _t_message_images TYPE yif_aai_google~ty_message_images_t,
+          _t_message_files  TYPE yif_aai_google~ty_message_files_t.
 
     DATA: _model               TYPE string,
           _temperature         TYPE p LENGTH 2 DECIMALS 1,
@@ -60,6 +63,15 @@ CLASS ycl_aai_google DEFINITION
 
     METHODS _load_agent_settings.
 
+    METHODS _get_files
+      IMPORTING
+        i_t_files     TYPE ytt_aai_files
+      EXPORTING
+        e_t_images    TYPE yif_aai_google~ty_images_t
+        e_t_files     TYPE yif_aai_google~ty_files_t
+        e_t_images_db TYPE yif_aai_google~ty_message_images_t
+        e_t_files_db  TYPE yif_aai_google~ty_message_files_t.
+
     METHODS _log
       IMPORTING
         i_s_msg TYPE bapiret2.
@@ -67,7 +79,9 @@ CLASS ycl_aai_google DEFINITION
     METHODS _append_to_history
       IMPORTING
         i_s_response TYPE yif_aai_google~ty_contents_response_s
-        i_tokens     TYPE i OPTIONAL.
+        i_tokens     TYPE i OPTIONAL
+      EXPORTING
+        e_seqno      TYPE i.
 
 ENDCLASS.
 
@@ -123,6 +137,61 @@ CLASS ycl_aai_google IMPLEMENTATION.
         IMPORTING
           e_t_msg_data = me->_t_chat_messages
       ).
+
+      " Images and files
+      """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+      LOOP AT me->_t_chat_messages ASSIGNING FIELD-SYMBOL(<ls_message>).
+
+        DATA(l_index) = sy-tabix.
+
+        IF <ls_message>-role <> yif_aai_openai=>mc_user.
+          CONTINUE.
+        ENDIF.
+
+        READ TABLE me->_t_messages_db ASSIGNING FIELD-SYMBOL(<ls_message_db>) INDEX l_index.
+
+        IF sy-subrc = 0.
+
+          me->_o_persistence->get_files(
+            EXPORTING
+              i_seqno   = <ls_message_db>-seqno
+            IMPORTING
+              e_t_files = DATA(lt_files_db)
+          ).
+
+          me->_get_files(
+            EXPORTING
+              i_t_files  = lt_files_db
+            IMPORTING
+              e_t_images = DATA(lt_images)
+              e_t_files  = DATA(lt_files)
+          ).
+
+          IF lt_images IS NOT INITIAL.
+
+            DATA(ls_message_images) = VALUE yif_aai_google~ty_message_images_s( seqno = <ls_message_db>-seqno
+                                                                                images = CORRESPONDING #( lt_images ) ).
+
+            INSERT ls_message_images INTO TABLE me->_t_message_images.
+
+          ENDIF.
+
+          FREE lt_images.
+
+          IF lt_files IS NOT INITIAL.
+
+            DATA(ls_message_files) = VALUE yif_aai_google~ty_message_files_s( seqno = <ls_message_db>-seqno
+                                                                              files = CORRESPONDING #( lt_files ) ).
+
+            INSERT ls_message_files INTO TABLE me->_t_message_files.
+
+          ENDIF.
+
+          FREE lt_files.
+
+        ENDIF.
+
+      ENDLOOP.
 
     ENDIF.
 
@@ -197,6 +266,7 @@ CLASS ycl_aai_google IMPLEMENTATION.
         i_message       = i_message
         i_new           = i_new
         i_greeting      = i_greeting
+        i_t_files       = i_t_files
         i_async_task_id = i_async_task_id
         i_o_prompt      = i_o_prompt
         i_o_agent       = i_o_agent
@@ -225,6 +295,9 @@ CLASS ycl_aai_google IMPLEMENTATION.
                    <l_data>              TYPE string.
 
     DATA lr_data TYPE REF TO data.
+
+    DATA: lt_tool_images TYPE yif_aai_google~ty_images_t,
+          lt_tool_files  TYPE yif_aai_google~ty_files_t.
 
     DATA: ls_response TYPE yif_aai_google~ty_google_generate_response_s.
 
@@ -303,7 +376,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
         APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
 
-        <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( l_greeting ) ) ).
+        <ls_msg> = VALUE #( role = yif_aai_google=>mc_role_model
+                            parts = VALUE #( ( l_greeting ) ) ).
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -335,11 +409,15 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-    <ls_msg> = VALUE #( role = 'user' parts = VALUE #( ( l_message ) ) ).
+    <ls_msg> = VALUE #( role = yif_aai_google=>mc_role_user
+                        parts = VALUE #( ( l_message ) ) ).
+
+    DATA(l_seqno) = lines( me->_t_chat_messages ).
 
     IF l_prompt IS NOT INITIAL.
       DATA(ls_prompt) = <ls_msg>.
-      ls_prompt = VALUE #( role = 'user' parts = VALUE #( ( l_prompt ) ) ).
+      ls_prompt = VALUE #( role = yif_aai_google=>mc_role_user
+                           parts = VALUE #( ( l_prompt ) ) ).
     ENDIF.
 
     IF me->_o_persistence IS BOUND.
@@ -351,8 +429,48 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
     " In memory we keep the augmented prompt instead of the user message
     IF l_prompt IS NOT INITIAL.
-      <ls_msg> = VALUE #( role = 'user' parts = VALUE #( ( l_prompt ) ) ).
+      <ls_msg> = VALUE #( role = yif_aai_google=>mc_role_user
+                          parts = VALUE #( ( l_prompt ) ) ).
     ENDIF.
+
+    " Images and files
+    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    IF i_t_files IS NOT INITIAL AND me->_o_persistence IS BOUND.
+
+      me->_o_persistence->persist_files(
+        EXPORTING
+          i_seqno   = l_seqno
+          i_t_files = i_t_files
+      ).
+
+    ENDIF.
+
+    me->_get_files(
+      EXPORTING
+        i_t_files  = i_t_files
+      IMPORTING
+        e_t_images = DATA(lt_images)
+        e_t_files  = DATA(lt_files)
+    ).
+
+    IF lt_images IS NOT INITIAL.
+
+      DATA(ls_message_images) = VALUE yif_aai_google~ty_message_images_s( seqno = l_seqno
+                                                                          images = CORRESPONDING #( lt_images ) ).
+
+      INSERT ls_message_images INTO TABLE me->_t_message_images.
+
+    ENDIF.
+
+    IF lt_files IS NOT INITIAL.
+
+      DATA(ls_message_files) = VALUE yif_aai_google~ty_message_files_s( seqno = l_seqno
+                                                                        files = CORRESPONDING #( lt_files ) ).
+
+      INSERT ls_message_files INTO TABLE me->_t_message_files.
+
+    ENDIF.
+    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
     IF i_o_agent IS BOUND AND me->mo_function_calling IS NOT BOUND.
 
@@ -372,10 +490,10 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
       IF me->_o_connection->create_connection( i_endpoint = l_endpoint ).
 
-        DATA(ls_generate_request) = VALUE yif_aai_google~ty_google_generate_request_s( contents = me->_t_chat_messages ).
+        DATA(ls_generate_request) = VALUE yif_aai_google~ty_google_generate_request_s( contents = me->get_conversation( ) ).
 
         "Do not send system messages to the API. They are being persisted just to be make them visible to the developer.
-        DELETE ls_generate_request-contents WHERE role = 'system'.
+        DELETE ls_generate_request-contents WHERE role = yif_aai_google=>mc_role_system.
 
         ls_generate_request-tools = '[]'.
 
@@ -407,7 +525,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           DATA(l_system_instructions) = '{"text": ' && lo_aai_util->serialize( me->_system_instructions ) && '}'.
 
-          DATA(ls_msg) = VALUE yif_aai_google~ty_contents_s( role = 'system' parts = VALUE #( ( l_system_instructions ) ) ).
+          DATA(ls_msg) = VALUE yif_aai_google~ty_contents_s( role = yif_aai_google=>mc_role_system
+                                                             parts = VALUE #( ( l_system_instructions ) ) ).
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_system_instructions( i_data = ls_msg ).
@@ -443,7 +562,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-          <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
+          <ls_msg> = VALUE #( role = yif_aai_google=>mc_role_model
+                              parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -473,7 +593,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-          <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
+          <ls_msg> = VALUE #( role = yif_aai_google=>mc_role_model
+                              parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -497,7 +618,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
           APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-          <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
+          <ls_msg> = VALUE #( role = yif_aai_google=>mc_role_model
+                              parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -559,19 +681,112 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
             ENDIF.
 
-            me->mo_function_calling->call_tool(
-              EXPORTING
-                i_tool_name   = to_upper( <ls_parts>-functioncall-name )
-                i_json        = <l_data>
-              RECEIVING
-                r_response    = DATA(l_tool_response)
-            ).
+            " Tool call approval
+            """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+            DATA(l_tool_call_approved) = abap_true.
+
+            IF me->_o_persistence IS BOUND AND
+               me->mo_function_calling IS BOUND.
+
+              DATA(lo_fc_approvals) = NEW ycl_aai_func_call_approvals( ).
+
+              lo_fc_approvals->check_tool_call_approval(
+                EXPORTING
+                  i_tool_name     = to_upper( condense( <ls_parts>-functioncall-name ) )
+                  i_o_persistence = me->_o_persistence
+                  i_t_tools       = CORRESPONDING #( me->mo_function_calling->mt_methods )
+                IMPORTING
+                  e_approved      = l_tool_call_approved
+                  e_tool_response = DATA(l_tool_call_approval_response)
+              ).
+
+            ENDIF.
+            """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+            IF l_tool_call_approved = abap_true.
+
+              me->mo_function_calling->call_tool(
+                EXPORTING
+                  i_tool_name   = to_upper( <ls_parts>-functioncall-name )
+                  i_json        = <l_data>
+                IMPORTING
+                  e_t_files     = DATA(lt_tool_response_files)
+                RECEIVING
+                  r_response    = DATA(l_tool_response)
+              ).
+
+              IF lo_fc_approvals IS BOUND.
+
+                lo_fc_approvals->set_approval_as_used(
+                  EXPORTING
+                    i_tool_name     = to_upper( condense( <ls_parts>-functioncall-name ) )
+                    i_o_persistence = me->_o_persistence
+                ).
+
+              ENDIF.
+
+            ELSE.
+              l_tool_response = l_tool_call_approval_response.
+            ENDIF.
 
             "The response cannot be just a text. It must be an object with any attribute(s) name(s).
             l_tool_response = '{"text":' && lo_aai_util->serialize( l_tool_response ) && '}'.
 
-            me->_append_to_history( i_s_response = VALUE #( parts = VALUE #( ( function_response = VALUE #( name = <ls_parts>-functioncall-name
-                                                                                                            response = l_tool_response ) ) ) role = 'model' ) ).
+            me->_append_to_history(
+              EXPORTING
+                i_s_response = VALUE #( parts = VALUE #( ( function_response = VALUE #( name = <ls_parts>-functioncall-name
+                                                                                        response = l_tool_response )
+                ) ) role = yif_aai_google=>mc_role_user )
+              IMPORTING
+                e_seqno = l_seqno
+            ).
+
+            IF me->_o_persistence IS BOUND.
+
+              " Images and files returned from tool call
+              """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+              IF lt_tool_response_files IS NOT INITIAL.
+
+                me->_o_persistence->persist_files(
+                  EXPORTING
+                    i_seqno   = l_seqno
+                    i_t_files = lt_tool_response_files
+                ).
+
+                me->_get_files(
+                  EXPORTING
+                    i_t_files     = lt_tool_response_files
+                  IMPORTING
+                    e_t_images    = lt_tool_images
+                    e_t_files     = lt_tool_files
+                ).
+
+                IF lt_tool_images IS NOT INITIAL.
+
+                  ls_message_images = VALUE yif_aai_google~ty_message_images_s( seqno = l_seqno
+                                                                                images = CORRESPONDING #( lt_tool_images ) ).
+
+                  INSERT ls_message_images INTO TABLE me->_t_message_images.
+
+                ENDIF.
+
+                IF lt_tool_files IS NOT INITIAL.
+
+                  ls_message_files = VALUE yif_aai_google~ty_message_files_s( seqno = l_seqno
+                                                                              files = CORRESPONDING #( lt_tool_files ) ).
+
+                  INSERT ls_message_files INTO TABLE me->_t_message_files.
+
+                ENDIF.
+
+                FREE: lt_tool_response_files,
+                      lt_tool_images,
+                      lt_tool_files.
+
+              ENDIF.
+              """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+            ENDIF.
 
           ENDLOOP.
 
@@ -588,7 +803,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
             l_message = '{"text": ' && lo_aai_util->serialize( l_message ) && '}'.
 
-            <ls_msg> = VALUE #( role = 'user' parts = VALUE #( ( l_message ) ) ).
+            <ls_msg> = VALUE #( role = yif_aai_google=>mc_role_user
+                                parts = VALUE #( ( l_message ) ) ).
 
             IF me->_o_persistence IS BOUND.
               me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -621,7 +837,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
         APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-        <ls_msg> = VALUE #( role = 'model' parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
+        <ls_msg> = VALUE #( role = yif_aai_google=>mc_role_model
+                            parts = VALUE #( ( '{"text": ' && lo_aai_util->serialize( e_response ) && '}' ) ) ).
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -644,10 +861,68 @@ CLASS ycl_aai_google IMPLEMENTATION.
 
   METHOD yif_aai_google~get_conversation.
 
-    r_conversation = NEW ycl_aai_util( )->serialize(
-      EXPORTING
-        i_data = me->_t_chat_messages
-    ).
+    DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+    FREE rt_conversation.
+
+    rt_conversation = me->_t_chat_messages.
+
+    LOOP AT rt_conversation ASSIGNING FIELD-SYMBOL(<ls_msg>).
+
+      DATA(l_index) = sy-tabix.
+
+      IF <ls_msg>-role = yif_aai_google=>mc_role_user.
+
+        READ TABLE me->_t_messages_db ASSIGNING FIELD-SYMBOL(<ls_message_db>) INDEX l_index.
+
+        " If the message is already persisted use SEQNO
+        IF sy-subrc = 0.
+          l_index = <ls_message_db>-seqno.
+        ENDIF.
+
+        READ TABLE me->_t_message_images ASSIGNING FIELD-SYMBOL(<ls_message_images>)
+          WITH KEY seqno = l_index.
+
+        IF sy-subrc = 0.
+
+          LOOP AT <ls_message_images>-images ASSIGNING FIELD-SYMBOL(<ls_image>).
+
+            DATA(ls_inline_data_image) = VALUE yif_aai_google=>ty_parts_inline_data_s( ).
+
+            ls_inline_data_image-inline_data-data = <ls_image>-file_data.
+            ls_inline_data_image-inline_data-mime_type = <ls_image>-mime_type.
+
+            DATA(l_inline_data_image_json) = lo_aai_util->serialize( i_data = ls_inline_data_image ).
+
+            APPEND l_inline_data_image_json TO <ls_msg>-parts.
+
+          ENDLOOP.
+
+        ENDIF.
+
+        READ TABLE me->_t_message_files ASSIGNING FIELD-SYMBOL(<ls_message_files>)
+            WITH KEY seqno = l_index.
+
+        IF sy-subrc = 0.
+
+          LOOP AT <ls_message_files>-files ASSIGNING FIELD-SYMBOL(<ls_file>).
+
+            DATA(ls_inline_data_file) = VALUE yif_aai_google=>ty_parts_inline_data_s( ).
+
+            ls_inline_data_file-inline_data-data = <ls_file>-file_data.
+            ls_inline_data_file-inline_data-mime_type = <ls_file>-mime_type.
+
+            DATA(l_inline_data_file_json) = lo_aai_util->serialize( i_data = ls_inline_data_file ).
+
+            APPEND l_inline_data_file_json TO <ls_msg>-parts.
+
+          ENDLOOP.
+
+        ENDIF.
+
+      ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -711,6 +986,8 @@ CLASS ycl_aai_google IMPLEMENTATION.
           ls_contents          TYPE yif_aai_google~ty_contents_s.
 
     DATA: l_json_parts TYPE /ui2/cl_json=>json.
+
+    CLEAR e_seqno.
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
@@ -779,9 +1056,15 @@ CLASS ycl_aai_google IMPLEMENTATION.
     APPEND ls_contents TO me->_t_chat_messages.
 
     IF me->_o_persistence IS BOUND.
-      me->_o_persistence->persist_message( i_data = ls_contents
-                                           i_tokens = i_tokens
-                                           i_model = CONV #( me->_model ) ).
+
+      me->_o_persistence->persist_message(
+        EXPORTING
+          i_data = ls_contents
+          i_tokens = i_tokens
+          i_model = CONV #( me->_model )
+        IMPORTING
+          e_seqno = e_seqno ).
+
     ENDIF.
 
   ENDMETHOD.
@@ -790,6 +1073,41 @@ CLASS ycl_aai_google IMPLEMENTATION.
   METHOD yif_aai_google~set_endpoint.
 
     me->m_endpoint = i_endpoint.
+
+  ENDMETHOD.
+
+  METHOD _get_files.
+
+    " Supported image file types
+    " PNG (.png) → image/png
+    " JPEG (.jpeg and .jpg) → image/jpeg
+    " WEBP (.webp) → image/webp
+
+    CONSTANTS: lc_png  TYPE string VALUE 'image/png'  ##NO_TEXT,
+               lc_jpeg TYPE string VALUE 'image/jpeg' ##NO_TEXT,
+               lc_webp TYPE string VALUE 'image/webp' ##NO_TEXT.
+
+    FREE: e_t_images, e_t_files.
+
+    LOOP AT i_t_files ASSIGNING FIELD-SYMBOL(<ls_file>).
+
+      CASE condense( to_lower( <ls_file>-file_type ) ).
+
+        WHEN lc_png OR lc_jpeg OR lc_webp.
+
+          APPEND VALUE #( filename = <ls_file>-filename
+                          mime_type = <ls_file>-file_type
+                          file_data = <ls_file>-content ) TO e_t_images.
+
+        WHEN OTHERS.
+
+          APPEND VALUE #( filename = <ls_file>-filename
+                          mime_type = <ls_file>-file_type
+                          file_data = <ls_file>-content ) TO e_t_files.
+
+      ENDCASE.
+
+    ENDLOOP.
 
   ENDMETHOD.
 

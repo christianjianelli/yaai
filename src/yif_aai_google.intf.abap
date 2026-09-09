@@ -65,7 +65,38 @@ INTERFACE yif_aai_google
 
          BEGIN OF ty_generation_config_s,
            temperature TYPE p LENGTH 2 DECIMALS 1,
-         END OF ty_generation_config_s.
+         END OF ty_generation_config_s,
+
+         BEGIN OF ty_inline_data_s,
+           mime_type TYPE string,
+           data      TYPE string,
+         END OF ty_inline_data_s,
+
+         BEGIN OF ty_parts_inline_data_s,
+           inline_data TYPE ty_inline_data_s,
+         END OF ty_parts_inline_data_s,
+
+         BEGIN OF ty_file_s,
+           filename  TYPE string,
+           mime_type TYPE string,
+           file_data TYPE string,
+         END OF ty_file_s,
+
+         ty_images_t TYPE STANDARD TABLE OF ty_file_s WITH EMPTY KEY,
+         ty_files_t  TYPE STANDARD TABLE OF ty_file_s WITH EMPTY KEY,
+
+         BEGIN OF ty_message_images_s,
+           seqno  TYPE yde_aai_seqno,
+           images TYPE ty_images_t,
+         END OF ty_message_images_s,
+
+         BEGIN OF ty_message_files_s,
+           seqno TYPE yde_aai_seqno,
+           files TYPE ty_files_t,
+         END OF ty_message_files_s,
+
+         ty_message_images_t TYPE SORTED TABLE OF ty_message_images_s WITH UNIQUE KEY seqno,
+         ty_message_files_t  TYPE SORTED TABLE OF ty_message_files_s  WITH UNIQUE KEY seqno.
 
   TYPES: ty_contents_t   TYPE STANDARD TABLE OF ty_contents_s WITH NON-UNIQUE KEY role,
          ty_candidates_t TYPE STANDARD TABLE OF ty_candidates_s WITH DEFAULT KEY.
@@ -98,6 +129,10 @@ INTERFACE yif_aai_google
            error          TYPE ty_error_s,
            usage_metadata TYPE ty_usage_metadata_s,
          END OF ty_google_generate_response_s.
+
+  CONSTANTS: mc_role_system TYPE string VALUE 'system' ##NO_TEXT,
+             mc_role_model  TYPE string VALUE 'model' ##NO_TEXT,
+             mc_role_user   TYPE string VALUE 'user' ##NO_TEXT.
 
   DATA: mo_function_calling TYPE REF TO yif_aai_func_call_google READ-ONLY,
         mo_agent            TYPE REF TO yif_aai_agent READ-ONLY.
@@ -143,7 +178,7 @@ INTERFACE yif_aai_google
 
   METHODS get_conversation
     RETURNING
-      VALUE(r_conversation) TYPE /ui2/cl_json=>json.
+      VALUE(rt_conversation) TYPE ty_contents_t.
 
   METHODS generate
     IMPORTING
@@ -151,6 +186,7 @@ INTERFACE yif_aai_google
       i_new           TYPE abap_bool DEFAULT abap_false
       i_greeting      TYPE csequence OPTIONAL
       i_async_task_id TYPE csequence OPTIONAL
+      i_t_files       TYPE ytt_aai_files OPTIONAL
       i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
       i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
         PREFERRED PARAMETER i_message

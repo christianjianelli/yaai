@@ -119,7 +119,7 @@ CLASS ycl_aai_async_chat_openai IMPLEMENTATION.
                                               i_o_persistence = lo_aai_db
                                               i_o_agent = lo_agent ).
 
-    IF i_api IS NOT INITIAL.
+    IF i_api IS NOT INITIAL AND i_api <> yif_aai_const=>c_openai.
       lo_aai_openai->use_completions( abap_true ).
     ENDIF.
 
@@ -131,6 +131,7 @@ CLASS ycl_aai_async_chat_openai IMPLEMENTATION.
         EXPORTING
           i_message       = i_message
           i_async_task_id = CONV string( i_task_id )
+          i_t_files       = i_t_files
           i_o_agent       = lo_agent
         IMPORTING
           e_response      = r_response
@@ -163,10 +164,12 @@ CLASS ycl_aai_async_chat_openai IMPLEMENTATION.
 
       lo_aai_openai->chat(
         EXPORTING
-          i_o_prompt = lo_aai_prompt
-          i_o_agent  = lo_agent
+          i_async_task_id = CONV string( i_task_id )
+          i_t_files       = i_t_files
+          i_o_prompt      = lo_aai_prompt
+          i_o_agent       = lo_agent
         IMPORTING
-          e_response = r_response
+          e_response      = r_response
       ).
 
       lo_log->add( VALUE #( number = '004' type = 'S' ) ).

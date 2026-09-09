@@ -55,7 +55,8 @@ ENDCLASS.
 
 
 
-CLASS ycl_aai_conn IMPLEMENTATION.
+CLASS YCL_AAI_CONN IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -143,6 +144,22 @@ CLASS ycl_aai_conn IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+
+  METHOD get_http_client.
+
+    e_http_client = me->_o_http_client.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_conn~add_http_header_param.
+
+    APPEND VALUE #( name = i_name
+                    value = i_value ) TO me->yif_aai_conn~mt_http_header.
+
+  ENDMETHOD.
+
 
   METHOD yif_aai_conn~create_connection.
 
@@ -238,6 +255,9 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
     ENDIF.
 
+    "Set HTTP 1.1 as the default HTTP version
+    me->_o_http_client->request->set_version( if_http_request=>co_protocol_version_1_1 ).
+
     me->_o_http_client->request->set_method( i_http_method ).
 
     IF me->yif_aai_conn~m_suppress_content_type = abap_false.
@@ -297,29 +317,6 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_conn~set_body.
-
-    IF i_json IS SUPPLIED.
-
-      me->_o_http_client->request->set_cdata(
-        EXPORTING
-          data = i_json
-      ).
-
-      RETURN.
-
-    ENDIF.
-
-    IF i_binary IS SUPPLIED.
-
-      me->_o_http_client->request->set_data(
-        EXPORTING
-          data = i_binary
-      ).
-
-    ENDIF.
-
-  ENDMETHOD.
 
   METHOD yif_aai_conn~do_receive.
 
@@ -398,123 +395,6 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_conn~get_response.
-
-    e_response = me->_o_http_client->response->get_cdata( ).
-
-  ENDMETHOD.
-
-  METHOD _log.
-
-    IF me->mo_log IS NOT BOUND.
-      me->mo_log = NEW #( ).
-    ENDIF.
-
-    me->mo_log->add( i_s_msg = i_s_msg ).
-
-*    IF sy-msgid IS NOT INITIAL AND
-*       sy-msgty IS NOT INITIAL AND
-*       sy-msgno IS NOT INITIAL.
-*
-*      me->mo_log->add( VALUE #( id = sy-msgid
-*                                type = sy-msgty
-*                                number = sy-msgno
-*                                message_v1 = sy-msgv1
-*                                message_v2 = sy-msgv2
-*                                message_v3 = sy-msgv3
-*                                message_v4 = sy-msgv4 ) ).
-*    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_conn~set_base_url.
-
-    me->m_base_url = i_base_url.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_conn~set_api_key.
-
-    me->_api_key = i_api_key.
-
-    IF i_o_api_key IS SUPPLIED.
-
-      me->mo_api_key = i_o_api_key.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_conn~set_proxy.
-
-    me->yif_aai_conn~m_proxy_host = i_proxy_host.
-    me->yif_aai_conn~m_proxy_service = i_proxy_service.
-    me->yif_aai_conn~m_proxy_user = i_proxy_user.
-    me->yif_aai_conn~m_proxy_passwd = i_proxy_passwd.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_conn~suppress_content_type.
-
-    me->yif_aai_conn~m_suppress_content_type = i_suppress_content_type.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_conn~set_ssl_id.
-
-    me->m_ssl_id = i_ssl_id.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_conn~get_error_text.
-
-    DATA l_text TYPE string.
-
-    CLEAR e_error_text.
-
-    LOOP AT me->mo_log->mt_msg ASSIGNING FIELD-SYMBOL(<ls_msg>).
-
-      IF <ls_msg>-id IS INITIAL OR <ls_msg>-type <> 'E' OR <ls_msg>-number IS INITIAL.
-        CONTINUE.
-      ENDIF.
-
-      MESSAGE ID <ls_msg>-id
-        TYPE <ls_msg>-type
-        NUMBER <ls_msg>-number
-        WITH <ls_msg>-message_v1
-             <ls_msg>-message_v2
-             <ls_msg>-message_v3
-             <ls_msg>-message_v4
-        INTO l_text.
-
-      IF e_error_text IS INITIAL.
-        e_error_text = l_text.
-      ELSE.
-        e_error_text = |{ e_error_text } ; { l_text }|.
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_conn~add_http_header_param.
-
-    APPEND VALUE #( name = i_name
-                    value = i_value ) TO me->yif_aai_conn~mt_http_header.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_conn~remove_http_header_param.
-
-    DELETE me->yif_aai_conn~mt_http_header WHERE name = i_name.
-
-  ENDMETHOD.
-
-  METHOD get_http_client.
-
-    e_http_client = me->_o_http_client.
-
-  ENDMETHOD.
 
   METHOD yif_aai_conn~fetch_oauth_token.
 
@@ -634,4 +514,142 @@ CLASS ycl_aai_conn IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD yif_aai_conn~get_error_text.
+
+    DATA l_text TYPE string.
+
+    CLEAR e_error_text.
+
+    LOOP AT me->mo_log->mt_msg ASSIGNING FIELD-SYMBOL(<ls_msg>).
+
+      IF <ls_msg>-id IS INITIAL OR <ls_msg>-type <> 'E' OR <ls_msg>-number IS INITIAL.
+        CONTINUE.
+      ENDIF.
+
+      MESSAGE ID <ls_msg>-id
+        TYPE <ls_msg>-type
+        NUMBER <ls_msg>-number
+        WITH <ls_msg>-message_v1
+             <ls_msg>-message_v2
+             <ls_msg>-message_v3
+             <ls_msg>-message_v4
+        INTO l_text.
+
+      IF e_error_text IS INITIAL.
+        e_error_text = l_text.
+      ELSE.
+        e_error_text = |{ e_error_text } ; { l_text }|.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_conn~get_response.
+
+    e_response = me->_o_http_client->response->get_cdata( ).
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_conn~remove_http_header_param.
+
+    DELETE me->yif_aai_conn~mt_http_header WHERE name = i_name.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_conn~set_api_key.
+
+    me->_api_key = i_api_key.
+
+    IF i_o_api_key IS SUPPLIED.
+
+      me->mo_api_key = i_o_api_key.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_conn~set_base_url.
+
+    me->m_base_url = i_base_url.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_conn~set_body.
+
+    IF i_json IS SUPPLIED.
+
+      me->_o_http_client->request->set_cdata(
+        EXPORTING
+          data = i_json
+      ).
+
+      RETURN.
+
+    ENDIF.
+
+    IF i_binary IS SUPPLIED.
+
+      me->_o_http_client->request->set_data(
+        EXPORTING
+          data = i_binary
+      ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_conn~set_proxy.
+
+    me->yif_aai_conn~m_proxy_host = i_proxy_host.
+    me->yif_aai_conn~m_proxy_service = i_proxy_service.
+    me->yif_aai_conn~m_proxy_user = i_proxy_user.
+    me->yif_aai_conn~m_proxy_passwd = i_proxy_passwd.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_conn~set_ssl_id.
+
+    me->m_ssl_id = i_ssl_id.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_conn~suppress_content_type.
+
+    me->yif_aai_conn~m_suppress_content_type = i_suppress_content_type.
+
+  ENDMETHOD.
+
+
+  METHOD _log.
+
+    IF me->mo_log IS NOT BOUND.
+      me->mo_log = NEW #( ).
+    ENDIF.
+
+    me->mo_log->add( i_s_msg = i_s_msg ).
+
+*    IF sy-msgid IS NOT INITIAL AND
+*       sy-msgty IS NOT INITIAL AND
+*       sy-msgno IS NOT INITIAL.
+*
+*      me->mo_log->add( VALUE #( id = sy-msgid
+*                                type = sy-msgty
+*                                number = sy-msgno
+*                                message_v1 = sy-msgv1
+*                                message_v2 = sy-msgv2
+*                                message_v3 = sy-msgv3
+*                                message_v4 = sy-msgv4 ) ).
+*    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.

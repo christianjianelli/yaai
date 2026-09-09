@@ -26,6 +26,7 @@ CLASS ycl_aai_rest_agent DEFINITION
              model          TYPE yde_aai_model,
              temperature    TYPE yde_aai_temperature,
              verbosity      TYPE yde_aai_verbosity,
+             think          TYPE abap_bool,
              reasoning      TYPE yde_aai_reasoning_effort,
              max_tool_calls TYPE yde_aai_max_tool_calls,
            END OF ty_model_s,
@@ -218,7 +219,7 @@ CLASS ycl_aai_rest_agent IMPLEMENTATION.
 
       ls_response_read-agent-docs = CORRESPONDING #( lt_agent_rag ).
 
-      SELECT api, model, temperature, verbosity, reasoning, max_tool_calls
+      SELECT api, model, temperature, verbosity, reasoning, max_tool_calls, think
         FROM yaai_agent_mdl
         WHERE id = @l_agent_id
         INTO CORRESPONDING FIELDS OF TABLE @ls_response_read-agent-models.

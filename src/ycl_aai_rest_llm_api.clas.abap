@@ -7,6 +7,10 @@ CLASS ycl_aai_rest_llm_api DEFINITION INHERITING FROM ycl_aai_rest_base
     TYPES: BEGIN OF ty_model_s,
              model         TYPE string,
              default_model TYPE abap_bool,
+             tools         TYPE abap_bool,
+             vision        TYPE abap_bool,
+             files         TYPE abap_bool,
+             audio         TYPE abap_bool,
            END OF ty_model_s,
 
            BEGIN OF ty_oauth_s,
@@ -72,7 +76,7 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
         WHERE id = @l_id
         INTO CORRESPONDING FIELDS OF @<ls_api>.
 
-      SELECT model, default_model
+      SELECT model, default_model, tools, vision, files, audio
         FROM yaai_model
         WHERE id = @l_id
         INTO CORRESPONDING FIELDS OF TABLE @<ls_api>-models.
@@ -90,7 +94,7 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
 
       IF sy-subrc = 0.
 
-        SELECT id, model, default_model
+        SELECT id, model, default_model, default_model, tools, vision, files, audio
           FROM yaai_model
           FOR ALL ENTRIES IN @lt_apis
           WHERE id = @lt_apis-id
@@ -114,7 +118,11 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
             WHERE id = <ls_api_db>-id.
 
             APPEND VALUE #( model = <ls_model_db>-model
-                            default_model = <ls_model_db>-default_model ) TO <ls_api>-models.
+                            default_model = <ls_model_db>-default_model
+                            tools = <ls_model_db>-tools
+                            vision = <ls_model_db>-vision
+                            files = <ls_model_db>-files
+                            audio = <ls_model_db>-audio ) TO <ls_api>-models.
 
           ENDLOOP.
 
@@ -199,7 +207,11 @@ CLASS ycl_aai_rest_llm_api IMPLEMENTATION.
 
       INSERT yaai_model FROM @( VALUE yaai_model( id = ls_request-id
                                                     model = <ls_model>-model
-                                                    default_model = <ls_model>-default_model ) ).
+                                                    default_model = <ls_model>-default_model
+                                                    tools = <ls_model>-tools
+                                                    vision = <ls_model>-vision
+                                                    files = <ls_model>-files
+                                                    audio = <ls_model>-audio ) ).
 
     ENDLOOP.
 

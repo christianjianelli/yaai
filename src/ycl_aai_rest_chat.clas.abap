@@ -15,6 +15,14 @@ CLASS ycl_aai_rest_chat DEFINITION
              model        TYPE yde_aai_model,
            END OF ty_msg_s,
 
+           BEGIN OF ty_msg_file_s,
+             seqno     TYPE yde_aai_seqno,
+             filename  TYPE yaai_msg_file-filename,
+             file_type TYPE yaai_msg_file-file_type,
+             file_size TYPE yaai_msg_file-file_size,
+             content   TYPE string,
+           END OF ty_msg_file_s,
+
            BEGIN OF ty_log_s,
              id       TYPE string,
              seqno    TYPE yde_aai_seqno,
@@ -34,6 +42,16 @@ CLASS ycl_aai_rest_chat DEFINITION
              description TYPE string,
            END OF ty_tool_s,
 
+           BEGIN OF ty_approval_s,
+             class_name  TYPE string,
+             method_name TYPE string,
+             scope       TYPE string,
+             approved    TYPE abap_bool,
+             approved_at TYPE string,
+             used        TYPE abap_bool,
+             used_at     TYPE string,
+           END OF ty_approval_s,
+
            BEGIN OF ty_task_flow_s,
              id                 TYPE string,
              task_id            TYPE string,
@@ -47,9 +65,13 @@ CLASS ycl_aai_rest_chat DEFINITION
 
            ty_msg_t       TYPE STANDARD TABLE OF ty_msg_s WITH EMPTY KEY,
 
+           ty_msg_files_t TYPE STANDARD TABLE OF ty_msg_file_s WITH EMPTY KEY,
+
            ty_log_t       TYPE STANDARD TABLE OF ty_log_s WITH EMPTY KEY,
 
            ty_tools_t     TYPE STANDARD TABLE OF ty_tool_s WITH EMPTY KEY,
+
+           ty_approvals_t TYPE STANDARD TABLE OF ty_approval_s WITH EMPTY KEY,
 
            BEGIN OF ty_chat_query_s,
              id         TYPE string,
@@ -58,6 +80,7 @@ CLASS ycl_aai_rest_chat DEFINITION
              chat_date  TYPE yde_aai_chat_date,
              chat_time  TYPE yde_aai_chat_time,
              max_seq_no TYPE i,
+             tokens     TYPE i,
              blocked    TYPE abap_bool,
            END OF ty_chat_query_s,
 
@@ -70,11 +93,14 @@ CLASS ycl_aai_rest_chat DEFINITION
              chat_date   TYPE yde_aai_chat_date,
              chat_time   TYPE yde_aai_chat_time,
              max_seq_no  TYPE i,
+             tokens      TYPE i,
              blocked     TYPE abap_bool,
              plan_rag_id TYPE string,
              messages    TYPE ty_msg_t,
              log         TYPE ty_log_t,
              tools       TYPE ty_tools_t,
+             approvals   TYPE ty_approvals_t,
+             files       TYPE ty_msg_files_t,
              task_flow   TYPE ty_task_flow_t,
            END OF ty_chat_s,
 
@@ -116,7 +142,11 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
   METHOD yif_aai_rest_resource~read.
 
     DATA: lt_rng_username  TYPE RANGE OF yaai_log-username,
-          lt_rng_chat_date TYPE RANGE OF yaai_log-log_date.
+          lt_rng_chat_date TYPE RANGE OF yaai_log-log_date,
+          lt_files         TYPE SORTED TABLE OF yaai_msg_file
+            WITH UNIQUE KEY id seqno filename,
+          lt_files_content TYPE SORTED TABLE OF yaai_msg_file
+            WITH NON-UNIQUE KEY id filename seqno.
 
     DATA: ls_response_query TYPE ty_response_query_s,
           ls_response_read  TYPE ty_response_read_s.
@@ -124,7 +154,11 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
     DATA: l_chat_date_from TYPE yaai_log-log_date,
           l_chat_date_to   TYPE yaai_log-log_date,
           l_json           TYPE string,
-          l_chat_id        TYPE yaai_chat-id.
+          l_chat_id        TYPE yaai_chat-id,
+          l_bin_data       TYPE xstring,
+          l_object         TYPE ust12-objct,
+          l_field1         TYPE ust12-field VALUE 'USER' ##NO_TEXT,
+          l_field2         TYPE ust12-field VALUE 'ACTVT' ##NO_TEXT.
 
     DATA(l_id) = condense( to_upper( i_o_request->get_form_field( name = 'id' ) ) ).
 
@@ -145,9 +179,33 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
 
     IF l_chat_id IS NOT INITIAL. " Read
 
+      lt_rng_username = VALUE #( ( sign = 'I' option = 'EQ' low = sy-uname ) ).
+
+      SELECT SINGLE low
+        FROM tvarvc
+        WHERE name = @yif_aai_const=>c_chat_auth_obj_param
+          AND type = 'P'
+          AND numb = '0000'
+        INTO @DATA(l_authorization_object_name).
+
+      IF l_authorization_object_name IS NOT INITIAL.
+
+        l_object = l_authorization_object_name.
+
+        AUTHORITY-CHECK OBJECT l_object
+          ID l_field1  FIELD sy-uname
+          ID l_field2  FIELD '03'.
+
+        IF sy-subrc = 0.
+          FREE lt_rng_username.
+        ENDIF.
+
+      ENDIF.
+
       SELECT SINGLE id, api, username, chat_date, chat_time, blocked
         FROM yaai_chat
         WHERE id = @l_chat_id
+          AND username IN @lt_rng_username
         INTO @DATA(ls_chat).
 
       IF sy-subrc <> 0.
@@ -155,8 +213,8 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
         "Not Found
         i_o_response->set_status(
           EXPORTING
-            code = 404
-            reason = 'Not Found'
+            code = 401
+            reason = 'Unauthorized'
         ).
 
       ENDIF.
@@ -167,7 +225,7 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
         FROM yaai_agent_plan
         WHERE chat_id = @l_chat_id
         INTO @DATA(ls_agent_plan)
-        UP TO 1 ROWS.                                   "#EC CI_NOORDER "#EC CI_NOFIRST
+        UP TO 1 ROWS.                   "#EC CI_NOORDER "#EC CI_NOFIRST
       ENDSELECT.
 
       IF sy-subrc = 0.
@@ -183,6 +241,8 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
       IF sy-subrc = 0.
 
         LOOP AT lt_msg ASSIGNING FIELD-SYMBOL(<ls_msg>).
+
+          ls_response_read-chat-tokens = ls_response_read-chat-tokens + <ls_msg>-total_tokens.
 
           <ls_msg>-msg = escape( val    = <ls_msg>-msg
                                  format = cl_abap_format=>e_html_text ).
@@ -208,12 +268,90 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
 
       SELECT class_name, method_name, proxy_class, description
         FROM yaai_tools
-          WHERE id = @l_chat_id
-            INTO TABLE @DATA(lt_tools).
+       WHERE id = @l_chat_id
+        INTO TABLE @DATA(lt_tools).
 
       IF sy-subrc = 0.
         ls_response_read-chat-tools = CORRESPONDING #( lt_tools ).
       ENDIF.
+
+      SELECT class_name, method_name, scope, approved, approved_at, used, used_at
+        FROM yaai_approval
+       WHERE id = @l_chat_id
+        INTO TABLE @DATA(lt_approvals).
+
+      IF sy-subrc = 0.
+        ls_response_read-chat-approvals = CORRESPONDING #( lt_approvals ).
+      ENDIF.
+
+      SELECT DISTINCT id, seqno, filename
+        FROM yaai_msg_file
+        WHERE id = @l_chat_id
+        ORDER BY id, seqno, filename
+        INTO CORRESPONDING FIELDS OF TABLE @lt_files.
+
+      SELECT id, filename, seqno, line_no, file_type, file_size, content
+        FROM yaai_msg_file
+        WHERE id = @l_chat_id
+        ORDER BY id, filename, seqno, line_no
+        INTO CORRESPONDING FIELDS OF TABLE @lt_files_content.
+
+      LOOP AT lt_files ASSIGNING FIELD-SYMBOL(<ls_file>).
+
+        CLEAR l_bin_data.
+
+        LOOP AT lt_files_content ASSIGNING FIELD-SYMBOL(<ls_files_content>)
+          WHERE id = <ls_file>-id
+            AND seqno = <ls_file>-seqno
+            AND filename = <ls_file>-filename.
+
+          CONCATENATE l_bin_data <ls_files_content>-content INTO l_bin_data IN BYTE MODE.
+
+        ENDLOOP.
+
+        DATA(lo_zip) = NEW cl_abap_zip( ).
+
+        lo_zip->load(
+          EXPORTING
+            zip             = l_bin_data
+          EXCEPTIONS
+            zip_parse_error = 1
+            OTHERS          = 2
+        ).
+
+        IF sy-subrc <> 0.
+          CLEAR lo_zip.
+          CONTINUE.
+        ENDIF.
+
+        lo_zip->get(
+          EXPORTING
+            name                    = CONV #( <ls_files_content>-filename )
+          IMPORTING
+            content                 = DATA(l_content_bin)
+          EXCEPTIONS
+            zip_index_error         = 1
+            zip_decompression_error = 2
+            OTHERS                  = 3
+        ).
+
+        IF sy-subrc <> 0.
+          CLEAR lo_zip.
+          CONTINUE.
+        ENDIF.
+
+        APPEND INITIAL LINE TO ls_response_read-chat-files ASSIGNING FIELD-SYMBOL(<ls_response_read_chat_file>).
+
+        <ls_response_read_chat_file>-seqno = <ls_files_content>-seqno.
+        <ls_response_read_chat_file>-filename = <ls_files_content>-filename.
+        <ls_response_read_chat_file>-file_type = <ls_files_content>-file_type.
+        <ls_response_read_chat_file>-file_size = <ls_files_content>-file_size.
+
+        <ls_response_read_chat_file>-content = cl_abap_codepage=>convert_from( l_content_bin ).
+
+        CLEAR lo_zip.
+
+      ENDLOOP.
 
       SELECT a~id, a~chat_id, a~task_id, b~name AS task_name, a~previous_task_id, c~name AS previous_task_name, a~status
         FROM yaai_agent_task AS a
@@ -254,6 +392,7 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
                                           chat_date = ls_response_read-chat-chat_date
                                           chat_time = ls_response_read-chat-chat_time
                                           max_seq_no = ls_response_read-chat-max_seq_no
+                                          tokens = ls_response_read-chat-tokens
                                           blocked = ls_response_read-chat-blocked ) ).
 
       l_json = /ui2/cl_json=>serialize(
@@ -279,7 +418,7 @@ CLASS ycl_aai_rest_chat IMPLEMENTATION.
         lt_rng_username = VALUE #( ( sign = 'I' option = 'EQ' low = l_username ) ).
       ENDIF.
 
-      SELECT a~id, a~api, a~username, a~chat_date, a~chat_time, a~blocked, MAX( b~seqno ) AS max_seq_no
+      SELECT a~id, a~api, a~username, a~chat_date, a~chat_time, a~blocked, MAX( b~seqno ) AS max_seq_no, SUM( b~tokens ) AS tokens
         FROM yaai_chat AS a
         LEFT OUTER JOIN yaai_msg AS b
         ON a~id = b~id

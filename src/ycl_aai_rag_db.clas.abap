@@ -20,7 +20,7 @@ CLASS ycl_aai_rag_db DEFINITION
 
     METHODS convert_file_content
       IMPORTING
-        i_id         TYPE uuid
+        i_id         TYPE yde_aai_id
         i_filename   TYPE string
         i_content    TYPE string
       EXPORTING
@@ -61,7 +61,7 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
 
     TRY.
 
-        ls_aai_rag-id = cl_system_uuid=>create_uuid_x16_static( ).
+        ls_aai_rag-id = cl_system_uuid=>create_uuid_c32_static( ).
 
       CATCH cx_uuid_error ##NO_HANDLER.
     ENDTRY.

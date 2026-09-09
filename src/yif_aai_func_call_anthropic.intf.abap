@@ -57,6 +57,8 @@ INTERFACE yif_aai_func_call_anthropic
     IMPORTING
               i_tool_name       TYPE string
               i_json            TYPE /ui2/cl_json=>json
+    EXPORTING
+              e_t_files         TYPE ytt_aai_files
     RETURNING VALUE(r_response) TYPE string.
 
 ENDINTERFACE.

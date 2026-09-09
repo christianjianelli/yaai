@@ -8,6 +8,7 @@
     <DATATYPE>CHAR</DATATYPE>
     <LENG>000200</LENG>
     <OUTPUTLEN>000200</OUTPUTLEN>
+    <LOWERCASE>X</LOWERCASE>
     <DDTEXT>RAG file description</DDTEXT>
    </DD01V>
   </asx:values>

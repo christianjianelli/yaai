@@ -12,11 +12,12 @@ CLASS ycl_aai_func_call_ollama DEFINITION
 
     ALIASES mt_methods FOR yif_aai_func_call_ollama~mt_methods.
 
-    ALIASES add_methods   FOR yif_aai_func_call_ollama~add_methods.
-    ALIASES get_tools     FOR yif_aai_func_call_ollama~get_tools.
-    ALIASES reset_methods FOR yif_aai_func_call_ollama~reset_methods.
-    ALIASES remove_method FOR yif_aai_func_call_ollama~remove_method.
-    ALIASES call_tool     FOR yif_aai_func_call_ollama~call_tool.
+    ALIASES add_methods      FOR yif_aai_func_call_ollama~add_methods.
+    ALIASES get_tools        FOR yif_aai_func_call_ollama~get_tools.
+    ALIASES reset_methods    FOR yif_aai_func_call_ollama~reset_methods.
+    ALIASES remove_method    FOR yif_aai_func_call_ollama~remove_method.
+    ALIASES call_tool        FOR yif_aai_func_call_ollama~call_tool.
+    ALIASES get_tool_by_name FOR yif_aai_func_call_ollama~get_tool_by_name.
 
     METHODS constructor
       IMPORTING
@@ -32,7 +33,8 @@ ENDCLASS.
 
 
 
-CLASS ycl_aai_func_call_ollama IMPLEMENTATION.
+CLASS YCL_AAI_FUNC_CALL_OLLAMA IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -43,6 +45,7 @@ CLASS ycl_aai_func_call_ollama IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 
   METHOD yif_aai_func_call_ollama~add_methods.
 
@@ -174,12 +177,12 @@ CLASS ycl_aai_func_call_ollama IMPLEMENTATION.
       ).
 
       " Fill the parameters table to dynamically pass the importing parameters in the method call
-      LOOP AT lt_components INTO DATA(ls_components).
+      LOOP AT lt_components INTO DATA(ls_component).
 
-        ls_parameter-name = to_upper( ls_components-name ).
+        ls_parameter-name = to_upper( ls_component-name ).
         ls_parameter-kind = cl_abap_objectdescr=>exporting.
 
-        ASSIGN COMPONENT ls_components-name OF STRUCTURE <ls_data> TO FIELD-SYMBOL(<lr_param>).
+        ASSIGN COMPONENT ls_component-name OF STRUCTURE <ls_data> TO FIELD-SYMBOL(<lr_param>).
 
         IF sy-subrc = 0.
 
@@ -192,6 +195,33 @@ CLASS ycl_aai_func_call_ollama IMPLEMENTATION.
       ENDLOOP.
 
     ENDIF.
+
+    " Get exporting parameter with images
+    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    FREE lt_components.
+
+    lo_aai_util->get_method_exporting_params(
+      EXPORTING
+        i_class_name   = ls_method-class_name
+        i_method_name  = ls_method-method_name
+      IMPORTING
+        e_t_components = lt_components
+    ).
+
+    LOOP AT lt_components INTO ls_component.
+
+      IF ls_component-name = 'E_T_FILES' ##NO_TEXT.
+
+        ls_parameter-name = ls_component-name.
+        ls_parameter-kind = cl_abap_objectdescr=>importing.
+        ls_parameter-value = REF #( e_t_files ).
+
+        INSERT ls_parameter INTO TABLE lt_parameters.
+
+      ENDIF.
+
+    ENDLOOP.
+    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
     ls_parameter-name = 'R_RESPONSE'.
     ls_parameter-kind = cl_abap_objectdescr=>receiving.
@@ -258,6 +288,7 @@ CLASS ycl_aai_func_call_ollama IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 
   METHOD yif_aai_func_call_ollama~get_tools.
 
@@ -334,16 +365,52 @@ CLASS ycl_aai_func_call_ollama IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD yif_aai_func_call_ollama~get_tool_by_name.
+
+    CLEAR e_s_tool.
+
+    LOOP AT me->mt_methods INTO DATA(ls_method).
+
+      ls_method-class_name = to_upper( condense( ls_method-class_name ) ).
+      ls_method-method_name = to_upper( condense( ls_method-method_name ) ).
+
+      DATA(l_name) = |{ ls_method-class_name }_{ ls_method-method_name }|.
+
+      IF i_tool_name <> l_name.
+        CLEAR ls_method.
+        CONTINUE.
+      ENDIF.
+
+      EXIT.
+
+    ENDLOOP.
+
+    IF ls_method IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    e_s_tool = CORRESPONDING #( ls_method ).
+
+    SELECT SINGLE approval
+      FROM yaai_tool
+      WHERE class_name = @e_s_tool-class_name
+        AND method_name = @e_s_tool-method_name
+       INTO @e_s_tool-approval.
+
+  ENDMETHOD.
+
+
   METHOD yif_aai_func_call_ollama~remove_method.
 
     DELETE me->mt_methods WHERE class_name = i_s_method-class_name AND method_name = i_s_method-method_name.
 
   ENDMETHOD.
 
+
   METHOD yif_aai_func_call_ollama~reset_methods.
 
     FREE me->mt_methods.
 
   ENDMETHOD.
-
 ENDCLASS.

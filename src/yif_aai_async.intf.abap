@@ -53,6 +53,7 @@ INTERFACE yif_aai_async
               i_model          TYPE csequence OPTIONAL
               i_log            TYPE abap_bool DEFAULT abap_true
               i_debug          TYPE abap_bool DEFAULT abap_false
+              i_t_files        TYPE ytt_aai_files OPTIONAL
     RETURNING VALUE(r_started) TYPE abap_bool.
 
   METHODS get_status

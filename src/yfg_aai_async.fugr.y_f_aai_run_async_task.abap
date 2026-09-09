@@ -11,6 +11,7 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
 *"     VALUE(I_AGENT_ID) TYPE  YDE_AAI_AGENT_ID OPTIONAL
 *"     VALUE(I_MODEL) TYPE  STRING OPTIONAL
 *"     VALUE(I_LOG) TYPE  XFELD DEFAULT ABAP_TRUE
+*"     VALUE(I_T_FILES) TYPE  YTT_AAI_FILES OPTIONAL
 *"----------------------------------------------------------------------
   CASE i_api.
 
@@ -26,6 +27,7 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
           i_agent_id = i_agent_id
           i_model    = i_model
           i_log      = abap_true
+          i_t_files  = i_t_files
       ).
 
     WHEN yif_aai_const=>c_anthropic.
@@ -40,6 +42,7 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
           i_agent_id = i_agent_id
           i_model    = i_model
           i_log      = abap_true
+          i_t_files  = i_t_files
       ).
 
     WHEN yif_aai_const=>c_google.
@@ -54,6 +57,7 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
           i_agent_id = i_agent_id
           i_model    = i_model
           i_log      = abap_true
+          i_t_files  = i_t_files
       ).
 
     WHEN yif_aai_const=>c_mistral.
@@ -68,6 +72,7 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
           i_agent_id = i_agent_id
           i_model    = i_model
           i_log      = abap_true
+          i_t_files  = i_t_files
       ).
 
     WHEN yif_aai_const=>c_ollama.
@@ -82,6 +87,7 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
           i_agent_id = i_agent_id
           i_model    = i_model
           i_log      = abap_true
+          i_t_files  = i_t_files
       ).
 
     WHEN yif_aai_const=>c_sap_ai_core.
@@ -96,6 +102,7 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
           i_agent_id = i_agent_id
           i_model    = i_model
           i_log      = abap_true
+          i_t_files  = i_t_files
       ).
 
     WHEN OTHERS.
@@ -134,6 +141,7 @@ FUNCTION Y_F_AAI_RUN_ASYNC_TASK.
           i_agent_id = i_agent_id
           i_model    = i_model
           i_log      = abap_true
+          i_t_files  = i_t_files
       ).
 
   ENDCASE.

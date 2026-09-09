@@ -15,6 +15,8 @@ CLASS ycl_aai_ollama DEFINITION
     ALIASES set_model FOR yif_aai_ollama~set_model.
     ALIASES set_context_length FOR yif_aai_ollama~set_context_length.
     ALIASES set_temperature FOR yif_aai_ollama~set_temperature.
+    ALIASES set_think FOR yif_aai_ollama~set_think.
+    ALIASES set_keep_alive FOR yif_aai_ollama~set_keep_alive.
     ALIASES set_system_instructions FOR yif_aai_ollama~set_system_instructions.
     ALIASES set_connection FOR yif_aai_ollama~set_connection.
     ALIASES bind_tools FOR yif_aai_ollama~bind_tools.
@@ -51,15 +53,27 @@ CLASS ycl_aai_ollama DEFINITION
 
     DATA: _t_chat_messages          TYPE yif_aai_ollama~ty_chat_messages_t.
 
-    DATA: _model                    TYPE string,
-          _temperature              TYPE p LENGTH 2 DECIMALS 1,
-          _num_ctx                  TYPE i,
-          _system_instructions      TYPE string,
-          _ollama_chat_response     TYPE yif_aai_ollama~ty_ollama_chat_response_s,
-          _ollama_generate_response TYPE yif_aai_ollama~ty_ollama_generate_response_s,
-          _max_tool_calls           TYPE i.
+    DATA: _model                      TYPE string,
+          _temperature                TYPE p LENGTH 2 DECIMALS 1,
+          _num_ctx                    TYPE i,
+          _max_tool_calls             TYPE i,
+          _think                      TYPE abap_bool,
+          _keep_alive                 TYPE string,
+          _reasoning_effort           TYPE string,
+          _system_instructions        TYPE string,
+          _ollama_chat_response_s     TYPE yif_aai_ollama~ty_ollama_chat_response_s,
+          _ollama_generate_response_s TYPE yif_aai_ollama~ty_ollama_generate_response_s,
+          _t_messages_db              TYPE yif_aai_db=>ty_messages_t,
+          _t_message_images           TYPE yif_aai_ollama~ty_message_images_t.
 
     METHODS _load_agent_settings.
+
+    METHODS _get_files
+      IMPORTING
+        i_t_files     TYPE ytt_aai_files
+      EXPORTING
+        e_t_images    TYPE yif_aai_ollama~ty_images_t
+        e_t_images_db TYPE yif_aai_ollama~ty_message_images_t.
 
     METHODS _log
       IMPORTING
@@ -71,19 +85,6 @@ ENDCLASS.
 
 CLASS ycl_aai_ollama IMPLEMENTATION.
 
-  METHOD get_instance.
-
-    IF m_ref IS NOT BOUND.
-      m_ref = NEW #( ).
-    ENDIF.
-
-    IF i_model IS SUPPLIED.
-      m_ref->set_model( i_model ).
-    ENDIF.
-
-    r_ref = m_ref.
-
-  ENDMETHOD.
 
   METHOD constructor.
 
@@ -114,6 +115,12 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     me->_temperature = 1.
 
+    me->_reasoning_effort = yif_aai_ollama~mc_reasoning_effort_low.
+
+    me->_think = abap_false.
+
+    me->_keep_alive = '10m'.
+
     me->_num_ctx = 4096.
 
     me->_max_tool_calls = 10.
@@ -128,8 +135,52 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       me->_o_persistence->get_chat(
         IMPORTING
+          e_t_messages = me->_t_messages_db
           e_t_msg_data = me->_t_chat_messages
       ).
+
+      " Images
+      """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+      LOOP AT me->_t_chat_messages ASSIGNING FIELD-SYMBOL(<ls_message>).
+
+        DATA(l_index) = sy-tabix.
+
+        IF <ls_message>-role <> yif_aai_openai=>mc_user.
+          CONTINUE.
+        ENDIF.
+
+        READ TABLE me->_t_messages_db ASSIGNING FIELD-SYMBOL(<ls_message_db>) INDEX l_index.
+
+        IF sy-subrc = 0.
+
+          me->_o_persistence->get_files(
+            EXPORTING
+              i_seqno   = <ls_message_db>-seqno
+            IMPORTING
+              e_t_files = DATA(lt_files_db)
+          ).
+
+          me->_get_files(
+            EXPORTING
+              i_t_files  = lt_files_db
+            IMPORTING
+              e_t_images = DATA(lt_images)
+          ).
+
+          IF lt_images IS NOT INITIAL.
+
+            DATA(ls_message_images) = VALUE yif_aai_ollama~ty_message_images_s( seqno = <ls_message_db>-seqno
+                                                                                images = CORRESPONDING #( lt_images ) ).
+
+            INSERT ls_message_images INTO TABLE me->_t_message_images.
+
+          ENDIF.
+
+          FREE lt_images.
+
+        ENDIF.
+
+      ENDLOOP.
 
     ENDIF.
 
@@ -144,47 +195,48 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_ollama~set_model.
 
-    me->_model = i_model.
+  METHOD get_chat_messages.
 
-  ENDMETHOD.
-
-  METHOD yif_aai_ollama~set_context_length.
-
-    me->_num_ctx = i_context_length.
+    rt_messages = me->_t_chat_messages.
 
   ENDMETHOD.
 
-  METHOD yif_aai_ollama~set_temperature.
 
-    me->_temperature = i_temperature.
+  METHOD get_instance.
 
-  ENDMETHOD.
+    IF m_ref IS NOT BOUND.
+      m_ref = NEW #( ).
+    ENDIF.
 
-  METHOD yif_aai_ollama~set_system_instructions.
+    IF i_model IS SUPPLIED.
+      m_ref->set_model( i_model ).
+    ENDIF.
 
-    me->_system_instructions = i_system_instructions.
-
-  ENDMETHOD.
-
-  METHOD yif_aai_ollama~set_history.
-
-    me->_t_chat_messages = i_t_history.
+    r_ref = m_ref.
 
   ENDMETHOD.
 
-  METHOD yif_aai_ollama~get_history.
 
-    e_t_history = me->_t_chat_messages.
+  METHOD yif_aai_chat~chat.
+
+    me->chat(
+      EXPORTING
+        i_message       = i_message
+        i_new           = i_new
+        i_greeting      = i_greeting
+        i_async_task_id = i_async_task_id
+        i_t_files       = i_t_files
+        i_o_prompt      = i_o_prompt
+        i_o_agent       = i_o_agent
+      IMPORTING
+        e_response      = e_response
+        e_failed        = e_failed
+        e_t_response    = e_t_response
+    ).
 
   ENDMETHOD.
 
-  METHOD yif_aai_ollama~set_connection.
-
-    me->_o_connection = i_o_connection.
-
-  ENDMETHOD.
 
   METHOD yif_aai_ollama~bind_tools.
 
@@ -196,20 +248,6 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_chat~chat.
-
-    me->chat(
-      EXPORTING
-        i_message    = i_message
-        i_new        = i_new
-        i_greeting   = i_greeting
-      IMPORTING
-        e_response   = e_response
-        e_failed     = e_failed
-        e_t_response = e_t_response
-    ).
-
-  ENDMETHOD.
 
   METHOD yif_aai_ollama~chat.
 
@@ -258,7 +296,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING FIELD-SYMBOL(<ls_msg>).
 
-        <ls_msg> = VALUE #( role = 'system' content = me->_system_instructions ).
+        <ls_msg> = VALUE #( role = yif_aai_ollama=>mc_system
+                            content = me->_system_instructions ).
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_system_instructions( i_data = <ls_msg> ).
@@ -270,7 +309,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-        <ls_msg> = VALUE #( role = 'assistant' content = i_greeting ).
+        <ls_msg> = VALUE #( role = yif_aai_ollama=>mc_assistant content = i_greeting ).
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -285,11 +324,12 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
       IF me->_system_instructions IS NOT INITIAL.
 
         READ TABLE me->_t_chat_messages TRANSPORTING NO FIELDS
-          WITH KEY role = 'system'.
+          WITH KEY role = yif_aai_ollama=>mc_system.
 
         IF sy-subrc <> 0.
 
-          INSERT VALUE #( role = 'system' content = me->_system_instructions ) INTO me->_t_chat_messages INDEX 1.
+          INSERT VALUE #( role = yif_aai_ollama=>mc_system
+                          content = me->_system_instructions ) INTO me->_t_chat_messages INDEX 1.
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_system_instructions( i_data = me->_t_chat_messages[ 1 ] ).
@@ -315,7 +355,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-    <ls_msg> = VALUE #( role = 'user' content = i_message ).
+    <ls_msg> = VALUE #( role = yif_aai_ollama=>mc_user content = i_message ).
 
     IF l_prompt IS NOT INITIAL.
 
@@ -324,6 +364,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
       ls_prompt-content = l_prompt.
 
     ENDIF.
+
+    DATA(l_seqno) = lines( me->_t_chat_messages ).
 
     IF me->_o_persistence IS BOUND.
       " persist the user message and the augmented prompt
@@ -337,6 +379,69 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
     IF l_prompt IS NOT INITIAL.
       <ls_msg>-content = l_prompt.
     ENDIF.
+
+    " Images
+    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    IF i_t_files IS NOT INITIAL AND me->_o_persistence IS BOUND.
+
+      me->_o_persistence->persist_files(
+        EXPORTING
+          i_seqno   = l_seqno
+          i_t_files = i_t_files
+      ).
+
+      me->_get_files(
+        EXPORTING
+          i_t_files  = i_t_files
+        IMPORTING
+          e_t_images = DATA(lt_images)
+      ).
+
+    ENDIF.
+
+    IF lt_images IS NOT INITIAL.
+
+      DATA(ls_message_images) = VALUE yif_aai_ollama~ty_message_images_s( seqno = l_seqno
+                                                                          images = CORRESPONDING #( lt_images ) ).
+
+      INSERT ls_message_images INTO TABLE me->_t_message_images.
+
+    ENDIF.
+
+    LOOP AT me->_t_chat_messages ASSIGNING <ls_msg>.
+
+      DATA(l_index) = sy-tabix.
+
+      CASE <ls_msg>-role.
+
+        WHEN yif_aai_ollama=>mc_user OR yif_aai_ollama=>mc_tool.
+
+          READ TABLE me->_t_messages_db ASSIGNING FIELD-SYMBOL(<ls_message_db>) INDEX l_index.
+
+          " If the message is already persisted use SEQNO
+          IF sy-subrc = 0.
+            l_index = <ls_message_db>-seqno.
+          ENDIF.
+
+          READ TABLE me->_t_message_images ASSIGNING FIELD-SYMBOL(<ls_message_images>)
+            WITH KEY seqno = l_index.
+
+          IF sy-subrc = 0.
+
+            FREE <ls_msg>-images.
+
+            LOOP AT <ls_message_images>-images ASSIGNING FIELD-SYMBOL(<ls_image>).
+
+              APPEND <ls_image>-image TO <ls_msg>-images.
+
+            ENDLOOP.
+
+          ENDIF.
+
+      ENDCASE.
+
+    ENDLOOP.
+    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
     DATA(lo_aai_util) = NEW ycl_aai_util( ).
 
@@ -354,7 +459,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
       IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_ollama_chat_endpoint ).
 
-        FREE me->_ollama_chat_response.
+        FREE me->_ollama_chat_response_s.
 
         IF me->mo_function_calling IS BOUND.
 
@@ -367,8 +472,11 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_chat_request_s( model = me->_model
                                                                                                        options = VALUE #( temperature = me->_temperature
-                                                                                                                          num_ctx = me->_num_ctx )
+                                                                                                                          num_ctx = me->_num_ctx
+                                                                                                                          think = me->_reasoning_effort )
                                                                                                        messages = me->_t_chat_messages
+                                                                                                       think = me->_think
+                                                                                                       keep_alive = me->_keep_alive
                                                                                                        tools = l_tools ) ).
 
         me->_o_connection->set_body( l_json ).
@@ -395,7 +503,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
           APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-          <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
+          <ls_msg> = VALUE #( role = yif_aai_ollama=>mc_assistant
+                              content = e_response ).
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -415,16 +524,17 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           EXPORTING
             i_json = l_json
           IMPORTING
-            e_data = me->_ollama_chat_response
+            e_data = me->_ollama_chat_response_s
         ).
 
-        IF me->_ollama_chat_response IS INITIAL.
+        IF me->_ollama_chat_response_s IS INITIAL.
 
           MESSAGE e020(yaai) INTO e_response.
 
           APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-          <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
+          <ls_msg> = VALUE #( role = yif_aai_ollama=>mc_assistant
+                              content = e_response ).
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -438,22 +548,44 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         ENDIF.
 
-        IF me->_ollama_chat_response-message-tool_calls[] IS NOT INITIAL AND me->mo_function_calling IS BOUND.
+        IF me->_ollama_chat_response_s-message-tool_calls[] IS NOT INITIAL AND me->mo_function_calling IS BOUND.
 
           APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-          <ls_msg> = me->_ollama_chat_response-message.
+          <ls_msg> = me->_ollama_chat_response_s-message.
 
           IF me->_o_persistence IS BOUND.
 
             me->_o_persistence->persist_message( i_data = <ls_msg>
-                                                 i_tokens = me->_ollama_chat_response-eval_count + me->_ollama_chat_response-prompt_eval_count
+                                                 i_tokens = me->_ollama_chat_response_s-eval_count + me->_ollama_chat_response_s-prompt_eval_count
                                                  i_async_task_id = i_async_task_id
                                                  i_model = CONV #( me->_model ) ).
 
           ENDIF.
 
-          LOOP AT me->_ollama_chat_response-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool>).
+          LOOP AT me->_ollama_chat_response_s-message-tool_calls ASSIGNING FIELD-SYMBOL(<ls_tool>).
+
+            " Tool call approval
+            """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+            DATA(l_tool_call_approved) = abap_true.
+
+            IF me->_o_persistence IS BOUND AND
+               me->mo_function_calling IS BOUND.
+
+              DATA(lo_fc_approvals) = NEW ycl_aai_func_call_approvals( ).
+
+              lo_fc_approvals->check_tool_call_approval(
+                EXPORTING
+                  i_tool_name     = to_upper( condense( <ls_tool>-function-name ) )
+                  i_o_persistence = me->_o_persistence
+                  i_t_tools       = CORRESPONDING #( me->mo_function_calling->mt_methods )
+                IMPORTING
+                  e_approved      = l_tool_call_approved
+                  e_tool_response = DATA(l_tool_call_approval_response)
+              ).
+
+            ENDIF.
+            """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
             " For some reason, probably a bug in Ollama API, part of the arguments in the JSON are passed as escaped strings.
             " Because just part of the JSON has to be unescaped it is not possible to use the proper deserialize method.
@@ -463,17 +595,35 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
             REPLACE ALL OCCURRENCES OF '"[' IN <ls_tool>-function-arguments WITH '['.
             REPLACE ALL OCCURRENCES OF ']"' IN <ls_tool>-function-arguments WITH ']'.
 
-            me->mo_function_calling->call_tool(
-              EXPORTING
-                i_tool_name   = to_upper( <ls_tool>-function-name )
-                i_json        = <ls_tool>-function-arguments
-              RECEIVING
-                r_response    = DATA(l_tool_response)
-            ).
+            IF l_tool_call_approved = abap_true.
+
+              me->mo_function_calling->call_tool(
+                EXPORTING
+                  i_tool_name   = to_upper( <ls_tool>-function-name )
+                  i_json        = <ls_tool>-function-arguments
+                IMPORTING
+                  e_t_files     = DATA(lt_tool_response_files)
+                RECEIVING
+                  r_response    = DATA(l_tool_response)
+              ).
+
+              IF lo_fc_approvals IS BOUND.
+
+                lo_fc_approvals->set_approval_as_used(
+                  EXPORTING
+                    i_tool_name     = to_upper( condense( <ls_tool>-function-name ) )
+                    i_o_persistence = me->_o_persistence
+                ).
+
+              ENDIF.
+
+            ELSE.
+              l_tool_response = l_tool_call_approval_response.
+            ENDIF.
 
             APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-            <ls_msg> = VALUE #( role = 'tool'
+            <ls_msg> = VALUE #( role = yif_aai_ollama=>mc_tool
                                 tool_name = <ls_tool>-function-name
                                 content = l_tool_response ).
 
@@ -483,6 +633,44 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
                                                    i_async_task_id = i_async_task_id
                                                    i_model = CONV #( me->_model ) ).
 
+              " Images returned from tool call
+              """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+              IF lt_tool_response_files IS NOT INITIAL.
+
+                me->_o_persistence->persist_files(
+                  EXPORTING
+                    i_seqno   = l_seqno
+                    i_t_files = lt_tool_response_files
+                ).
+
+                me->_get_files(
+                  EXPORTING
+                    i_t_files     = lt_tool_response_files
+                  IMPORTING
+                    e_t_images    = DATA(lt_tool_images)
+                ).
+
+                IF lt_tool_images IS NOT INITIAL.
+
+                  ls_message_images = VALUE yif_aai_ollama~ty_message_images_s( seqno = l_seqno
+                                                                                images = CORRESPONDING #( lt_tool_images ) ).
+
+                  INSERT ls_message_images INTO TABLE me->_t_message_images.
+
+                  LOOP AT lt_tool_images ASSIGNING <ls_image>.
+
+                    APPEND <ls_image>-image TO <ls_msg>-images.
+
+                  ENDLOOP.
+
+                ENDIF.
+
+                FREE: lt_tool_response_files,
+                      lt_tool_images.
+
+              ENDIF.
+              """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
             ENDIF.
 
           ENDLOOP.
@@ -491,7 +679,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
             APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-            <ls_msg> = VALUE #( role = 'user' ).
+            <ls_msg> = VALUE #( role = yif_aai_ollama=>mc_user ).
 
             "The maximum number of tool calls allowed has been reached.
             MESSAGE ID 'YAAI' TYPE 'S' NUMBER '017' INTO <ls_msg>-content.
@@ -510,9 +698,9 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         ENDIF.
 
-        IF me->_ollama_chat_response-error IS NOT INITIAL.
+        IF me->_ollama_chat_response_s-error IS NOT INITIAL.
 
-          e_response = me->_ollama_chat_response-error.
+          e_response = me->_ollama_chat_response_s-error.
 
           IF e_t_response IS REQUESTED.
             APPEND INITIAL LINE TO e_t_response ASSIGNING <l_response>.
@@ -521,7 +709,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
           APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-          <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
+          <ls_msg> = VALUE #( role = yif_aai_ollama=>mc_assistant
+                              content = e_response ).
 
           IF me->_o_persistence IS BOUND.
             me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -537,24 +726,24 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         ENDIF.
 
-        me->_ollama_chat_response-message-content = lo_aai_util->replace_unicode_escape_seq( me->_ollama_chat_response-message-content ).
+        me->_ollama_chat_response_s-message-content = lo_aai_util->replace_unicode_escape_seq( me->_ollama_chat_response_s-message-content ).
 
-        APPEND me->_ollama_chat_response-message TO me->_t_chat_messages.
+        APPEND me->_ollama_chat_response_s-message TO me->_t_chat_messages.
 
         APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-        <ls_msg> = VALUE #( role =  me->_ollama_chat_response-message-role
-                            content = me->_ollama_chat_response-message-content ).
+        <ls_msg> = VALUE #( role =  me->_ollama_chat_response_s-message-role
+                            content = me->_ollama_chat_response_s-message-content ).
 
         IF me->_o_persistence IS BOUND.
 
           me->_o_persistence->persist_message( i_data = <ls_msg>
-                                               i_tokens = me->_ollama_chat_response-eval_count + me->_ollama_chat_response-prompt_eval_count
+                                               i_tokens = me->_ollama_chat_response_s-eval_count + me->_ollama_chat_response_s-prompt_eval_count
                                                i_async_task_id = i_async_task_id
                                                i_model = CONV #( me->_model ) ).
         ENDIF.
 
-        e_response = me->_ollama_chat_response-message-content.
+        e_response = me->_ollama_chat_response_s-message-content.
 
         EXIT.
 
@@ -572,7 +761,8 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
         APPEND INITIAL LINE TO me->_t_chat_messages ASSIGNING <ls_msg>.
 
-        <ls_msg> = VALUE #( role = 'assistant' content = e_response ).
+        <ls_msg> = VALUE #( role = yif_aai_ollama=>mc_assistant
+                            content = e_response ).
 
         IF me->_o_persistence IS BOUND.
           me->_o_persistence->persist_message( i_data = <ls_msg>
@@ -590,13 +780,60 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     ENDDO.
 
-    IF e_t_response IS REQUESTED AND me->_ollama_chat_response-error IS INITIAL.
+    IF e_t_response IS REQUESTED AND me->_ollama_chat_response_s-error IS INITIAL.
 
       SPLIT e_response AT cl_abap_char_utilities=>newline INTO TABLE e_t_response.
 
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD yif_aai_ollama~embed.
+
+    CLEAR: e_s_response,
+           e_failed.
+
+    IF me->_o_connection IS NOT BOUND.
+      me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
+    ENDIF.
+
+    IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_ollama_embed_endpoint ).
+
+      DATA(lo_aai_util) = NEW ycl_aai_util( ).
+
+      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_embed_request_s( model = me->_model
+                                                                                                      input = i_input ) ).
+
+      me->_o_connection->set_body( l_json ).
+
+      FREE l_json.
+
+      me->_o_connection->do_receive(
+        IMPORTING
+          e_response = l_json
+          e_failed   = e_failed
+      ).
+
+      IF e_failed = abap_true.
+
+        RETURN.
+
+      ELSE.
+
+        lo_aai_util->deserialize(
+          EXPORTING
+            i_json = l_json
+          IMPORTING
+            e_data = e_s_response
+        ).
+
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD yif_aai_ollama~generate.
 
@@ -661,12 +898,12 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
           EXPORTING
             i_json = l_json
           IMPORTING
-            e_data = me->_ollama_generate_response
+            e_data = me->_ollama_generate_response_s
         ).
 
-        me->_ollama_generate_response-response = lo_aai_util->replace_unicode_escape_seq( me->_ollama_generate_response-response ).
+        me->_ollama_generate_response_s-response = lo_aai_util->replace_unicode_escape_seq( me->_ollama_generate_response_s-response ).
 
-        e_response = me->_ollama_generate_response-response.
+        e_response = me->_ollama_generate_response_s-response.
 
       ENDIF.
 
@@ -694,56 +931,99 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD yif_aai_ollama~embed.
 
-    CLEAR: e_s_response,
-           e_failed.
+  METHOD yif_aai_ollama~get_history.
 
-    IF me->_o_connection IS NOT BOUND.
-      me->_o_connection = NEW ycl_aai_conn( i_api = yif_aai_const=>c_ollama ).
-    ENDIF.
-
-    IF me->_o_connection->create_connection( i_endpoint = yif_aai_const=>c_ollama_embed_endpoint ).
-
-      DATA(lo_aai_util) = NEW ycl_aai_util( ).
-
-      DATA(l_json) = lo_aai_util->serialize( i_data = VALUE yif_aai_ollama~ty_ollama_embed_request_s( model = me->_model
-                                                                                                      input = i_input ) ).
-
-      me->_o_connection->set_body( l_json ).
-
-      FREE l_json.
-
-      me->_o_connection->do_receive(
-        IMPORTING
-          e_response = l_json
-          e_failed   = e_failed
-      ).
-
-      IF e_failed = abap_true.
-
-        RETURN.
-
-      ELSE.
-
-        lo_aai_util->deserialize(
-          EXPORTING
-            i_json = l_json
-          IMPORTING
-            e_data = e_s_response
-        ).
-
-      ENDIF.
-
-    ENDIF.
+    e_t_history = me->_t_chat_messages.
 
   ENDMETHOD.
 
-  METHOD get_chat_messages.
 
-    rt_messages = me->_t_chat_messages.
+  METHOD yif_aai_ollama~set_connection.
+
+    me->_o_connection = i_o_connection.
 
   ENDMETHOD.
+
+
+  METHOD yif_aai_ollama~set_context_length.
+
+    me->_num_ctx = i_context_length.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_ollama~set_history.
+
+    me->_t_chat_messages = i_t_history.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_ollama~set_keep_alive.
+
+    me->_keep_alive = i_keep_alive.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_ollama~set_model.
+
+    me->_model = i_model.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_ollama~set_system_instructions.
+
+    me->_system_instructions = i_system_instructions.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_ollama~set_temperature.
+
+    me->_temperature = i_temperature.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_ollama~set_think.
+
+    me->_think = i_think.
+
+  ENDMETHOD.
+
+
+  METHOD _get_files.
+
+    " Supported image file types
+    " PNG (.png) → image/png
+    " JPEG (.jpeg and .jpg) → image/jpeg
+    " WEBP (.webp) → image/webp
+    " Non-animated GIF (.gif) → image/gif
+
+    CONSTANTS: lc_png  TYPE string VALUE 'image/png'  ##NO_TEXT,
+               lc_jpeg TYPE string VALUE 'image/jpeg' ##NO_TEXT,
+               lc_webp TYPE string VALUE 'image/webp' ##NO_TEXT,
+               lc_gif  TYPE string VALUE 'image/gif'  ##NO_TEXT.
+
+    FREE: e_t_images.
+
+    LOOP AT i_t_files ASSIGNING FIELD-SYMBOL(<ls_file>).
+
+      CASE condense( to_lower( <ls_file>-file_type ) ).
+
+        WHEN lc_png OR lc_jpeg OR lc_webp OR lc_gif.
+
+          APPEND VALUE #( image = <ls_file>-content ) TO e_t_images.
+
+      ENDCASE.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 
   METHOD _load_agent_settings.
 
@@ -771,6 +1051,14 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
 
     ENDIF.
 
+    me->_think = ls_model-think.
+
+    IF ls_model-reasoning IS NOT INITIAL.
+
+      me->_reasoning_effort = ls_model-reasoning.
+
+    ENDIF.
+
     DATA(l_system_instructions) = me->mo_agent->get_system_instructions( ).
 
     IF l_system_instructions IS NOT INITIAL.
@@ -782,6 +1070,7 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 
   METHOD _log.
 
@@ -805,5 +1094,4 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.

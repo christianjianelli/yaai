@@ -12,15 +12,16 @@ INTERFACE yif_aai_chat
 
   METHODS chat
     IMPORTING
-      id              TYPE uuid OPTIONAL
+      id              TYPE yde_aai_id OPTIONAL
       i_message       TYPE csequence OPTIONAL
       i_new           TYPE abap_bool DEFAULT abap_false
       i_greeting      TYPE csequence OPTIONAL
       i_async_task_id TYPE csequence OPTIONAL
+      i_t_files       TYPE ytt_aai_files OPTIONAL
       i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
       i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
     EXPORTING
-      e_id            TYPE uuid
+      e_id            TYPE yde_aai_id
       e_response      TYPE string
       e_failed        TYPE abap_bool
       e_t_response    TYPE ty_response_t.

@@ -12,6 +12,7 @@ INTERFACE yif_aai_async_chat_run
               i_agent_id        TYPE yde_aai_agent_id OPTIONAL
               i_model           TYPE csequence OPTIONAL
               i_log             TYPE abap_bool DEFAULT abap_true
+              i_t_files         TYPE ytt_aai_files OPTIONAL
     RETURNING VALUE(r_response) TYPE string.
 
 ENDINTERFACE.

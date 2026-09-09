@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS YCL_aai_FUNC_CALL_GOOGLE IMPLEMENTATION.
+CLASS YCL_AAI_FUNC_CALL_GOOGLE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -185,12 +185,12 @@ CLASS YCL_aai_FUNC_CALL_GOOGLE IMPLEMENTATION.
     ENDIF.
 
     " Fill the parameters table to dynamically pass the importing parameters in the method call
-    LOOP AT lt_components INTO DATA(ls_components).
+    LOOP AT lt_components INTO DATA(ls_component).
 
-      ls_parameter-name = to_upper( ls_components-name ).
+      ls_parameter-name = to_upper( ls_component-name ).
       ls_parameter-kind = cl_abap_objectdescr=>exporting.
 
-      ASSIGN COMPONENT ls_components-name OF STRUCTURE <ls_data> TO FIELD-SYMBOL(<lr_param>).
+      ASSIGN COMPONENT ls_component-name OF STRUCTURE <ls_data> TO FIELD-SYMBOL(<lr_param>).
 
       IF sy-subrc = 0.
 
@@ -201,6 +201,33 @@ CLASS YCL_aai_FUNC_CALL_GOOGLE IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+    " Get exporting parameter with images and/or files
+    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    FREE lt_components.
+
+    lo_aai_util->get_method_exporting_params(
+      EXPORTING
+        i_class_name   = ls_method-class_name
+        i_method_name  = ls_method-method_name
+      IMPORTING
+        e_t_components = lt_components
+    ).
+
+    LOOP AT lt_components INTO ls_component.
+
+      IF ls_component-name = 'E_T_FILES' ##NO_TEXT.
+
+        ls_parameter-name = ls_component-name.
+        ls_parameter-kind = cl_abap_objectdescr=>importing.
+        ls_parameter-value = REF #( e_t_files ).
+
+        INSERT ls_parameter INTO TABLE lt_parameters.
+
+      ENDIF.
+
+    ENDLOOP.
+    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
     ls_parameter-name = 'R_RESPONSE'.
     ls_parameter-kind = cl_abap_objectdescr=>receiving.

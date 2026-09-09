@@ -25,15 +25,15 @@ INTERFACE yif_aai_rag_db
       i_keywords    TYPE csequence OPTIONAL
       i_content     TYPE string
     EXPORTING
-      e_id          TYPE uuid
+      e_id          TYPE yde_aai_id
       e_error       TYPE string.
 
   METHODS read
     IMPORTING
-      i_id          TYPE uuid OPTIONAL
+      i_id          TYPE yde_aai_id OPTIONAL
       i_filename    TYPE csequence OPTIONAL
     EXPORTING
-      e_id          TYPE uuid
+      e_id          TYPE yde_aai_id
       e_filename    TYPE csequence
       e_description TYPE csequence
       e_keywords    TYPE csequence
@@ -42,7 +42,7 @@ INTERFACE yif_aai_rag_db
 
   METHODS update
     IMPORTING
-      i_id          TYPE uuid OPTIONAL
+      i_id          TYPE yde_aai_id OPTIONAL
       i_filename    TYPE csequence OPTIONAL
       i_description TYPE csequence OPTIONAL
       i_keywords    TYPE csequence OPTIONAL
@@ -54,7 +54,7 @@ INTERFACE yif_aai_rag_db
 
   METHODS delete
     IMPORTING
-      i_id       TYPE uuid OPTIONAL
+      i_id       TYPE yde_aai_id OPTIONAL
       i_filename TYPE csequence OPTIONAL
     EXPORTING
       e_deleted  TYPE abap_bool

@@ -6,7 +6,7 @@
 REPORT yr_aai_agent_run.
 
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
-PARAMETERS p_agent TYPE c LENGTH 32 OBLIGATORY.
+PARAMETERS p_agent TYPE yde_aai_agent_id OBLIGATORY.
 PARAMETERS p_api   TYPE yde_aai_api OBLIGATORY.
 PARAMETERS p_new   AS CHECKBOX.
 SELECTION-SCREEN END OF BLOCK b1.
@@ -15,7 +15,7 @@ START-OF-SELECTION.
 
   ycl_aai_agent=>run_autonomously(
     EXPORTING
-      i_agent_id = CONV #( p_agent )
+      i_agent_id = p_agent
       i_api      = p_api
       i_new_run  = p_new
   ).

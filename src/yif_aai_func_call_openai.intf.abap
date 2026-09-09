@@ -58,16 +58,16 @@ INTERFACE yif_aai_func_call_openai
   METHODS add_methods IMPORTING i_t_methods TYPE ty_methods_t.
 
   METHODS get_tools
-            IMPORTING
-              i_o_agent TYPE REF TO yif_aai_agent OPTIONAL
-            EXPORTING
-              e_tools TYPE string.
+    IMPORTING
+      i_o_agent TYPE REF TO yif_aai_agent OPTIONAL
+    EXPORTING
+      e_tools   TYPE string.
 
   METHODS get_tools_chat_completions
-            IMPORTING
-              i_o_agent TYPE REF TO yif_aai_agent OPTIONAL
-            EXPORTING
-              e_tools TYPE string.
+    IMPORTING
+      i_o_agent TYPE REF TO yif_aai_agent OPTIONAL
+    EXPORTING
+      e_tools   TYPE string.
 
   METHODS reset_methods.
 
@@ -77,6 +77,8 @@ INTERFACE yif_aai_func_call_openai
     IMPORTING
               i_tool_name       TYPE string
               i_json            TYPE /ui2/cl_json=>json
+    EXPORTING
+              e_t_files         TYPE ytt_aai_files
     RETURNING VALUE(r_response) TYPE string.
 
 ENDINTERFACE.

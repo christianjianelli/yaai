@@ -62,7 +62,7 @@ CLASS ycl_aai_rest_task IMPLEMENTATION.
 
     TRY.
 
-        DATA(l_id) = cl_system_uuid=>create_uuid_x16_static( ).
+        DATA(l_id) = cl_system_uuid=>create_uuid_c32_static( ).
 
         ls_response-id = l_id.
 

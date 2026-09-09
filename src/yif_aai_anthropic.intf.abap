@@ -5,13 +5,40 @@ INTERFACE yif_aai_anthropic
 
   TYPES: BEGIN OF ty_chat_message_s,
            role    TYPE string,
-           content TYPE string,
+           content TYPE /ui2/cl_json=>json,
          END OF ty_chat_message_s,
 
          BEGIN OF ty_chat_message_think_s,
            type TYPE string,
            text TYPE string,
          END OF ty_chat_message_think_s,
+
+         BEGIN OF ty_text_block_param_s,
+           type TYPE string,
+           text TYPE /ui2/cl_json=>json,
+         END OF ty_text_block_param_s,
+
+         BEGIN OF ty_base64_image_source_s,
+           data       TYPE string,
+           media_type TYPE string,
+           type       TYPE string,
+         END OF ty_base64_image_source_s,
+
+         BEGIN OF ty_image_block_param_s,
+           source TYPE ty_base64_image_source_s,
+           type   TYPE string,
+         END OF ty_image_block_param_s,
+
+         BEGIN OF ty_document_source_s,
+           data       TYPE string,
+           media_type TYPE string,
+           type       TYPE string,
+         END OF ty_document_source_s,
+
+         BEGIN OF ty_document_block_s,
+           source TYPE ty_document_source_s,
+           type   TYPE string,
+         END OF ty_document_block_s,
 
          BEGIN OF ty_chat_message_tool_use_s,
            type  TYPE string,
@@ -23,8 +50,35 @@ INTERFACE yif_aai_anthropic
          BEGIN OF ty_chat_message_tool_result_s,
            type        TYPE string,
            tool_use_id TYPE string,
-           content     TYPE string,
-         END OF ty_chat_message_tool_result_s.
+           content     TYPE /ui2/cl_json=>json,
+         END OF ty_chat_message_tool_result_s,
+
+         BEGIN OF ty_image_s,
+           media_type TYPE string,
+           image_url  TYPE string,
+         END OF ty_image_s,
+
+         BEGIN OF ty_file_s,
+           filename  TYPE string,
+           file_data TYPE string,
+           file_type TYPE string,
+         END OF ty_file_s,
+
+         ty_images_t TYPE STANDARD TABLE OF ty_image_s WITH EMPTY KEY,
+         ty_files_t  TYPE STANDARD TABLE OF ty_file_s WITH EMPTY KEY,
+
+         BEGIN OF ty_message_images_s,
+           seqno  TYPE yde_aai_seqno,
+           images TYPE ty_images_t,
+         END OF ty_message_images_s,
+
+         BEGIN OF ty_message_files_s,
+           seqno TYPE yde_aai_seqno,
+           files TYPE ty_files_t,
+         END OF ty_message_files_s,
+
+         ty_message_images_t TYPE SORTED TABLE OF ty_message_images_s WITH UNIQUE KEY seqno,
+         ty_message_files_t  TYPE SORTED TABLE OF ty_message_files_s  WITH UNIQUE KEY seqno.
 
   TYPES: ty_chat_messages_t TYPE STANDARD TABLE OF ty_chat_message_s WITH NON-UNIQUE KEY role.
 
@@ -44,7 +98,7 @@ INTERFACE yif_aai_anthropic
            id      TYPE string,
            name    TYPE string,
            input   TYPE /ui2/cl_json=>json,
-           content TYPE string,
+           content TYPE /ui2/cl_json=>json,
          END OF ty_response_content_s.
 
   TYPES: ty_content_t TYPE STANDARD TABLE OF ty_response_content_s WITH NON-UNIQUE KEY type.
@@ -126,6 +180,7 @@ INTERFACE yif_aai_anthropic
       i_new           TYPE abap_bool DEFAULT abap_false
       i_greeting      TYPE csequence OPTIONAL
       i_async_task_id TYPE csequence OPTIONAL
+      i_t_files       TYPE ytt_aai_files OPTIONAL
       i_o_prompt      TYPE REF TO yif_aai_prompt OPTIONAL
       i_o_agent       TYPE REF TO yif_aai_agent OPTIONAL
         PREFERRED PARAMETER i_message

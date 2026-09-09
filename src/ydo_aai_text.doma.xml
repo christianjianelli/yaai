@@ -3,14 +3,13 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <DD01V>
-    <DOMNAME>YDO_AAIC_BASE_URL</DOMNAME>
+    <DOMNAME>YDO_AAI_TEXT</DOMNAME>
     <DDLANGUAGE>E</DDLANGUAGE>
     <DATATYPE>CHAR</DATATYPE>
     <LENG>000255</LENG>
     <OUTPUTLEN>000255</OUTPUTLEN>
     <LOWERCASE>X</LOWERCASE>
-    <DDTEXT>Base URL</DDTEXT>
-    <DOMMASTER>E</DOMMASTER>
+    <DDTEXT>Text</DDTEXT>
    </DD01V>
   </asx:values>
  </asx:abap>

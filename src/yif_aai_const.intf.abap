@@ -2,12 +2,15 @@ INTERFACE yif_aai_const
   PUBLIC.
 
   "ABAP AI tools version
-  CONSTANTS: c_version TYPE string VALUE '1.2.2'.
+  CONSTANTS: c_version TYPE string VALUE '1.2.3'.
 
   "General
   CONSTANTS: c_message_id          TYPE bapiret2-id VALUE 'YAAI' ##NO_TEXT,
              c_placeholder_pattern TYPE c LENGTH 1 VALUE '%' ##NO_TEXT,
              c_unauthorized        TYPE string VALUE 'UNAUTHORIZED' ##NO_TEXT.
+
+  "Authorization Objects
+  CONSTANTS: c_chat_auth_obj_param TYPE tvarvc-name VALUE 'YAAI_CHAT_AUTH_OBJ'.
 
   "Ollama
   CONSTANTS: c_ollama                   TYPE string VALUE 'OLLAMA' ##NO_TEXT,

@@ -86,7 +86,7 @@ CLASS ycl_aai_rest_task_flow IMPLEMENTATION.
 
     TRY.
 
-        l_id = cl_system_uuid=>create_uuid_x16_static( ).
+        l_id = cl_system_uuid=>create_uuid_c32_static( ).
 
       CATCH cx_uuid_error ##NO_HANDLER.
 

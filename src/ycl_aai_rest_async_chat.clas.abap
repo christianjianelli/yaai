@@ -8,6 +8,8 @@ CLASS ycl_aai_rest_async_chat DEFINITION
 
     TYPES: BEGIN OF ty_file_s,
              filename TYPE string,
+             type     TYPE string,
+             size     TYPE string,
              content  TYPE string,
            END OF ty_file_s,
 
@@ -131,6 +133,15 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
 
     ls_response-task_id = l_task_id.
 
+    DATA(lt_files) = VALUE ytt_aai_files( ).
+
+    LOOP AT ls_request-files ASSIGNING FIELD-SYMBOL(<ls_file>).
+      APPEND VALUE #( filename = <ls_file>-filename
+                      file_type = <ls_file>-type
+                      file_size = <ls_file>-size
+                      content = <ls_file>-content ) TO lt_files.
+    ENDLOOP.
+
     " Run Async Task
     " Change the value of l_debug to run the task synchronously
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -146,6 +157,7 @@ CLASS ycl_aai_rest_async_chat IMPLEMENTATION.
         i_model    = ls_request-model
         i_log      = abap_true
         i_debug    = l_debug
+        i_t_files  = lt_files
     ).
 
     IF l_started = abap_false.

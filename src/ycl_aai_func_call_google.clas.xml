@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>YCL_AAI_FUNC_CALL_GOOGLE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ABAP AI Function Calling - Google</DESCRIPT>
+    <DESCRIPT>ABAP AI tools - Function Calling - Google</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

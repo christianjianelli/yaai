@@ -21,6 +21,10 @@ CLASS ycl_aai_log DEFINITION
       IMPORTING
         i_chat_id TYPE yde_aai_chat_id OPTIONAL.
 
+    METHODS write_json_on_log_file
+      IMPORTING
+        i_json TYPE csequence.
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -28,7 +32,9 @@ CLASS ycl_aai_log DEFINITION
 ENDCLASS.
 
 
-CLASS ycl_aai_log IMPLEMENTATION.
+
+CLASS YCL_AAI_LOG IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -71,6 +77,69 @@ CLASS ycl_aai_log IMPLEMENTATION.
     IF i_save = abap_true.
       me->save_log( ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_log~delete_expired_logs.
+
+    DELETE FROM yaai_log                                "#EC CI_NOFIELD
+      WHERE expiry_date < @sy-datum.                    "#EC CI_NOWHERE
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_log~get_log.
+
+    rt_log = me->mt_log.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_log~get_messages.
+
+    IF me->mt_log IS NOT INITIAL.
+
+      FREE me->mt_msg.
+
+      LOOP AT me->mt_log ASSIGNING FIELD-SYMBOL(<ls_log>).
+
+        APPEND VALUE #( id = <ls_log>-msgid
+                        number = <ls_log>-msgno
+                        type = <ls_log>-msgty
+                        message_v1 = <ls_log>-msgv1
+                        message_v2 = <ls_log>-msgv2
+                        message_v3 = <ls_log>-msgv3
+                        message_v4 = <ls_log>-msgv4 ) TO me->mt_msg.
+
+      ENDLOOP.
+
+    ENDIF.
+
+    rt_msg = me->mt_msg.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_log~load_log.
+
+    IF i_chat_id IS NOT SUPPLIED AND me->m_chat_id IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    IF i_chat_id IS SUPPLIED.
+      me->m_chat_id = i_chat_id.
+    ENDIF.
+
+    IF me->m_chat_id IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT id, seqno, username, log_date, log_time, expiry_date,
+           msgid, msgno, msgv1, msgv2, msgv3, msgv4
+      FROM yaai_log
+      WHERE id = @me->m_chat_id
+      INTO CORRESPONDING FIELDS OF TABLE @me->mt_log.
 
   ENDMETHOD.
 
@@ -125,67 +194,23 @@ CLASS ycl_aai_log IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD write_json_on_log_file.
 
-  METHOD yif_aai_log~load_log.
+    DATA(l_file) = |./{ me->m_chat_id }.json|.
 
-    IF i_chat_id IS NOT SUPPLIED AND me->m_chat_id IS INITIAL.
-      RETURN.
-    ENDIF.
+    OPEN DATASET l_file
+      FOR OUTPUT
+      IN BINARY MODE.
 
-    IF i_chat_id IS SUPPLIED.
-      me->m_chat_id = i_chat_id.
-    ENDIF.
+    IF sy-subrc = 0.
 
-    IF me->m_chat_id IS INITIAL.
-      RETURN.
-    ENDIF.
+      DATA(l_json_bin) = cl_abap_codepage=>convert_to( source = i_json ).
 
-    SELECT id, seqno, username, log_date, log_time, expiry_date,
-           msgid, msgno, msgv1, msgv2, msgv3, msgv4
-      FROM yaai_log
-      WHERE id = @me->m_chat_id
-      INTO CORRESPONDING FIELDS OF TABLE @me->mt_log.
+      TRANSFER l_json_bin TO l_file.
 
-  ENDMETHOD.
-
-
-  METHOD yif_aai_log~get_log.
-
-    rt_log = me->mt_log.
-
-  ENDMETHOD.
-
-
-  METHOD yif_aai_log~get_messages.
-
-    IF me->mt_log IS NOT INITIAL.
-
-      FREE me->mt_msg.
-
-      LOOP AT me->mt_log ASSIGNING FIELD-SYMBOL(<ls_log>).
-
-        APPEND VALUE #( id = <ls_log>-msgid
-                        number = <ls_log>-msgno
-                        type = <ls_log>-msgty
-                        message_v1 = <ls_log>-msgv1
-                        message_v2 = <ls_log>-msgv2
-                        message_v3 = <ls_log>-msgv3
-                        message_v4 = <ls_log>-msgv4 ) TO me->mt_msg.
-
-      ENDLOOP.
+      CLOSE DATASET l_file.
 
     ENDIF.
 
-    rt_msg = me->mt_msg.
-
   ENDMETHOD.
-
-
-  METHOD yif_aai_log~delete_expired_logs.
-
-    DELETE FROM yaai_log                                "#EC CI_NOFIELD
-      WHERE expiry_date < @sy-datum.                    "#EC CI_NOWHERE
-
-  ENDMETHOD.
-
 ENDCLASS.

@@ -4,6 +4,8 @@ CLASS ycl_aai_util DEFINITION
 
   PUBLIC SECTION.
 
+    INTERFACES if_oo_adt_classrun.
+
     TYPES: BEGIN OF ty_importing_params_s,
              name        TYPE string,
              type        TYPE string,
@@ -12,7 +14,16 @@ CLASS ycl_aai_util DEFINITION
              description TYPE string,
            END OF ty_importing_params_s,
 
+           BEGIN OF ty_exporting_params_s,
+             name        TYPE string,
+             type        TYPE string,
+             format      TYPE string,
+             required    TYPE abap_bool,
+             description TYPE string,
+           END OF ty_exporting_params_s,
+
            ty_importing_params_tt TYPE STANDARD TABLE OF ty_importing_params_s WITH EMPTY KEY,
+           ty_exporting_params_tt TYPE STANDARD TABLE OF ty_exporting_params_s WITH EMPTY KEY,
 
            ty_splitted_string_tt  TYPE STANDARD TABLE OF string WITH EMPTY KEY.
 
@@ -34,12 +45,30 @@ CLASS ycl_aai_util DEFINITION
                 i_content        TYPE string
       RETURNING VALUE(r_content) TYPE string.
 
+    METHODS get_method_parameters
+      IMPORTING
+        i_class_name         TYPE csequence
+        i_method_name        TYPE csequence
+        i_parameter_kind     TYPE abap_parmkind
+      EXPORTING
+        e_t_importing_params TYPE ty_importing_params_tt
+        e_t_exporting_params TYPE ty_exporting_params_tt
+        e_t_components       TYPE cl_abap_structdescr=>component_table.
+
     METHODS get_method_importing_params
       IMPORTING
         i_class_name         TYPE csequence
         i_method_name        TYPE csequence
       EXPORTING
         e_t_importing_params TYPE ty_importing_params_tt
+        e_t_components       TYPE cl_abap_structdescr=>component_table.
+
+    METHODS get_method_exporting_params
+      IMPORTING
+        i_class_name         TYPE csequence
+        i_method_name        TYPE csequence
+      EXPORTING
+        e_t_exporting_params TYPE ty_exporting_params_tt
         e_t_components       TYPE cl_abap_structdescr=>component_table.
 
     METHODS get_parameter_type
@@ -65,6 +94,33 @@ CLASS ycl_aai_util DEFINITION
       EXPORTING
         e_t_splitted_string TYPE ty_splitted_string_tt.
 
+    METHODS get_mime_type
+      IMPORTING
+                i_filename         TYPE csequence OPTIONAL
+                i_file_extension   TYPE csequence OPTIONAL
+                  PREFERRED PARAMETER i_filename
+      RETURNING VALUE(r_mime_type) TYPE string.
+
+    METHODS base64_encode_x
+      IMPORTING
+                i_file_content_bin           TYPE xstring
+      RETURNING VALUE(r_file_content_base64) TYPE string.
+
+    METHODS base64_decode_x
+      IMPORTING
+                i_file_content_base64     TYPE string
+      RETURNING VALUE(r_file_content_bin) TYPE xstring.
+
+    METHODS base64_encode
+      IMPORTING
+                i_file_content               TYPE string
+      RETURNING VALUE(r_file_content_base64) TYPE string.
+
+    METHODS base64_decode
+      IMPORTING
+                i_file_content_base64 TYPE string
+      RETURNING VALUE(r_file_content) TYPE string.
+
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -74,34 +130,6 @@ ENDCLASS.
 
 
 CLASS ycl_aai_util IMPLEMENTATION.
-
-  METHOD serialize.
-
-    FREE r_json.
-
-    DATA(l_pretty_name) = /ui2/cl_json=>pretty_mode-low_case.
-
-    IF i_camel_case = abap_true.
-      l_pretty_name = /ui2/cl_json=>pretty_mode-camel_case.
-    ENDIF.
-
-    r_json = /ui2/cl_json=>serialize(
-     EXPORTING
-       data = i_data
-       compress         = abap_false
-*       name             =
-       pretty_name      = l_pretty_name
-*       type_descr       =
-*       assoc_arrays     =
-*       ts_as_iso8601    =
-*       expand_includes  =
-*       assoc_arrays_opt =
-*       numc_as_string   =
-*       name_mappings    =
-*       conversion_exits =
-    ).
-
-  ENDMETHOD.
 
   METHOD deserialize.
 
@@ -126,246 +154,6 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD replace_unicode_escape_seq.
-
-    r_content = i_content.
-
-    " Unicode escape sequences are not replaced during the JSON deserialization
-    FIND ALL OCCURRENCES OF REGEX '\\u[0-9A-Fa-f]{4}' IN i_content RESULTS DATA(lt_matches).
-
-    LOOP AT lt_matches ASSIGNING FIELD-SYMBOL(<ls_match>).
-
-      DATA(l_offset) = <ls_match>-offset + 2.
-      DATA(l_length) = 4.
-
-      DATA(l_hexa) = i_content+l_offset(l_length).
-
-      DATA(l_character) = cl_abap_conv_in_ce=>uccp( to_upper( l_hexa ) ).
-
-      l_offset = <ls_match>-offset.
-      l_length = <ls_match>-length.
-
-      REPLACE ALL OCCURRENCES OF i_content+l_offset(l_length) IN r_content WITH l_character.
-
-    ENDLOOP.
-
-    FREE lt_matches.
-
-    " Unicode escape sequences should have a escaped backslash like '\\u',
-    " but the JSON deserialization done by the class /ui2/cl_json sometimes removes it.
-    " Here we try to find and replace them.
-    FIND ALL OCCURRENCES OF REGEX 'u[0-9A-Fa-f]{4}' IN i_content RESULTS lt_matches.
-
-    LOOP AT lt_matches ASSIGNING <ls_match>.
-
-      l_offset = <ls_match>-offset + 1.
-      l_length = 4.
-
-      l_hexa = i_content+l_offset(l_length).
-
-      l_character = cl_abap_conv_in_ce=>uccp( to_upper( l_hexa ) ).
-
-      l_offset = <ls_match>-offset.
-      l_length = <ls_match>-length.
-
-      REPLACE ALL OCCURRENCES OF i_content+l_offset(l_length) IN r_content WITH l_character.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD get_parameter_type.
-
-    CLEAR r_type.
-
-    CASE i_o_type_descr->type_kind.
-
-      WHEN cl_abap_typedescr=>typekind_string OR
-           cl_abap_typedescr=>typekind_char OR
-           cl_abap_typedescr=>typekind_date OR
-           cl_abap_typedescr=>typekind_csequence OR
-           cl_abap_typedescr=>typekind_clike.
-
-        r_type = 'string'.
-
-        IF i_o_type_descr->absolute_name CS 'ABAP_BOOL' AND i_o_type_descr->output_length = 1.
-          r_type = 'boolean'.
-        ENDIF.
-
-      WHEN cl_abap_typedescr=>typekind_int OR
-           cl_abap_typedescr=>typekind_int1 OR
-           cl_abap_typedescr=>typekind_int2 OR
-           cl_abap_typedescr=>typekind_int8 OR
-           cl_abap_typedescr=>typekind_decfloat OR
-           cl_abap_typedescr=>typekind_decfloat16 OR
-           cl_abap_typedescr=>typekind_decfloat34 OR
-           cl_abap_typedescr=>typekind_float OR
-           cl_abap_typedescr=>typekind_num OR
-           cl_abap_typedescr=>typekind_numeric OR
-           cl_abap_typedescr=>typekind_packed.
-
-        r_type = 'number'.
-
-    ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD get_parameter_format.
-
-    CLEAR r_format.
-
-    IF i_o_type_descr->type_kind = cl_abap_typedescr=>typekind_date.
-      r_format = 'date'.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD get_method_importing_params.
-
-    DATA: lo_class_descr TYPE REF TO cl_abap_classdescr,
-          lo_tabledescr  TYPE REF TO cl_abap_tabledescr,
-          lo_structdescr TYPE REF TO cl_abap_structdescr,
-          lo_elem_descr  TYPE REF TO cl_abap_elemdescr.
-
-    DATA: lt_methods    TYPE abap_methdescr_tab,
-          lt_components TYPE cl_abap_structdescr=>component_table.
-
-    DATA: ls_component TYPE cl_abap_structdescr=>component.
-
-    FREE e_t_importing_params.
-
-    " Get the class descriptor
-    CALL METHOD cl_abap_classdescr=>describe_by_name
-      EXPORTING
-        p_name         = to_upper( i_class_name )     " Type name
-      RECEIVING
-        p_descr_ref    = DATA(lo_descr)   " Reference to description object
-      EXCEPTIONS
-        type_not_found = 1                " Type with name p_name could not be found
-        OTHERS         = 2.
-
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    lo_class_descr ?= lo_descr.
-
-    " Get all methods of the class
-    lt_methods = lo_class_descr->methods.
-
-    READ TABLE lt_methods ASSIGNING FIELD-SYMBOL(<ls_method>) WITH KEY name = to_upper( i_method_name ).
-
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    LOOP AT <ls_method>-parameters ASSIGNING FIELD-SYMBOL(<ls_parameter>).
-
-      IF <ls_parameter>-parm_kind <> 'I'. " Importing parameters
-        CONTINUE.
-      ENDIF.
-
-      lo_class_descr->get_method_parameter_type(
-        EXPORTING
-          p_method_name       = i_method_name         " Method name
-          p_parameter_name    = <ls_parameter>-name   " Parameter Name
-        RECEIVING
-          p_descr_ref         = DATA(lo_descr_ref)    " Description object
-        EXCEPTIONS
-          parameter_not_found = 1                     " Parameter could not be found
-          method_not_found    = 2                     " Method was not found
-          OTHERS              = 3
-      ).
-
-      IF sy-subrc = 0.
-
-        ls_component-name = <ls_parameter>-name.
-        ls_component-type ?= lo_descr_ref.
-
-        APPEND ls_component TO e_t_components.
-
-      ENDIF.
-
-      IF e_t_importing_params IS REQUESTED.
-
-        CASE ls_component-type->kind.
-
-          WHEN 'E'. "Element
-
-            lo_elem_descr ?= lo_descr_ref.
-
-            IF lo_elem_descr->is_ddic_type( ) = abap_true.
-
-              lo_elem_descr->get_ddic_field(
-                EXPORTING
-                  p_langu      = sy-langu           " Current Language
-                RECEIVING
-                  p_flddescr   = DATA(ls_flddescr)  " Field Description
-                EXCEPTIONS
-                  not_found    = 0                  " Type could not be found
-                  no_ddic_type = 0                  " Type is not a dictionary type
-                  OTHERS       = 0
-              ).
-
-            ENDIF.
-
-            APPEND VALUE #( name = <ls_parameter>-name
-                            type = me->get_parameter_type( i_o_type_descr = lo_elem_descr )
-                            format = me->get_parameter_format( i_o_type_descr = lo_elem_descr )
-                            required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
-                            description = ls_flddescr-fieldtext ) TO e_t_importing_params.
-
-          WHEN 'S'. " Structure
-
-            lo_structdescr ?= lo_descr_ref.
-
-            IF lo_structdescr->is_ddic_type( ) = abap_true.
-
-              DATA(ls_ddic_header) = lo_structdescr->get_ddic_header( ).
-
-              SELECT SINGLE ddtext
-                FROM dd02t
-                WHERE tabname = @ls_ddic_header-tabname
-                  AND ddlanguage = @sy-langu
-                INTO @ls_flddescr-fieldtext. "#EC CI_NOORDER
-
-            ENDIF.
-
-            APPEND VALUE #( name = <ls_parameter>-name
-                            type = 'object'
-                            format = space
-                            required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
-                            description = ls_flddescr-fieldtext ) TO e_t_importing_params.
-
-          WHEN 'T'. " Table Type
-
-            lo_tabledescr ?= lo_descr_ref.
-
-            IF lo_tabledescr->is_ddic_type( ) = abap_true.
-
-              ls_ddic_header = lo_tabledescr->get_ddic_header( ).
-
-              SELECT SINGLE ddtext
-                FROM dd40t
-                WHERE typename = @ls_ddic_header-tabname
-                  AND ddlanguage = @sy-langu
-                INTO @ls_flddescr-fieldtext. "#EC CI_NOORDER
-
-            ENDIF.
-
-            APPEND VALUE #( name = <ls_parameter>-name
-                            type = 'array'
-                            format = space
-                            required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
-                            description = ls_flddescr-fieldtext ) TO e_t_importing_params.
-
-        ENDCASE.
-
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
 
   METHOD get_json_schema.
 
@@ -609,6 +397,352 @@ CLASS ycl_aai_util IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD get_method_parameters.
+
+    DATA: lo_class_descr TYPE REF TO cl_abap_classdescr,
+          lo_tabledescr  TYPE REF TO cl_abap_tabledescr,
+          lo_structdescr TYPE REF TO cl_abap_structdescr,
+          lo_elem_descr  TYPE REF TO cl_abap_elemdescr.
+
+    DATA: lt_methods    TYPE abap_methdescr_tab,
+          lt_components TYPE cl_abap_structdescr=>component_table.
+
+    DATA: ls_component TYPE cl_abap_structdescr=>component.
+
+    FREE: e_t_importing_params,
+          e_t_exporting_params,
+          e_t_components.
+
+    " Get the class descriptor
+    CALL METHOD cl_abap_classdescr=>describe_by_name
+      EXPORTING
+        p_name         = to_upper( i_class_name )     " Type name
+      RECEIVING
+        p_descr_ref    = DATA(lo_descr)   " Reference to description object
+      EXCEPTIONS
+        type_not_found = 1                " Type with name p_name could not be found
+        OTHERS         = 2.
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    lo_class_descr ?= lo_descr.
+
+    " Get all methods of the class
+    lt_methods = lo_class_descr->methods.
+
+    READ TABLE lt_methods ASSIGNING FIELD-SYMBOL(<ls_method>) WITH KEY name = to_upper( i_method_name ).
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    LOOP AT <ls_method>-parameters ASSIGNING FIELD-SYMBOL(<ls_parameter>).
+
+      IF <ls_parameter>-parm_kind <> i_parameter_kind. " Importing/Exporting parameter
+        CONTINUE.
+      ENDIF.
+
+      lo_class_descr->get_method_parameter_type(
+        EXPORTING
+          p_method_name       = i_method_name         " Method name
+          p_parameter_name    = <ls_parameter>-name   " Parameter Name
+        RECEIVING
+          p_descr_ref         = DATA(lo_descr_ref)    " Description object
+        EXCEPTIONS
+          parameter_not_found = 1                     " Parameter could not be found
+          method_not_found    = 2                     " Method was not found
+          OTHERS              = 3
+      ).
+
+      IF sy-subrc = 0.
+
+        ls_component-name = <ls_parameter>-name.
+        ls_component-type ?= lo_descr_ref.
+
+        APPEND ls_component TO e_t_components.
+
+      ENDIF.
+
+      CASE ls_component-type->kind.
+
+        WHEN 'E'. "Element
+
+          lo_elem_descr ?= lo_descr_ref.
+
+          IF lo_elem_descr->is_ddic_type( ) = abap_true.
+
+            lo_elem_descr->get_ddic_field(
+              EXPORTING
+                p_langu      = sy-langu           " Current Language
+              RECEIVING
+                p_flddescr   = DATA(ls_flddescr)  " Field Description
+              EXCEPTIONS
+                not_found    = 0                  " Type could not be found
+                no_ddic_type = 0                  " Type is not a dictionary type
+                OTHERS       = 0
+            ).
+
+          ENDIF.
+
+          APPEND VALUE #( name = <ls_parameter>-name
+                          type = me->get_parameter_type( i_o_type_descr = lo_elem_descr )
+                          format = me->get_parameter_format( i_o_type_descr = lo_elem_descr )
+                          required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
+                          description = ls_flddescr-fieldtext ) TO e_t_importing_params.
+
+        WHEN 'S'. " Structure
+
+          lo_structdescr ?= lo_descr_ref.
+
+          IF lo_structdescr->is_ddic_type( ) = abap_true.
+
+            DATA(ls_ddic_header) = lo_structdescr->get_ddic_header( ).
+
+            SELECT SINGLE ddtext
+              FROM dd02t
+              WHERE tabname = @ls_ddic_header-tabname
+                AND ddlanguage = @sy-langu
+              INTO @ls_flddescr-fieldtext.              "#EC CI_NOORDER
+
+          ENDIF.
+
+          APPEND VALUE #( name = <ls_parameter>-name
+                          type = 'object'
+                          format = space
+                          required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
+                          description = ls_flddescr-fieldtext ) TO e_t_importing_params.
+
+        WHEN 'T'. " Table Type
+
+          lo_tabledescr ?= lo_descr_ref.
+
+          IF lo_tabledescr->is_ddic_type( ) = abap_true.
+
+            ls_ddic_header = lo_tabledescr->get_ddic_header( ).
+
+            SELECT SINGLE ddtext
+              FROM dd40t
+              WHERE typename = @ls_ddic_header-tabname
+                AND ddlanguage = @sy-langu
+              INTO @ls_flddescr-fieldtext.              "#EC CI_NOORDER
+
+          ENDIF.
+
+          IF <ls_parameter>-parm_kind = 'I' AND e_t_importing_params IS REQUESTED.
+
+            APPEND VALUE #( name = <ls_parameter>-name
+                            type = 'array'
+                            format = space
+                            required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
+                            description = ls_flddescr-fieldtext ) TO e_t_importing_params.
+
+          ENDIF.
+
+          IF <ls_parameter>-parm_kind = 'E' AND e_t_exporting_params IS REQUESTED.
+
+            APPEND VALUE #( name = <ls_parameter>-name
+                            type = 'array'
+                            format = space
+                            required = COND #( WHEN <ls_parameter>-is_optional IS INITIAL THEN abap_true ELSE abap_false )
+                            description = ls_flddescr-fieldtext ) TO e_t_exporting_params.
+
+          ENDIF.
+
+      ENDCASE.
+
+
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD get_method_importing_params.
+
+    me->get_method_parameters(
+      EXPORTING
+        i_class_name         = i_class_name
+        i_method_name        = i_method_name
+        i_parameter_kind     = 'I'
+      IMPORTING
+        e_t_importing_params = e_t_importing_params
+        e_t_components       = e_t_components
+    ).
+
+  ENDMETHOD.
+
+  METHOD get_method_exporting_params.
+
+    me->get_method_parameters(
+      EXPORTING
+        i_class_name         = i_class_name
+        i_method_name        = i_method_name
+        i_parameter_kind     = 'E'
+      IMPORTING
+        e_t_exporting_params = e_t_exporting_params
+        e_t_components       = e_t_components
+    ).
+
+  ENDMETHOD.
+
+  METHOD get_mime_type.
+
+    DATA lt_splitted TYPE STANDARD TABLE OF string.
+
+    DATA: l_extension TYPE mimetypes-extension,
+          l_mimetype  TYPE mimetypes-type.
+
+    IF i_filename IS SUPPLIED.
+
+      SPLIT i_filename AT '.' INTO TABLE lt_splitted.
+
+      IF lt_splitted IS NOT INITIAL.
+        l_extension = lt_splitted[ lines( lt_splitted ) ].
+      ENDIF.
+
+    ELSEIF i_file_extension IS SUPPLIED.
+      l_extension = to_lower( condense( i_file_extension ) ).
+    ENDIF.
+
+    CALL FUNCTION 'SDOK_MIMETYPE_GET'
+      EXPORTING
+        extension = l_extension
+      IMPORTING
+        mimetype  = l_mimetype.
+
+    r_mime_type = l_mimetype.
+
+  ENDMETHOD.
+
+
+  METHOD get_parameter_format.
+
+    CLEAR r_format.
+
+    IF i_o_type_descr->type_kind = cl_abap_typedescr=>typekind_date.
+      r_format = 'date'.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_parameter_type.
+
+    CLEAR r_type.
+
+    CASE i_o_type_descr->type_kind.
+
+      WHEN cl_abap_typedescr=>typekind_string OR
+           cl_abap_typedescr=>typekind_char OR
+           cl_abap_typedescr=>typekind_date OR
+           cl_abap_typedescr=>typekind_csequence OR
+           cl_abap_typedescr=>typekind_clike.
+
+        r_type = 'string'.
+
+        IF i_o_type_descr->absolute_name CS 'ABAP_BOOL' AND i_o_type_descr->output_length = 1.
+          r_type = 'boolean'.
+        ENDIF.
+
+      WHEN cl_abap_typedescr=>typekind_int OR
+           cl_abap_typedescr=>typekind_int1 OR
+           cl_abap_typedescr=>typekind_int2 OR
+           cl_abap_typedescr=>typekind_int8 OR
+           cl_abap_typedescr=>typekind_decfloat OR
+           cl_abap_typedescr=>typekind_decfloat16 OR
+           cl_abap_typedescr=>typekind_decfloat34 OR
+           cl_abap_typedescr=>typekind_float OR
+           cl_abap_typedescr=>typekind_num OR
+           cl_abap_typedescr=>typekind_numeric OR
+           cl_abap_typedescr=>typekind_packed.
+
+        r_type = 'number'.
+
+    ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD replace_unicode_escape_seq.
+
+    r_content = i_content.
+
+    " Unicode escape sequences are not replaced during the JSON deserialization
+    FIND ALL OCCURRENCES OF REGEX '\\u[0-9A-Fa-f]{4}' IN i_content RESULTS DATA(lt_matches).
+
+    LOOP AT lt_matches ASSIGNING FIELD-SYMBOL(<ls_match>).
+
+      DATA(l_offset) = <ls_match>-offset + 2.
+      DATA(l_length) = 4.
+
+      DATA(l_hexa) = i_content+l_offset(l_length).
+
+      DATA(l_character) = cl_abap_conv_in_ce=>uccp( to_upper( l_hexa ) ).
+
+      l_offset = <ls_match>-offset.
+      l_length = <ls_match>-length.
+
+      REPLACE ALL OCCURRENCES OF i_content+l_offset(l_length) IN r_content WITH l_character.
+
+    ENDLOOP.
+
+    FREE lt_matches.
+
+    " Unicode escape sequences should have a escaped backslash like '\\u',
+    " but the JSON deserialization done by the class /ui2/cl_json sometimes removes it.
+    " Here we try to find and replace them.
+    FIND ALL OCCURRENCES OF REGEX 'u[0-9A-Fa-f]{4}' IN i_content RESULTS lt_matches.
+
+    LOOP AT lt_matches ASSIGNING <ls_match>.
+
+      l_offset = <ls_match>-offset + 1.
+      l_length = 4.
+
+      l_hexa = i_content+l_offset(l_length).
+
+      l_character = cl_abap_conv_in_ce=>uccp( to_upper( l_hexa ) ).
+
+      l_offset = <ls_match>-offset.
+      l_length = <ls_match>-length.
+
+      REPLACE ALL OCCURRENCES OF i_content+l_offset(l_length) IN r_content WITH l_character.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD serialize.
+
+    FREE r_json.
+
+    DATA(l_pretty_name) = /ui2/cl_json=>pretty_mode-low_case.
+
+    IF i_camel_case = abap_true.
+      l_pretty_name = /ui2/cl_json=>pretty_mode-camel_case.
+    ENDIF.
+
+    r_json = /ui2/cl_json=>serialize(
+     EXPORTING
+       data = i_data
+       compress         = abap_false
+*       name             =
+       pretty_name      = l_pretty_name
+*       type_descr       =
+*       assoc_arrays     =
+*       ts_as_iso8601    =
+*       expand_includes  =
+*       assoc_arrays_opt =
+*       numc_as_string   =
+*       name_mappings    =
+*       conversion_exits =
+    ).
+
+  ENDMETHOD.
+
+
   METHOD split_string.
 
     DATA lt_split TYPE STANDARD TABLE OF string WITH EMPTY KEY.
@@ -714,6 +848,74 @@ CLASS ycl_aai_util IMPLEMENTATION.
     IF l_line IS NOT INITIAL.
       APPEND l_line TO e_t_splitted_string.
     ENDIF.
+
+  ENDMETHOD.
+
+  METHOD base64_encode_x.
+
+    r_file_content_base64 = cl_http_utility=>encode_x_base64( unencoded = i_file_content_bin ).
+
+  ENDMETHOD.
+
+  METHOD base64_decode_x.
+
+    r_file_content_bin = cl_http_utility=>decode_x_base64( encoded = i_file_content_base64 ).
+
+  ENDMETHOD.
+
+  METHOD base64_encode.
+
+    r_file_content_base64 = cl_http_utility=>encode_base64( unencoded = i_file_content ).
+
+  ENDMETHOD.
+
+  METHOD base64_decode.
+
+    r_file_content = cl_http_utility=>decode_base64( encoded = i_file_content_base64 ).
+
+  ENDMETHOD.
+
+  METHOD if_oo_adt_classrun~main.
+
+    "out->write( me->get_mime_type( 'test.png' ) ).
+
+*    me->get_method_parameters(
+*      EXPORTING
+*        i_class_name         = 'YCL_AAI_UTIL'
+*        i_method_name        = 'GET_METHOD_PARAMETERS'
+*        i_parameter_kind     = 'I'
+*      IMPORTING
+*        e_t_importing_params = DATA(lt_importing_params)
+**        e_t_exporting_params = DATA(lt_exporting_params)
+*        e_t_components       = DATA(lt_components)
+*    ).
+*
+*    LOOP AT lt_importing_params ASSIGNING FIELD-SYMBOL(<ls_importing_param>).
+*      out->write( <ls_importing_param>-name ).
+*    ENDLOOP.
+*
+*    LOOP AT lt_components ASSIGNING FIELD-SYMBOL(<ls_component>).
+*      out->write( <ls_component>-name ).
+*    ENDLOOP.
+
+*    me->get_method_parameters(
+*      EXPORTING
+*        i_class_name         = 'YCL_AAI_UTIL'
+*        i_method_name        = 'GET_METHOD_PARAMETERS'
+*        i_parameter_kind     = 'E'
+*      IMPORTING
+**        e_t_importing_params = DATA(lt_importing_params)
+*        e_t_exporting_params = DATA(lt_exporting_params)
+*        e_t_components       = lt_components
+*    ).
+*
+*    LOOP AT lt_exporting_params ASSIGNING FIELD-SYMBOL(<ls_exporting_param>).
+*      out->write( <ls_exporting_param>-name ).
+*    ENDLOOP.
+*
+*    LOOP AT lt_components ASSIGNING <ls_component>.
+*      out->write( <ls_component>-name ).
+*    ENDLOOP.
 
   ENDMETHOD.
 

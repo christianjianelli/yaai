@@ -12,7 +12,7 @@ INTERFACE yif_aai_agent_db
       i_t_agent_docs   TYPE ty_agent_docs_t   OPTIONAL
       i_t_agent_models TYPE ty_agent_models_t OPTIONAL
     EXPORTING
-      e_id             TYPE uuid
+      e_id             TYPE yde_aai_id
       e_error          TYPE string.
 
   METHODS read

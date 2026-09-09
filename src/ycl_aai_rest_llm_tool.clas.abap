@@ -7,10 +7,12 @@ CLASS ycl_aai_rest_llm_tool DEFINITION
   PUBLIC SECTION.
 
     TYPES: BEGIN OF ty_tool_s,
-             class_name  TYPE string,
-             method_name TYPE string,
-             proxy_class TYPE string,
-             description TYPE string,
+             class_name    TYPE string,
+             method_name   TYPE string,
+             proxy_class   TYPE string,
+             description   TYPE string,
+             approval      TYPE abap_bool,
+             approval_text TYPE string,
            END OF ty_tool_s,
 
            BEGIN OF ty_response_create_s,
@@ -63,7 +65,9 @@ CLASS ycl_aai_rest_llm_tool IMPLEMENTATION.
     DATA(ls_tool) = VALUE yaai_tool( class_name = i_o_request->get_form_field( name = 'class_name' )
                                      method_name = i_o_request->get_form_field( name = 'method_name' )
                                      proxy_class = i_o_request->get_form_field( name = 'proxy_class' )
-                                     description = i_o_request->get_form_field( name = 'description' ) ).
+                                     description = i_o_request->get_form_field( name = 'description' )
+                                     approval = i_o_request->get_form_field( name = 'approval' )
+                                     approval_text = i_o_request->get_form_field( name = 'approval_text') ).
 
     IF ls_tool-class_name IS INITIAL OR
        ls_tool-method_name IS INITIAL OR
@@ -118,7 +122,7 @@ CLASS ycl_aai_rest_llm_tool IMPLEMENTATION.
 
     IF l_class_name IS NOT INITIAL AND l_method_name IS NOT INITIAL.
 
-      SELECT SINGLE class_name, method_name, proxy_class, description
+      SELECT SINGLE class_name, method_name, proxy_class, description, approval, approval_text
         FROM yaai_tool
           WHERE class_name = @l_class_name
             AND method_name = @l_method_name
@@ -129,7 +133,9 @@ CLASS ycl_aai_rest_llm_tool IMPLEMENTATION.
         ls_response_read-tool = VALUE #( class_name = ls_tool-class_name
                                          method_name = ls_tool-method_name
                                          proxy_class = ls_tool-proxy_class
-                                         description = ls_tool-description ).
+                                         description = ls_tool-description
+                                         approval = ls_tool-approval
+                                         approval_text = ls_tool-approval_text ).
 
       ENDIF.
 
@@ -143,18 +149,26 @@ CLASS ycl_aai_rest_llm_tool IMPLEMENTATION.
     ELSE.
 
       IF l_class_name IS NOT INITIAL.
-        lt_rng_class_name = VALUE #( ( sign = 'I' option = 'CP' low = |*{ l_class_name }*| ) ).
+        IF strlen( |*{ l_class_name }*| ) <= 30.
+          lt_rng_class_name = VALUE #( ( sign = 'I' option = 'CP' low = |*{ l_class_name }*| ) ).
+        ELSE.
+          lt_rng_class_name = VALUE #( ( sign = 'I' option = 'EQ' low = l_class_name ) ).
+        ENDIF.
       ENDIF.
 
       IF l_method_name IS NOT INITIAL.
-        lt_rng_method_name = VALUE #( ( sign = 'I' option = 'CP' low = |*{ l_method_name }*| ) ).
+        IF strlen( |*{ l_method_name }*| ) <= 30.
+          lt_rng_method_name = VALUE #( ( sign = 'I' option = 'CP' low = |*{ l_method_name }*| ) ).
+        ELSE.
+          lt_rng_method_name = VALUE #( ( sign = 'I' option = 'EQ' low = l_method_name ) ).
+        ENDIF.
       ENDIF.
 
       IF l_description IS NOT INITIAL.
         lt_rng_description = VALUE #( ( sign = 'I' option = 'CP' low = |*{ l_description }*| ) ).
       ENDIF.
 
-      SELECT class_name, method_name, proxy_class, description
+      SELECT class_name, method_name, proxy_class, description, approval, approval_text
         FROM yaai_tool
         WHERE class_name IN @lt_rng_class_name
           AND method_name IN @lt_rng_method_name
@@ -189,10 +203,14 @@ CLASS ycl_aai_rest_llm_tool IMPLEMENTATION.
 
     DATA l_json TYPE string.
 
+    DATA(l_approval) = to_lower( condense( i_o_request->get_form_field( name = 'approval' ) ) ).
+
     DATA(ls_tool) = VALUE yaai_tool( class_name = i_o_request->get_form_field( name = 'class_name' )
                                      method_name = i_o_request->get_form_field( name = 'method_name' )
                                      proxy_class = i_o_request->get_form_field( name = 'proxy_class' )
-                                     description = i_o_request->get_form_field( name = 'description' ) ).
+                                     description = i_o_request->get_form_field( name = 'description' )
+                                     approval = COND #( WHEN l_approval = 'true' THEN abap_true ELSE abap_false )
+                                     approval_text = i_o_request->get_form_field( name = 'approval_text') ).
 
     IF ls_tool-class_name IS INITIAL OR
        ls_tool-method_name IS INITIAL OR

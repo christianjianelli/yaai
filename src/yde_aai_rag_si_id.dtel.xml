@@ -10,11 +10,11 @@
     <SCRLEN1>10</SCRLEN1>
     <SCRLEN2>20</SCRLEN2>
     <SCRLEN3>40</SCRLEN3>
-    <DDTEXT>RAG System Intructions ID</DDTEXT>
-    <REPTEXT>RAG System Intructions ID</REPTEXT>
+    <DDTEXT>RAG System Instructions ID</DDTEXT>
+    <REPTEXT>RAG System Instructions ID</REPTEXT>
     <SCRTEXT_S>RAG SI ID</SCRTEXT_S>
-    <SCRTEXT_M>RAG System Intr.ID</SCRTEXT_M>
-    <SCRTEXT_L>RAG System Intructions ID</SCRTEXT_L>
+    <SCRTEXT_M>RAG System Instr.ID</SCRTEXT_M>
+    <SCRTEXT_L>RAG System Instructions ID</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
     <REFKIND>D</REFKIND>
    </DD04V>

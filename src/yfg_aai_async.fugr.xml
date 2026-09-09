@@ -54,6 +54,11 @@
        <OPTIONAL>X</OPTIONAL>
        <TYP>XFELD</TYP>
       </RSIMP>
+      <RSIMP>
+       <PARAMETER>I_T_FILES</PARAMETER>
+       <OPTIONAL>X</OPTIONAL>
+       <TYP>YTT_AAI_FILES</TYP>
+      </RSIMP>
      </IMPORT>
      <DOCUMENTATION>
       <RSFDO>
@@ -90,6 +95,10 @@
       </RSFDO>
       <RSFDO>
        <PARAMETER>I_LOG</PARAMETER>
+       <KIND>P</KIND>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>I_T_FILES</PARAMETER>
        <KIND>P</KIND>
       </RSFDO>
      </DOCUMENTATION>

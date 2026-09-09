@@ -61,7 +61,7 @@ CLASS ycl_aai_planning_tools IMPLEMENTATION.
     TRY.
         NEW ycl_aai_rag_db( )->create(
           EXPORTING
-            i_filename    = |{ cl_system_uuid=>create_uuid_x16_static( ) }.md|
+            i_filename    = |{ cl_system_uuid=>create_uuid_c32_static( ) }.md|
             i_content     = i_plan
             i_description = i_description
             i_keywords    = CONV string( me->_o_agent->m_chat_id )

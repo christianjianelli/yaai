@@ -42,7 +42,7 @@ CLASS ycl_aai_agent_db IMPLEMENTATION.
 
     TRY.
 
-        ls_agent-id = cl_system_uuid=>create_uuid_x16_static( ).
+        ls_agent-id = cl_system_uuid=>create_uuid_c32_static( ).
 
       CATCH cx_uuid_error ##NO_HANDLER.
     ENDTRY.

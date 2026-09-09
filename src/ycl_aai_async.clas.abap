@@ -26,7 +26,19 @@ ENDCLASS.
 
 
 
-CLASS ycl_aai_async IMPLEMENTATION.
+CLASS YCL_AAI_ASYNC IMPLEMENTATION.
+
+
+  METHOD on_end_of_task.
+
+    "TODO
+
+    IF 1 = 2.
+
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD yif_aai_async~create.
 
@@ -34,7 +46,7 @@ CLASS ycl_aai_async IMPLEMENTATION.
 
     TRY.
 
-        DATA(ls_task) = VALUE yaai_async( id = cl_system_uuid=>create_uuid_x16_static( )
+        DATA(ls_task) = VALUE yaai_async( id = cl_system_uuid=>create_uuid_c32_static( )
                                           chat_id = i_chat_id
                                           name = i_task_name
                                           status = yif_aai_async~mc_task_created
@@ -55,33 +67,6 @@ CLASS ycl_aai_async IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD yif_aai_async~read.
-
-    SELECT SINGLE id, chat_id, name, status, username, startdate, starttime
-      FROM yaai_async
-      WHERE id = @i_task_id
-      INTO CORRESPONDING FIELDS OF @e_s_task.
-
-  ENDMETHOD.
-
-
-  METHOD yif_aai_async~update.
-
-    r_updated = abap_false.
-
-    DATA(ls_task) = CORRESPONDING yaai_async( i_s_task ).
-
-    UPDATE yaai_async FROM @ls_task.
-
-    IF sy-subrc = 0.
-
-      r_updated = abap_true.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD yif_aai_async~delete.
 
     r_deleted = abap_false.
@@ -93,6 +78,50 @@ CLASS ycl_aai_async IMPLEMENTATION.
       r_deleted = abap_true.
 
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_async~get_response.
+
+    CLEAR r_response.
+
+    SELECT SINGLE response
+      FROM yaai_async
+      WHERE id = @i_task_id
+      INTO @r_response.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_async~get_status.
+
+    CLEAR r_status.
+
+    SELECT SINGLE status
+      FROM yaai_async
+      WHERE id = @i_task_id
+      INTO @r_status.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_async~get_tasks_by_chat_id.
+
+    SELECT id, chat_id, status, username, startdate, starttime
+      FROM yaai_async
+      WHERE chat_id = @i_chat_id
+      INTO CORRESPONDING FIELDS OF TABLE @r_t_tasks. "#EC CI_NOFIELD
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_async~read.
+
+    SELECT SINGLE id, chat_id, name, status, username, startdate, starttime
+      FROM yaai_async
+      WHERE id = @i_task_id
+      INTO CORRESPONDING FIELDS OF @e_s_task.
 
   ENDMETHOD.
 
@@ -118,7 +147,8 @@ CLASS ycl_aai_async IMPLEMENTATION.
           i_context  = i_context
           i_agent_id = i_agent_id
           i_model    = i_model
-          i_log      = abap_true.
+          i_log      = abap_true
+          i_t_files  = i_t_files.
 
     ELSE.
 
@@ -132,11 +162,46 @@ CLASS ycl_aai_async IMPLEMENTATION.
           i_context  = i_context
           i_agent_id = i_agent_id
           i_model    = i_model
-          i_log      = abap_true.
+          i_log      = abap_true
+          i_t_files  = i_t_files.
 
     ENDIF.
 
     r_started = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_async~update.
+
+    r_updated = abap_false.
+
+    DATA(ls_task) = CORRESPONDING yaai_async( i_s_task ).
+
+    UPDATE yaai_async FROM @ls_task.
+
+    IF sy-subrc = 0.
+
+      r_updated = abap_true.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD yif_aai_async~update_response.
+
+    r_updated = abap_false.
+
+    UPDATE yaai_async
+      SET response = @i_response
+      WHERE id = @i_task_id.
+
+    IF sy-subrc = 0.
+
+      r_updated = abap_true.
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -173,66 +238,4 @@ CLASS ycl_aai_async IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
-  METHOD yif_aai_async~get_status.
-
-    CLEAR r_status.
-
-    SELECT SINGLE status
-      FROM yaai_async
-      WHERE id = @i_task_id
-      INTO @r_status.
-
-  ENDMETHOD.
-
-
-  METHOD yif_aai_async~get_tasks_by_chat_id.
-
-    SELECT id, chat_id, status, username, startdate, starttime
-      FROM yaai_async
-      WHERE chat_id = @i_chat_id
-      INTO CORRESPONDING FIELDS OF TABLE @r_t_tasks. "#EC CI_NOFIELD
-
-  ENDMETHOD.
-
-
-  METHOD yif_aai_async~get_response.
-
-    CLEAR r_response.
-
-    SELECT SINGLE response
-      FROM yaai_async
-      WHERE id = @i_task_id
-      INTO @r_response.
-
-  ENDMETHOD.
-
-
-  METHOD yif_aai_async~update_response.
-
-    r_updated = abap_false.
-
-    UPDATE yaai_async
-      SET response = @i_response
-      WHERE id = @i_task_id.
-
-    IF sy-subrc = 0.
-
-      r_updated = abap_true.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD on_end_of_task.
-
-    "TODO
-
-    IF 1 = 2.
-
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

@@ -312,7 +312,7 @@ CLASS ycl_aai_agent IMPLEMENTATION.
 
     IF me->m_agent_id IS NOT INITIAL.
 
-      SELECT a~id, b~api, b~model, b~temperature, b~verbosity, b~reasoning, b~max_tool_calls
+      SELECT a~id, b~api, b~model, b~temperature, b~verbosity, b~reasoning, b~max_tool_calls, b~think
         FROM yaai_agent AS a
         INNER JOIN yaai_agent_mdl AS b
         ON a~id = b~id

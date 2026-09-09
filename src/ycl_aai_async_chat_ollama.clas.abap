@@ -126,6 +126,7 @@ CLASS ycl_aai_async_chat_ollama IMPLEMENTATION.
         EXPORTING
           i_message       = i_message
           i_async_task_id = CONV string( i_task_id )
+          i_t_files       = i_t_files
           i_o_agent       = lo_agent
         IMPORTING
           e_response      = r_response
@@ -158,6 +159,7 @@ CLASS ycl_aai_async_chat_ollama IMPLEMENTATION.
 
       lo_aai_ollama->chat(
         EXPORTING
+          i_t_files  = i_t_files
           i_o_prompt = lo_aai_prompt
           i_o_agent  = lo_agent
         IMPORTING
