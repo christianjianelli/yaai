@@ -20,7 +20,10 @@ This repository provides a set of tools designed to facilitate Artificial Intell
 - **Conversation Management**: Maintain and manage multi-turn conversations, with full access to conversation history for advanced chat scenarios.
 - **Tool/Function Calling**: Integrate ABAP business logic with LLMs using function/tool calling, allowing AI models to trigger ABAP methods.
 - **Retrieval-Augmented Generation (RAG)**: Enhance LLM outputs by incorporating enterprise data, enabling more accurate and relevant answers through retrieval-augmented generation workflows.
-- **AI Agents Development**: The ABAP AI tools now have the same features as the [ABAP AI tools Cloud](https://github.com/christianjianelli/yaai_cloud) version, with a primary focus on AI Agent development. All tooling is specifically designed to support ABAP developers in building and testing AI Agents.
+- **AI Agents Development**: The primary focus of the ABAP AI tools is AI Agent development. All tooling is specifically designed to support ABAP developers in building, testing, and validating AI Agents.
+- **Vision Support**: As of version 1.2.3, image processing is available across all supported APIs. You can send images to LLM models with vision capabilities for analysis and processing. [See Examples.](./docs/images_and_files_support.md)
+- **Files Support**: As of version 1.2.3, file processing is available across all APIs that support file input. You can send files to these APIs for analysis and processing. [See Examples.](./docs/images_and_files_support.md)
+
 
 These features empower you to build intelligent, enterprise-ready ABAP applications that leverage the latest advancements in AI.
 
