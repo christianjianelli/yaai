@@ -4,6 +4,10 @@
   <img src="../images/Mistral_AI_logo_(2025–).svg" alt="Mistral Logo" width="200px">
 </p>
 
+## Overview
+
+The Mistral API is supported by ABAP AI tools through the OpenAI Chat Completions API. For more information about using ABAP AI tools with the Mistral API, please refer to the OpenAI API documentation.
+
 **Website**: https://mistral.ai/
 
 **Try the API**: https://console.mistral.ai/home

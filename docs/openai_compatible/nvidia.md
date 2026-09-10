@@ -4,6 +4,8 @@
   <img src="../images/nvidia.png" alt="Mistral Logo" width="200px">
 </p>
 
+The Nvidia API is supported by ABAP AI tools through the OpenAI Chat Completions API. For more information about using ABAP AI tools with the Nvidia API, please refer to the OpenAI API documentation.
+
 **Website**: https://build.nvidia.com/
 
 ## Quickstart

@@ -11,10 +11,12 @@ Supported parameter types:
 - One-level structures (flat structures, no nested structures)
 - One-level tables (internal tables with flat line types)
 
+As of version 1.2.3, the ABAP AI tools function calling feature allows you to define whether a tool requires user approval before it can be used by the LLM. See [Tool Call Approvals](../tool_call_approval.md).
+
 ## Usage Steps
 
 1. **Define ABAP Global Class and Method**  
-    Create a global class with instance methods you want to expose. Ensure method parameters are scalar, flat structures, or flat tables. The method can only have `IMPORTING` parameters; `EXPORTING` and `CHANGING` parameters are not supported. The method must have a `RETURNING` parameter named `R_RESPONSE` of type `STRING`.
+    Create a global class with instance methods you want to expose. Ensure method parameters are scalar, flat structures, or flat tables. The method can only have `IMPORTING` parameters; `EXPORTING` and `CHANGING` parameters are not supported. The method must have a `RETURNING` parameter named `R_RESPONSE` of type `STRING`. As of version 1.2.3, a tool can return images and/or files using the `EXPORTING` parameter `E_T_FILES`, which must be of type `YTT_AAI_FILES`. This is the only exception to the rule that tools cannot have `EXPORTING` parameters.
 
 2. **Register the Class/Method**  
     Use the ABAP AI tools framework to register the class and method for function calling.  

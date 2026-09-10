@@ -4,6 +4,10 @@
   <img src="../images/moonshot.png" alt="Moonshot AI Logo" width="200px">
 </p>
 
+## Overview
+
+The Moonshot AI API is supported by ABAP AI tools through the OpenAI Chat Completions API. For more information about using ABAP AI tools with the Moonshot AI API, please refer to the OpenAI API documentation.
+
 **Website**: https://www.moonshot.ai/
 
 **API Documentation**: https://platform.kimi.ai/docs/overview

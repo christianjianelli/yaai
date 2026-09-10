@@ -4,6 +4,8 @@
   <img src="../images/sap.png" alt="SAP Logo" width="200px">
 </p>
 
+The SAP AI Core API is supported by ABAP AI tools through the OpenAI Chat Completions API. For more information about using ABAP AI tools with the SAP AI Core API, please refer to the OpenAI API documentation.
+
 **Website**: https://help.sap.com/docs/sap-ai-core/sap-ai-core-service-guide/enabling-service-in-cloud-foundry?locale=en-US
 
 **API Documentation**: https://help.sap.com/docs/sap-ai-core/generative-ai/openai?locale=en-US

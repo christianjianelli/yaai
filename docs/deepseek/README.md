@@ -4,6 +4,10 @@
   <img src="../images/deepseek.png" alt="DeepSeek Logo" width="200px">
 </p>
 
+## Overview
+
+The DeepSeek API is supported by ABAP AI tools through the OpenAI Chat Completions API. For more information about using ABAP AI tools with the DeepSeek API, please refer to the OpenAI API documentation.
+
 **Website**: https://deepseek.com/en/
 
 **API Documentation**: https://api-docs.deepseek.com/
