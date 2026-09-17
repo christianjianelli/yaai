@@ -51,7 +51,7 @@ START-OF-SELECTION.
     IMPORTING
       filelength              = file_length
     CHANGING
-      data_tab                = data_tab                  " Transfer table for file contents
+      data_tab                = data_tab  
     EXCEPTIONS
       file_open_error         = 1                " File does not exist and cannot be opened
       file_read_error         = 2                " Error when reading file
@@ -187,7 +187,7 @@ START-OF-SELECTION.
     IMPORTING
       filelength              = file_length
     CHANGING
-      data_tab                = data_tab                  " Transfer table for file contents
+      data_tab                = data_tab   
     EXCEPTIONS
       file_open_error         = 1                " File does not exist and cannot be opened
       file_read_error         = 2                " Error when reading file
@@ -219,20 +219,20 @@ START-OF-SELECTION.
 
   ENDIF.
 
-  DATA(bin_image) = cl_bcs_convert=>solix_to_xstring(
+  DATA(bin_file) = cl_bcs_convert=>solix_to_xstring(
     EXPORTING
       it_solix = data_tab
   ).
 
   " Files must be encoded in Base 64
-  DATA(base64_image) = cl_http_utility=>encode_x_base64( unencoded = bin_image ).
+  DATA(base64_file) = cl_http_utility=>encode_x_base64( unencoded = bin_file ).
 
   file_type = NEW ycl_aai_util( )->get_mime_type( i_filename = p_pdf ).
 
   DATA(t_files) = VALUE ytt_aai_files( ( filename = filename
                                          file_type = file_type
                                          file_size = file_length
-                                         content = base64_image ) ).
+                                         content = base64_file ) ).
 
   " Run the class YCL_AAI_BASIC_SETUP to execute the basic setup of the APIs and models
   DATA(o_aai_conn) = NEW ycl_aai_conn( i_api = yif_aai_const=>c_openai ).
