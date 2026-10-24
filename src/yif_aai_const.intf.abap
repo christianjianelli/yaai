@@ -2,7 +2,7 @@ INTERFACE yif_aai_const
   PUBLIC.
 
   "ABAP AI tools version
-  CONSTANTS: c_version TYPE string VALUE '1.2.3'.
+  CONSTANTS: c_version TYPE string VALUE '1.2.4'.
 
   "General
   CONSTANTS: c_message_id          TYPE bapiret2-id VALUE 'YAAI' ##NO_TEXT,

@@ -633,9 +633,13 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
                                                    i_async_task_id = i_async_task_id
                                                    i_model = CONV #( me->_model ) ).
 
-              " Images returned from tool call
-              """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-              IF lt_tool_response_files IS NOT INITIAL.
+            ENDIF.
+
+            " Images returned from tool call
+            """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+            IF lt_tool_response_files IS NOT INITIAL.
+
+              IF me->_o_persistence IS BOUND.
 
                 me->_o_persistence->persist_files(
                   EXPORTING
@@ -643,35 +647,35 @@ CLASS ycl_aai_ollama IMPLEMENTATION.
                     i_t_files = lt_tool_response_files
                 ).
 
-                me->_get_files(
-                  EXPORTING
-                    i_t_files     = lt_tool_response_files
-                  IMPORTING
-                    e_t_images    = DATA(lt_tool_images)
-                ).
+              ENDIF.
 
-                IF lt_tool_images IS NOT INITIAL.
+              me->_get_files(
+                EXPORTING
+                  i_t_files     = lt_tool_response_files
+                IMPORTING
+                  e_t_images    = DATA(lt_tool_images)
+              ).
 
-                  ls_message_images = VALUE yif_aai_ollama~ty_message_images_s( seqno = l_seqno
-                                                                                images = CORRESPONDING #( lt_tool_images ) ).
+              IF lt_tool_images IS NOT INITIAL.
 
-                  INSERT ls_message_images INTO TABLE me->_t_message_images.
+                ls_message_images = VALUE yif_aai_ollama~ty_message_images_s( seqno = l_seqno
+                                                                              images = CORRESPONDING #( lt_tool_images ) ).
 
-                  LOOP AT lt_tool_images ASSIGNING <ls_image>.
+                INSERT ls_message_images INTO TABLE me->_t_message_images.
 
-                    APPEND <ls_image>-image TO <ls_msg>-images.
+                LOOP AT lt_tool_images ASSIGNING <ls_image>.
 
-                  ENDLOOP.
+                  APPEND <ls_image>-image TO <ls_msg>-images.
 
-                ENDIF.
-
-                FREE: lt_tool_response_files,
-                      lt_tool_images.
+                ENDLOOP.
 
               ENDIF.
-              """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+              FREE: lt_tool_response_files,
+                    lt_tool_images.
 
             ENDIF.
+            """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
           ENDLOOP.
 

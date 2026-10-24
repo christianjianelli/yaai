@@ -154,6 +154,10 @@ CLASS ycl_aai_openai IMPLEMENTATION.
 
     IF i_o_connection IS SUPPLIED.
       me->_o_connection = i_o_connection.
+    ELSE.
+      me->_o_connection = NEW ycl_aai_conn( i_api = COND #( WHEN i_api IS NOT SUPPLIED
+                                                            THEN yif_aai_const=>c_openai
+                                                            ELSE i_api ) ).
     ENDIF.
 
     IF i_o_persistence IS SUPPLIED.
@@ -905,9 +909,13 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                   e_seqno = l_seqno
               ).
 
-              " Images and files returned from tool call
-              """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-              IF lt_tool_response_files IS NOT INITIAL.
+            ENDIF.
+
+            " Images and files returned from tool call
+            """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+            IF lt_tool_response_files IS NOT INITIAL.
+
+              IF me->_o_persistence IS BOUND.
 
                 me->_o_persistence->persist_files(
                   EXPORTING
@@ -915,40 +923,40 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                     i_t_files = lt_tool_response_files
                 ).
 
-                me->_get_files(
-                  EXPORTING
-                    i_t_files     = lt_tool_response_files
-                  IMPORTING
-                    e_t_images    = lt_tool_images
-                    e_t_files     = lt_tool_files
-                ).
+              ENDIF.
 
-                IF lt_tool_images IS NOT INITIAL.
+              me->_get_files(
+                EXPORTING
+                  i_t_files     = lt_tool_response_files
+                IMPORTING
+                  e_t_images    = lt_tool_images
+                  e_t_files     = lt_tool_files
+              ).
 
-                  ls_message_images = VALUE yif_aai_openai~ty_message_images_s( seqno = l_seqno
-                                                                                images = CORRESPONDING #( lt_tool_images ) ).
+              IF lt_tool_images IS NOT INITIAL.
 
-                  INSERT ls_message_images INTO TABLE me->_t_message_images.
+                ls_message_images = VALUE yif_aai_openai~ty_message_images_s( seqno = l_seqno
+                                                                              images = CORRESPONDING #( lt_tool_images ) ).
 
-                ENDIF.
-
-                IF lt_tool_files IS NOT INITIAL.
-
-                  ls_message_files = VALUE yif_aai_openai~ty_message_files_s( seqno = l_seqno
-                                                                              files = CORRESPONDING #( lt_tool_files ) ).
-
-                  INSERT ls_message_files INTO TABLE me->_t_message_files.
-
-                ENDIF.
-
-                FREE: lt_tool_response_files,
-                      lt_tool_images,
-                      lt_tool_files.
+                INSERT ls_message_images INTO TABLE me->_t_message_images.
 
               ENDIF.
-              """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+              IF lt_tool_files IS NOT INITIAL.
+
+                ls_message_files = VALUE yif_aai_openai~ty_message_files_s( seqno = l_seqno
+                                                                            files = CORRESPONDING #( lt_tool_files ) ).
+
+                INSERT ls_message_files INTO TABLE me->_t_message_files.
+
+              ENDIF.
+
+              FREE: lt_tool_response_files,
+                    lt_tool_images,
+                    lt_tool_files.
 
             ENDIF.
+            """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
             CLEAR l_tool_response.
 
@@ -1527,9 +1535,13 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                 e_seqno = l_seqno
             ).
 
-            " Images and files returned from tool call
-            """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-            IF lt_tool_response_files IS NOT INITIAL.
+          ENDIF.
+
+          " Images and files returned from tool call
+          """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+          IF lt_tool_response_files IS NOT INITIAL.
+
+            IF me->_o_persistence IS BOUND.
 
               me->_o_persistence->persist_files(
                 EXPORTING
@@ -1537,40 +1549,40 @@ CLASS ycl_aai_openai IMPLEMENTATION.
                   i_t_files = lt_tool_response_files
               ).
 
-              me->_get_files(
-                EXPORTING
-                  i_t_files     = lt_tool_response_files
-                IMPORTING
-                  e_t_images    = lt_tool_images
-                  e_t_files     = lt_tool_files
-              ).
+            ENDIF.
 
-              IF lt_tool_images IS NOT INITIAL.
+            me->_get_files(
+              EXPORTING
+                i_t_files     = lt_tool_response_files
+              IMPORTING
+                e_t_images    = lt_tool_images
+                e_t_files     = lt_tool_files
+            ).
 
-                ls_message_images = VALUE yif_aai_openai~ty_message_images_s( seqno = l_seqno
-                                                                              images = CORRESPONDING #( lt_tool_images ) ).
+            IF lt_tool_images IS NOT INITIAL.
 
-                INSERT ls_message_images INTO TABLE me->_t_message_images.
+              ls_message_images = VALUE yif_aai_openai~ty_message_images_s( seqno = l_seqno
+                                                                            images = CORRESPONDING #( lt_tool_images ) ).
 
-              ENDIF.
-
-              IF lt_tool_files IS NOT INITIAL.
-
-                ls_message_files = VALUE yif_aai_openai~ty_message_files_s( seqno = l_seqno
-                                                                            files = CORRESPONDING #( lt_tool_files ) ).
-
-                INSERT ls_message_files INTO TABLE me->_t_message_files.
-
-              ENDIF.
-
-              FREE: lt_tool_response_files,
-                    lt_tool_images,
-                    lt_tool_files.
+              INSERT ls_message_images INTO TABLE me->_t_message_images.
 
             ENDIF.
-            """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+            IF lt_tool_files IS NOT INITIAL.
+
+              ls_message_files = VALUE yif_aai_openai~ty_message_files_s( seqno = l_seqno
+                                                                          files = CORRESPONDING #( lt_tool_files ) ).
+
+              INSERT ls_message_files INTO TABLE me->_t_message_files.
+
+            ENDIF.
+
+            FREE: lt_tool_response_files,
+                  lt_tool_images,
+                  lt_tool_files.
 
           ENDIF.
+          """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
           CLEAR l_tool_response.
 
