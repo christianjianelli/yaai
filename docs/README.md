@@ -68,8 +68,9 @@ The ABAP AI tools UI repository provides interfaces to interact with LLMs direct
 - [Function Calling](function_calling.md): Learn how to use Function Calling.
 - [Retrieval-Augmented Generation (RAG)](rag.md): Enhance your LLM applications by incorporating external knowledge sources and retrieval mechanisms.
 
-## Create AI Agents 
-  - [How to Create and Test AI Agents in the ABAP AI tools Cockpit](https://github.com/christianjianelli/yaai_cockpit/blob/main/docs/guides/create-and-test-ai-agents.md)
+## How-to Guides
+- [How to Integrate an AI Assistant into an SAP Transaction Using ABAP AI tools](how-to/bp_ai_assistant/ai_assistant_integration.md)
+- [How to Create and Test AI Agents in the ABAP AI tools Cockpit](https://github.com/christianjianelli/yaai_cockpit/blob/main/docs/guides/create-and-test-ai-agents.md)
 
 ## How to Obtain Support
 

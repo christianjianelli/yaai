@@ -261,15 +261,13 @@ This repository contains examples that demonstrate the basic usage of the ABAP A
   - [Moonshot AI](docs/moonshot/README.md): Learn how to use ABAP AI tools with Moonshot AI models.
 
   ### Read the documentation
-
   - [ABAP AI tools Documentation](docs/README.md)
 
   ### Usage Examples
-
   - [ABAP AI tools - Usage Examples](https://github.com/christianjianelli/yaai_examples)
 
-  ### Create AI Agents 
-
+  ### How-to Guides
+  - [How to Integrate an AI Assistant into an SAP Transaction Using ABAP AI tools](docs/how-to/bp_ai_assistant/ai_assistant_integration.md)
   - [How to Create and Test AI Agents in the ABAP AI tools Cockpit](https://github.com/christianjianelli/yaai_cockpit/blob/main/docs/guides/create-and-test-ai-agents.md)
 
 ## How to Obtain Support
