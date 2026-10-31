@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>YCL_AAI_GUI_TOOLS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>ABAP AI tools - Screen Tools</DESCRIPT>
+    <DESCRIPT>ABAP AI tools - GUI Frontend Services Tools</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

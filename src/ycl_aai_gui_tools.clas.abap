@@ -5,9 +5,19 @@ CLASS ycl_aai_gui_tools DEFINITION
 
   PUBLIC SECTION.
 
+    TYPES ty_row TYPE c LENGTH 262143.
+
     METHODS get_screenshot
       EXPORTING
                 e_t_files         TYPE ytt_aai_files
+      RETURNING VALUE(r_response) TYPE string.
+
+    METHODS set_clipboard_data
+      IMPORTING
+                i_clipboard_data  TYPE string
+      RETURNING VALUE(r_response) TYPE string.
+
+    METHODS get_clipboard_data
       RETURNING VALUE(r_response) TYPE string.
 
   PROTECTED SECTION.
@@ -16,7 +26,48 @@ ENDCLASS.
 
 
 
-CLASS ycl_aai_gui_tools IMPLEMENTATION.
+CLASS YCL_AAI_GUI_TOOLS IMPLEMENTATION.
+
+
+  METHOD get_clipboard_data.
+
+    DATA lt_data TYPE STANDARD TABLE OF ty_row.
+
+    cl_gui_frontend_services=>clipboard_import(
+      IMPORTING
+        data                 = lt_data
+        length               = DATA(l_length)
+      EXCEPTIONS
+        cntl_error           = 1                " Control error
+        error_no_gui         = 2                " No GUI available
+        not_supported_by_gui = 3                " GUI does not support this
+        OTHERS               = 4
+    ).
+
+    IF sy-subrc <> 0.
+
+      r_response = 'Error while importing data from the clipboard.'.
+
+    ELSE.
+
+      IF lt_data IS INITIAL.
+        r_response = 'The clipboard is empty.'.
+      ENDIF.
+
+      LOOP AT lt_data ASSIGNING FIELD-SYMBOL(<l_row>).
+
+        IF r_response IS INITIAL.
+          r_response = <l_row>.
+        ELSE.
+          r_response = |{ r_response }{ cl_abap_char_utilities=>newline }{ <l_row> }|.
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD get_screenshot.
 
@@ -63,4 +114,45 @@ CLASS ycl_aai_gui_tools IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD set_clipboard_data.
+
+    DATA lt_data TYPE STANDARD TABLE OF ty_row.
+
+    DATA l_rc TYPE i.
+
+    SPLIT i_clipboard_data AT cl_abap_char_utilities=>newline INTO TABLE lt_data.
+
+    cl_gui_frontend_services=>clipboard_export(
+      IMPORTING
+        data                 = lt_data                 " Data
+      CHANGING
+        rc                   = l_rc                 " Return Code
+      EXCEPTIONS
+        cntl_error           = 1                " Control error
+        error_no_gui         = 2                " No GUI available
+        not_supported_by_gui = 3                " GUI does not support this
+        no_authority         = 4                " Authorization check failed
+        OTHERS               = 5
+    ).
+
+    IF sy-subrc <> 0 OR l_rc <> 0.
+
+      r_response = 'Error while exporting data to the clipboard.'.
+
+    ELSE.
+
+      LOOP AT lt_data ASSIGNING FIELD-SYMBOL(<l_row>).
+
+        IF r_response IS INITIAL.
+          r_response = <l_row>.
+        ELSE.
+          r_response = |{ r_response }{ cl_abap_char_utilities=>newline }{ <l_row> }|.
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.
