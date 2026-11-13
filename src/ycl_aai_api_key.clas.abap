@@ -9,20 +9,12 @@ CLASS ycl_aai_api_key DEFINITION
     ALIASES create FOR yif_aai_api_key~create.
     ALIASES read FOR yif_aai_api_key~read.
     ALIASES delete FOR yif_aai_api_key~delete.
+    ALIASES encode FOR yif_aai_api_key~encode.
+    ALIASES decode FOR yif_aai_api_key~decode.
 
   PROTECTED SECTION.
 
   PRIVATE SECTION.
-
-    METHODS encode
-      IMPORTING
-                i_api_key                TYPE string
-      RETURNING VALUE(r_encoded_api_key) TYPE string.
-
-    METHODS decode
-      IMPORTING
-                i_encoded_api_key        TYPE string
-      RETURNING VALUE(r_decoded_api_key) TYPE string.
 
 
 ENDCLASS.
@@ -31,13 +23,13 @@ ENDCLASS.
 
 CLASS ycl_aai_api_key IMPLEMENTATION.
 
-  METHOD encode.
+  METHOD yif_aai_api_key~encode.
 
     r_encoded_api_key = cl_http_utility=>if_http_utility~encode_base64( i_api_key ).
 
   ENDMETHOD.
 
-  METHOD decode.
+  METHOD yif_aai_api_key~decode.
 
     r_decoded_api_key = cl_http_utility=>if_http_utility~decode_base64( i_encoded_api_key ).
 
@@ -50,7 +42,17 @@ CLASS ycl_aai_api_key IMPLEMENTATION.
     SELECT SINGLE api_key
       FROM yaai_api_key
       WHERE id = @i_id
+        AND username = @sy-uname
       INTO @DATA(l_api_key).
+
+    IF sy-subrc <> 0.
+
+      SELECT SINGLE api_key
+        FROM yaai_api_key
+        WHERE id = @i_id
+        INTO @l_api_key.
+
+    ENDIF.
 
     r_api_key = me->decode( l_api_key ).
 
@@ -65,6 +67,7 @@ CLASS ycl_aai_api_key IMPLEMENTATION.
     ENDIF.
 
     DATA(ls_aai_api_key) = VALUE yaai_api_key( id = i_id
+                                               username = i_username
                                                api_key = me->encode( i_api_key ) ).
 
     IF ls_aai_api_key-api_key IS INITIAL.

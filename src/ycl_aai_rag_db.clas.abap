@@ -78,7 +78,7 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
     me->convert_file_content(
       EXPORTING
         i_id         = ls_aai_rag-id
-        i_filename   = i_filename
+        i_filename   = CONV #( i_filename )
         i_content    = i_content
       IMPORTING
         e_t_rag_data = DATA(lt_aai_rag_data)
@@ -134,6 +134,9 @@ CLASS ycl_aai_rag_db IMPLEMENTATION.
         RETURN.
       ENDIF.
 
+    ELSE.
+      e_error = |Document not found in the database|.
+      RETURN.
     ENDIF.
 
     SELECT FROM yaai_rag_data FIELDS id, line_no, bin_data
